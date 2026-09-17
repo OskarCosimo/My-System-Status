@@ -199,6 +199,12 @@ $allMaintenances = $allMaintenances ?? [];
         $isDown      = ($monitor['current_status'] === 'down');
         $isDegraded  = ($monitor['current_status'] === 'degraded');
         $mId         = (int)$monitor['id'];
+        
+        // Monitor Creation Date: Used to show GRAY (No Data) on days prior to monitor creation
+        $createdDate = !empty($monitor['created_at']) 
+            ? date('Y-m-d', strtotime($monitor['created_at'])) 
+            : date('Y-m-d');
+
         ob_start();
         ?>
         <li class="list-group-item py-4 px-2 px-sm-4">
@@ -263,6 +269,9 @@ $allMaintenances = $allMaintenances ?? [];
                         $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
                         $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
 
+                        // Check if day is prior to monitor creation date
+                        $isBeforeCreation = ($dayDate < $createdDate);
+
                         // Collect Incidents and Maintenances
                         $dayIncidents = [];
                         foreach ($allIncidents as $inc) {
@@ -289,13 +298,16 @@ $allMaintenances = $allMaintenances ?? [];
                         $hasMaintenance = !empty($dayMaintenances);
                         $hasIncident    = !empty($dayIncidents);
 
+                        // ACCURATE COLORING LOGIC: GRAY IF NO DATA OR BEFORE CREATION
                         $barClass = 'uptime-bar';
                         $barStyle = '';
 
                         if ($day === 0 && $isDown) {
+                            // Today active down: Red
                             $barClass .= ' uptime-outage';
                             $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
                         } elseif ($blackChecks > 0 && $downChecks > 0) {
+                            // Tri-gradient: Black on top, Green middle, Red bottom
                             $vBlack = max(15, min(40, (int)$blackPct));
                             $vRed   = max(15, min(40, (int)$downPct));
                             $gStart = $vBlack;
@@ -303,6 +315,7 @@ $allMaintenances = $allMaintenances ?? [];
                             $barStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$gStart}%, #10b981 {$gStart}%, #10b981 {$gEnd}%, #ef4444 {$gEnd}%, #ef4444 100%);\"";
                             $statusDesc = "<span style='color: #0f172a;'>⬛</span> Blackout: {$blackPct}% &bull; <span style='color: #ef4444;'>●</span> Downtime: {$downPct}%";
                         } elseif ($blackChecks > 0) {
+                            // Blackout descends from top down
                             if ($blackPct >= 95.0) {
                                 $barStyle = 'style="background-color: #0f172a;"';
                             } else {
@@ -311,6 +324,7 @@ $allMaintenances = $allMaintenances ?? [];
                             }
                             $statusDesc = "<span style='color: #0f172a;'>⬛</span> " . __('public.system_blackout') . ": {$blackPct}%";
                         } elseif ($downChecks > 0) {
+                            // Outage rises from bottom up
                             if ($downPct >= 95.0) {
                                 $barStyle = 'style="background-color: #ef4444;"';
                             } else {
@@ -319,11 +333,13 @@ $allMaintenances = $allMaintenances ?? [];
                             }
                             $statusDesc = "<span style='color: #ef4444;'>●</span> Downtime: {$downPct}% ({$dailyUptimePct}% " . __('public.uptime') . ")";
                         } elseif ($totalChecks > 0) {
+                            // Checks executed & 100% operational: Green
                             $barStyle = 'style="background-color: #10b981;"';
                             $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                         } else {
-                            $barStyle = 'style="background-color: #10b981;"';
-                            $statusDesc = "<span style='color: #10b981;'>●</span> " . __('status.operational');
+                            // GRAY BAR (NO DATA): Prior to creation date or no checks recorded
+                            $barStyle = 'style="background-color: #e2e8f0;"';
+                            $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded', 'No data recorded');
                         }
 
                         $label = "<strong>{$formattedDate}</strong><br>{$statusDesc}";
@@ -338,7 +354,7 @@ $allMaintenances = $allMaintenances ?? [];
                             'date'          => $formattedDate,
                             'monitor'       => $monitor['name'],
                             'checks'        => $totalChecks,
-                            'uptime_pct'    => $dailyUptimePct,
+                            'uptime_pct'    => ($totalChecks > 0) ? $dailyUptimePct : null,
                             'blackouts'     => $blackChecks,
                             'outages'       => $downChecks,
                             'incidents'     => array_map(fn($inc) => [
@@ -408,6 +424,9 @@ $allMaintenances = $allMaintenances ?? [];
                                 $childDegraded = ($child['current_status'] === 'degraded');
                                 $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
                                 $cId           = (int)$child['id'];
+                                $cCreatedDate  = !empty($child['created_at']) 
+                                    ? date('Y-m-d', strtotime($child['created_at'])) 
+                                    : date('Y-m-d');
                             ?>
                             <div class="bg-light p-3 rounded-3 border">
                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
@@ -458,9 +477,13 @@ $allMaintenances = $allMaintenances ?? [];
                                                     $cStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
                                                 }
                                                 $cLabel .= "<span style='color: #ef4444;'>●</span> Downtime: {$cDownPct}%";
-                                            } else {
+                                            } elseif ($cTotal > 0) {
                                                 $cStyle = 'style="background-color: #10b981;"';
                                                 $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
+                                            } else {
+                                                // GRAY BAR for sub-services without data
+                                                $cStyle = 'style="background-color: #e2e8f0;"';
+                                                $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded', 'No data recorded');
                                             }
                                     ?>
                                         <div class="uptime-bar" 
@@ -603,12 +626,12 @@ $allMaintenances = $allMaintenances ?? [];
                 <!-- Multiple Incidents Container -->
                 <div id="dayModalIncidentsList" class="d-none mb-3"></div>
 
-                <!-- 100% Operational Clean Box -->
+                <!-- Clean Status Box -->
                 <div id="dayModalCleanMsg" class="alert alert-success d-flex align-items-center gap-2 mb-0">
                     <i class="bi bi-check-circle-fill fs-3 text-success"></i>
                     <div>
-                        <strong>100% <?= __('status.operational') ?></strong>
-                        <div class="small"><?= __('public.operational_clean') ?></div>
+                        <strong id="dayModalCleanTitle">100% <?= __('status.operational') ?></strong>
+                        <div class="small" id="dayModalCleanDesc"><?= __('public.operational_clean') ?></div>
                     </div>
                 </div>
             </div>
@@ -702,22 +725,36 @@ function openDayDetailModalFromElement(el) {
         document.getElementById('dayModalBlackoutsCount').textContent = data.blackouts;
 
         const uptimeElem = document.getElementById('dayModalUptimePct');
-        uptimeElem.textContent = data.uptime_pct + '%';
-        if (data.uptime_pct >= 99.0) {
-            uptimeElem.className = 'fw-bold mb-0 text-success';
-        } else if (data.uptime_pct >= 90.0) {
-            uptimeElem.className = 'fw-bold mb-0 text-warning';
+        const cleanMsg   = document.getElementById('dayModalCleanMsg');
+        const cleanTitle = document.getElementById('dayModalCleanTitle');
+        const cleanDesc  = document.getElementById('dayModalCleanDesc');
+
+        if (data.checks > 0) {
+            uptimeElem.textContent = data.uptime_pct + '%';
+            if (data.uptime_pct >= 99.0) {
+                uptimeElem.className = 'fw-bold mb-0 text-success';
+            } else if (data.uptime_pct >= 90.0) {
+                uptimeElem.className = 'fw-bold mb-0 text-warning';
+            } else {
+                uptimeElem.className = 'fw-bold mb-0 text-danger';
+            }
+            cleanTitle.textContent = '100% <?= addslashes(__('status.operational')) ?>';
+            cleanDesc.textContent = '<?= addslashes(__('public.operational_clean')) ?>';
+            cleanMsg.className = 'alert alert-success d-flex align-items-center gap-2 mb-0';
         } else {
-            uptimeElem.className = 'fw-bold mb-0 text-danger';
+            uptimeElem.textContent = 'N/A';
+            uptimeElem.className = 'fw-bold mb-0 text-secondary';
+            cleanTitle.textContent = '<?= addslashes(__('public.no_data_recorded', 'No data recorded')) ?>';
+            cleanDesc.textContent = 'No monitoring checks were executed for this service on this date.';
+            cleanMsg.className = 'alert alert-light border d-flex align-items-center gap-2 mb-0 text-muted';
         }
 
         const maintContainer = document.getElementById('dayModalMaintenancesList');
         const incContainer   = document.getElementById('dayModalIncidentsList');
-        const cleanMsg       = document.getElementById('dayModalCleanMsg');
 
         let hasAnyEvent = false;
 
-        // 1. Render ALL Maintenances on this Day
+        // 1. Render Maintenances on this Day
         if (data.maintenances && data.maintenances.length > 0) {
             hasAnyEvent = true;
             let maintHtml = '';
@@ -745,7 +782,7 @@ function openDayDetailModalFromElement(el) {
             maintContainer.classList.add('d-none');
         }
 
-        // 2. Render ALL Incidents on this Day
+        // 2. Render Incidents on this Day
         if (data.incidents && data.incidents.length > 0) {
             hasAnyEvent = true;
             let incHtml = '';
