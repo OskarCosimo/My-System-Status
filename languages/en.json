@@ -77,6 +77,7 @@
     "unsubscribe_info": "Enter your email below to receive a secure one-click confirmation link valid for 60 minutes to remove all your subscriptions.",
     "subscribe_verification_note": "We will send a verification link to activate your subscription.",
     "no_services": "No Services Configured",
-    "no_services_desc": "Monitored routes will appear here once added in the admin dashboard."
+    "no_services_desc": "Monitored routes will appear here once added in the admin dashboard.",
+    "no_data_recorded": "No data recorded"
   }
 }
