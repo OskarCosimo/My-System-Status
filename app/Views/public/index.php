@@ -4,6 +4,9 @@ $uptimeHistory   = $uptimeHistory ?? [];
 $allIncidents    = $allIncidents ?? [];
 $allMaintenances = $allMaintenances ?? [];
 ?>
+<!-- DataTables CSS for Modal -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+
 <style>
     /* 90-Day Uptime Graph Container */
     .uptime-graph {
@@ -73,6 +76,16 @@ $allMaintenances = $allMaintenances ?? [];
         height: 7px;
         pointer-events: none;
         z-index: 3;
+    }
+
+    /* Interactive modal stat cards */
+    .modal-stat-card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        cursor: pointer;
+    }
+    .modal-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
 </style>
 
@@ -204,25 +217,6 @@ $allMaintenances = $allMaintenances ?? [];
             ? date('Y-m-d', strtotime($monitor['created_at'])) 
             : date('Y-m-d');
 
-        // CLUSTER AGGREGATION: If monitor has children (like Cloudflare), aggregate children logs into parent history!
-        $monitorHistory = $uptimeHistory[$mId] ?? [];
-        if ($hasChildren) {
-            foreach ($monitor['children'] as $child) {
-                $cId = (int)$child['id'];
-                if (!empty($uptimeHistory[$cId])) {
-                    foreach ($uptimeHistory[$cId] as $dateKey => $cStats) {
-                        if (!isset($monitorHistory[$dateKey])) {
-                            $monitorHistory[$dateKey] = ['total' => 0, 'down' => 0, 'up' => 0, 'blackout' => 0];
-                        }
-                        $monitorHistory[$dateKey]['total']    += (int)($cStats['total'] ?? 0);
-                        $monitorHistory[$dateKey]['down']     += (int)($cStats['down'] ?? 0);
-                        $monitorHistory[$dateKey]['up']       += (int)($cStats['up'] ?? 0);
-                        $monitorHistory[$dateKey]['blackout'] += (int)($cStats['blackout'] ?? 0);
-                    }
-                }
-            }
-        }
-
         ob_start();
         ?>
         <li class="list-group-item py-4 px-2 px-sm-4">
@@ -276,7 +270,7 @@ $allMaintenances = $allMaintenances ?? [];
                         $dayDate       = date('Y-m-d', $dayTime);
                         $formattedDate = date('M d, Y', $dayTime);
 
-                        $dayData = $monitorHistory[$dayDate] ?? null;
+                        $dayData = $uptimeHistory[$mId][$dayDate] ?? null;
 
                         $totalChecks = (int)($dayData['total'] ?? 0);
                         $downChecks  = (int)($dayData['down'] ?? 0);
@@ -286,6 +280,9 @@ $allMaintenances = $allMaintenances ?? [];
                         $blackPct = ($totalChecks > 0) ? round(($blackChecks / $totalChecks) * 100, 1) : 0;
                         $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
                         $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
+
+                        // Check if day is prior to monitor creation date
+                        $isBeforeCreation = ($dayDate < $createdDate);
 
                         // Collect Incidents and Maintenances
                         $dayIncidents = [];
@@ -313,23 +310,12 @@ $allMaintenances = $allMaintenances ?? [];
                         $hasMaintenance = !empty($dayMaintenances);
                         $hasIncident    = !empty($dayIncidents);
 
-                        // FULL COLORING LOGIC WITH COMPLETE TODAY (DAY 0) COVERAGE
                         $barClass = 'uptime-bar';
                         $barStyle = '';
 
-                        if ($day === 0) {
-                            // TODAY: Always reflects the real-time operational state (Never Gray!)
-                            if ($isDown) {
-                                $barStyle = 'style="background-color: #ef4444;"';
-                                $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
-                            } elseif ($isDegraded) {
-                                // Day 0 Degraded: Vibrant Amber Yellow!
-                                $barStyle = 'style="background-color: #f59e0b;"';
-                                $statusDesc = "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
-                            } else {
-                                $barStyle = 'style="background-color: #10b981;"';
-                                $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
-                            }
+                        if ($day === 0 && $isDown) {
+                            $barClass .= ' uptime-outage';
+                            $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
                         } elseif ($blackChecks > 0 && $downChecks > 0) {
                             $vBlack = max(15, min(40, (int)$blackPct));
                             $vRed   = max(15, min(40, (int)$downPct));
@@ -369,8 +355,11 @@ $allMaintenances = $allMaintenances ?? [];
                             $label .= "<br><span style='color: #ea580c;'>▲</span> " . count($dayIncidents) . " " . __('public.reported_incident');
                         }
 
+                        // Payload passed to modal on click
                         $modalPayload = [
                             'date'          => $formattedDate,
+                            'date_raw'      => $dayDate,
+                            'monitor_id'    => $monitor['id'],
                             'monitor'       => $monitor['name'],
                             'checks'        => $totalChecks,
                             'uptime_pct'    => ($totalChecks > 0) ? $dailyUptimePct : null,
@@ -433,7 +422,7 @@ $allMaintenances = $allMaintenances ?? [];
                 <span><?= __('public.today') ?></span>
             </div>
 
-            <!-- Sub-services Drawer with Accurate Status Rendering -->
+            <!-- Sub-services Drawer -->
             <?php if ($hasChildren): ?>
                 <div class="collapse mt-3 pt-3 border-top" id="subservices-<?= $monitor['id'] ?>">
                     <div class="ps-2 ps-sm-3 border-start border-3 border-primary-subtle d-flex flex-column gap-3">
@@ -443,6 +432,9 @@ $allMaintenances = $allMaintenances ?? [];
                                 $childDegraded = ($child['current_status'] === 'degraded');
                                 $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
                                 $cId           = (int)$child['id'];
+                                $cCreatedDate  = !empty($child['created_at']) 
+                                    ? date('Y-m-d', strtotime($child['created_at'])) 
+                                    : date('Y-m-d');
                             ?>
                             <div class="bg-light p-3 rounded-3 border">
                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
@@ -472,18 +464,9 @@ $allMaintenances = $allMaintenances ?? [];
                                             $cStyle = '';
                                             $cLabel = "<strong>{$cDate}</strong><br>";
 
-                                            if ($cDay === 0) {
-                                                // Sub-service Today status: Never Gray!
-                                                if ($childDown) {
-                                                    $cStyle = 'style="background-color: #ef4444;"';
-                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
-                                                } elseif ($childDegraded) {
-                                                    $cStyle = 'style="background-color: #f59e0b;"';
-                                                    $cLabel .= "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
-                                                } else {
-                                                    $cStyle = 'style="background-color: #10b981;"';
-                                                    $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
-                                                }
+                                            if ($cDay === 0 && $childDown) {
+                                                $cStyle = 'style="background-color: #ef4444;"';
+                                                $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
                                             } elseif ($cBlack > 0 && $cTotal > 0) {
                                                 $cBlackPct = round(($cBlack / $cTotal) * 100);
                                                 if ($cBlackPct >= 95) {
@@ -509,13 +492,28 @@ $allMaintenances = $allMaintenances ?? [];
                                                 $cStyle = 'style="background-color: #e2e8f0;"';
                                                 $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                             }
+
+                                            $childPayload = [
+                                                'date'       => $cDate,
+                                                'date_raw'   => $cDayDate,
+                                                'monitor_id' => $child['id'],
+                                                'monitor'    => $child['name'],
+                                                'checks'     => $cTotal,
+                                                'uptime_pct' => ($cTotal > 0) ? round((($cTotal - $cDown - $cBlack) / $cTotal) * 100, 2) : null,
+                                                'blackouts'  => $cBlack,
+                                                'outages'    => $cDown,
+                                                'incidents'  => [],
+                                                'maintenances' => []
+                                            ];
                                     ?>
                                         <div class="uptime-bar" 
                                              <?= $cStyle ?>
                                              data-bs-toggle="tooltip" 
                                              data-bs-placement="top" 
                                              data-bs-html="true" 
-                                             title="<?= htmlspecialchars($cLabel, ENT_QUOTES) ?>">
+                                             title="<?= htmlspecialchars($cLabel, ENT_QUOTES) ?>"
+                                             data-day-payload='<?= htmlspecialchars(json_encode($childPayload, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'
+                                             onclick="openDayDetailModalFromElement(this)">
                                         </div>
                                     <?php endfor; ?>
                                 </div>
@@ -604,7 +602,7 @@ $allMaintenances = $allMaintenances ?? [];
     <?php endif; ?>
 </div>
 
-<!-- Modal 1: Daily History Inspector -->
+<!-- Modal 1: Daily History Inspector with Interactive Checks Breakdown (DataTables) -->
 <div class="modal fade" id="dayDetailModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content shadow">
@@ -616,8 +614,8 @@ $allMaintenances = $allMaintenances ?? [];
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- Checks Counters Row -->
-                <div class="row g-2 mb-4 text-center">
+                <!-- Checks Counters Row (Clickable Cards) -->
+                <div class="row g-2 mb-3 text-center">
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border">
                             <div class="small text-muted"><?= __('public.daily_uptime') ?></div>
@@ -625,21 +623,57 @@ $allMaintenances = $allMaintenances ?? [];
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border">
+                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('all')" title="Click to view all checks executed">
                             <div class="small text-muted"><?= __('public.checks_executed') ?></div>
                             <h5 class="fw-bold mb-0 text-dark" id="dayModalChecksCount">0</h5>
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border">
+                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('down')" title="Click to filter outages">
                             <div class="small text-muted"><?= __('public.downtime_hits') ?></div>
                             <h5 class="fw-bold mb-0 text-danger" id="dayModalOutagesCount">0</h5>
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border">
+                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('blackout')" title="Click to view blackouts">
                             <div class="small text-muted"><?= __('public.system_blackouts') ?></div>
                             <h5 class="fw-bold mb-0 text-dark" id="dayModalBlackoutsCount">0</h5>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Toggle Button for Checks Details -->
+                <div class="mb-3 text-center" id="btnChecksToggleWrapper">
+                    <button class="btn btn-sm btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
+                            type="button" 
+                            id="btnToggleDayLogs" 
+                            onclick="toggleChecksTable()">
+                        <i class="bi bi-list-check fs-6"></i>
+                        <span id="btnToggleDayLogsText">View Individual Checks Telemetry</span>
+                        <i class="bi bi-chevron-down" id="toggleChevron"></i>
+                    </button>
+                </div>
+
+                <!-- DataTables Container Inside Modal (Initially Collapsed) -->
+                <div class="collapse mb-4" id="dayModalLogsContainer">
+                    <div class="card border bg-light p-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="fw-bold mb-0 small text-dark"><i class="bi bi-activity text-primary me-1"></i> Raw Heartbeat Telemetry</h6>
+                            <div id="logsTableFilterBadge"></div>
+                        </div>
+                        <div class="table-responsive">
+                            <table id="dayModalLogsTable" class="table table-sm table-hover align-middle mb-0 w-100 bg-white rounded border">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 100px;">Time</th>
+                                        <th style="width: 80px;">Status</th>
+                                        <th style="width: 90px;">Latency</th>
+                                        <th style="width: 70px;">HTTP</th>
+                                        <th>Diagnostics</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -702,7 +736,6 @@ $allMaintenances = $allMaintenances ?? [];
                         <div class="mb-3">
                             <label class="form-label fw-semibold"><?= __('public.email_address') ?></label>
                             <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
-                            <div class="text-muted small mt-1"><?= __('public.subscribe_verification_note') ?></div>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
@@ -734,13 +767,37 @@ $allMaintenances = $allMaintenances ?? [];
     </div>
 </div>
 
+<!-- DataTables Scripts for Interactive Modal Telemetry -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+
 <script>
+let currentDayModalData = null;
+let dayLogsDataTable = null;
+let isLogsTableLoaded = false;
+
 function openDayDetailModalFromElement(el) {
     const rawData = el.getAttribute('data-day-payload');
     if (!rawData) return;
 
     try {
         const data = JSON.parse(rawData);
+        currentDayModalData = data;
+        isLogsTableLoaded = false;
+
+        // Reset Telemetry collapse and button
+        const container = document.getElementById('dayModalLogsContainer');
+        container.classList.remove('show');
+        document.getElementById('toggleChevron').className = 'bi bi-chevron-down';
+        document.getElementById('btnToggleDayLogsText').textContent = 'View Individual Checks Telemetry (' + data.checks + ')';
+        document.getElementById('btnChecksToggleWrapper').style.display = (data.checks > 0) ? 'block' : 'none';
+
+        if (dayLogsDataTable) {
+            dayLogsDataTable.destroy();
+            dayLogsDataTable = null;
+            document.querySelector('#dayModalLogsTable tbody').innerHTML = '';
+        }
 
         document.getElementById('dayModalDateTitle').textContent = '<?= addslashes(__('public.daily_report')) ?>: ' + data.date;
         document.getElementById('dayModalMonitorName').textContent = data.monitor;
@@ -860,6 +917,76 @@ function openDayDetailModalFromElement(el) {
         new bootstrap.Modal(document.getElementById('dayDetailModal')).show();
     } catch (e) {
         console.error('Error opening day detail modal:', e);
+    }
+}
+
+// AJAX Toggle & Filter for Day Checks Table
+async function toggleChecksTable(filterStatus = null) {
+    if (!currentDayModalData || currentDayModalData.checks === 0) return;
+
+    const container = document.getElementById('dayModalLogsContainer');
+    const chevron   = document.getElementById('toggleChevron');
+
+    // If already shown and no specific filter requested, toggle close
+    if (container.classList.contains('show') && filterStatus === null) {
+        container.classList.remove('show');
+        chevron.className = 'bi bi-chevron-down';
+        return;
+    }
+
+    container.classList.add('show');
+    chevron.className = 'bi bi-chevron-up';
+
+    if (!isLogsTableLoaded) {
+        document.getElementById('btnToggleDayLogsText').textContent = 'Loading telemetry...';
+        
+        try {
+            const url = `/api/v1/monitor/day-logs?monitor_id=${currentDayModalData.monitor_id}&date=${currentDayModalData.date_raw}`;
+            const res = await fetch(url);
+            const json = await res.json();
+
+            if (json.success && json.data) {
+                if (dayLogsDataTable) {
+                    dayLogsDataTable.destroy();
+                }
+
+                dayLogsDataTable = $('#dayModalLogsTable').DataTable({
+                    data: json.data,
+                    deferRender: true,
+                    pageLength: 10,
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    order: [[0, 'desc']],
+                    columns: [
+                        { data: 'time' },
+                        { data: 'status' },
+                        { data: 'latency' },
+                        { data: 'http_code' },
+                        { data: 'details' }
+                    ],
+                    language: {
+                        search: "_INPUT_",
+                        searchPlaceholder: "Search logs...",
+                        info: "Showing _START_ to _END_ of _TOTAL_ checks",
+                        lengthMenu: "Show _MENU_"
+                    }
+                });
+
+                isLogsTableLoaded = true;
+            }
+        } catch (err) {
+            console.error('Error loading day logs:', err);
+        } finally {
+            document.getElementById('btnToggleDayLogsText').textContent = 'Hide Checks Telemetry';
+        }
+    }
+
+    // Apply quick filter if clicked on a stat card (e.g. down, blackout)
+    if (dayLogsDataTable && filterStatus) {
+        if (filterStatus === 'all') {
+            dayLogsDataTable.search('').columns().search('').draw();
+        } else {
+            dayLogsDataTable.search(filterStatus.toUpperCase()).draw();
+        }
     }
 }
 
