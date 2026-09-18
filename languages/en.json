@@ -30,7 +30,7 @@
     "window": "Maintenance Window"
   },
   "status": {
-    "operational": "Operational",
+    "operational": "Fully Operational",
     "degraded": "Degraded Performance",
     "partial_outage": "Partial Outage",
     "major_outage": "Major Outage",
@@ -55,8 +55,8 @@
     "sub_services": "sub-services",
     "days_ago": ":count days ago",
     "today": "Today",
-    "uptime": "uptime",
-    "daily_uptime": "Daily Uptime",
+    "uptime": "availability",
+    "daily_uptime": "Daily Availability",
     "daily_report": "Daily Report",
     "checks_executed": "Checks Executed",
     "downtime_hits": "Downtime Hits",
