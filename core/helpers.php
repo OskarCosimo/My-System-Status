@@ -7,10 +7,14 @@ use App\Services\SettingService;
 
 if (!function_exists('__')) {
     /**
-     * Translate the given message key.
+     * Translate the given message key. Supports both array replacements and string fallback defaults.
      */
-    function __(string $key, array $replace = []): string
+    function __(string $key, array|string $replace = []): string
     {
+        if (is_string($replace)) {
+            $translated = I18n::trans($key);
+            return ($translated === $key) ? $replace : $translated;
+        }
         return I18n::trans($key, $replace);
     }
 }
