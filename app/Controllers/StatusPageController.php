@@ -334,4 +334,66 @@ class StatusPageController
         header('Location: /?unsub_error=' . urlencode('This unsubscribe link is invalid or has expired (links expire in 60 minutes).'));
         exit;
     }
+
+    /**
+     * AJAX Endpoint: Fetch detailed checks telemetry for a specific monitor and date.
+     */
+    public function getDayLogs(): void
+    {
+        header('Content-Type: application/json');
+
+        $monitorId = (int)($_GET['monitor_id'] ?? 0);
+        $date      = trim($_GET['date'] ?? '');
+
+        if ($monitorId <= 0 || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'error' => 'Invalid parameters']);
+            exit;
+        }
+
+        $startWindow = "{$date} 00:00:00";
+        $endWindow   = "{$date} 23:59:59";
+
+        $stmt = $this->db->prepare("
+            SELECT status, response_time_ms, http_code, error_message, created_at 
+            FROM monitor_logs 
+            WHERE monitor_id = ? AND created_at >= ? AND created_at <= ? 
+            ORDER BY created_at DESC 
+            LIMIT 1500
+        ");
+        $stmt->execute([$monitorId, $startWindow, $endWindow]);
+        $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $formatted = [];
+        foreach ($logs as $log) {
+            $st = $log['status'] ?? 'down';
+
+            if ($st === 'up') {
+                $statusBadge = '<span class="badge bg-success">UP</span>';
+            } elseif ($st === 'blackout') {
+                $statusBadge = '<span class="badge bg-dark">BLACKOUT</span>';
+            } elseif ($st === 'timeout') {
+                $statusBadge = '<span class="badge bg-warning text-dark">TIMEOUT</span>';
+            } else {
+                $statusBadge = '<span class="badge bg-danger">DOWN</span>';
+            }
+
+            $detailsHtml = !empty($log['error_message'])
+                ? '<small class="text-danger fw-semibold">' . htmlspecialchars($log['error_message']) . '</small>'
+                : '<small class="text-success"><i class="bi bi-check2"></i> Operational</small>';
+
+            $timeFormatted = format_date($log['created_at'], 'H:i:s');
+
+            $formatted[] = [
+                'time'      => "<span class='font-monospace small text-dark'>{$timeFormatted}</span>",
+                'status'    => $statusBadge,
+                'latency'   => "<span class='font-monospace'>" . (int)($log['response_time_ms'] ?? 0) . " ms</span>",
+                'http_code' => "<code>" . htmlspecialchars($log['http_code'] ?? '-') . "</code>",
+                'details'   => $detailsHtml
+            ];
+        }
+
+        echo json_encode(['success' => true, 'data' => $formatted]);
+        exit;
+    }
 }
