@@ -18,9 +18,6 @@ class TranslationService
         $this->langDir  = dirname(__DIR__, 2) . '/languages';
     }
 
-    /**
-     * Synchronize and translate missing or untranslated keys from en.json into a target language.
-     */
     public function syncAndTranslate(string $targetLang): array
     {
         $sourceFile = $this->langDir . '/en.json';
@@ -36,7 +33,6 @@ class TranslationService
         $translatedCount = 0;
         $targetData = $this->processArray($sourceData, $targetData, $targetLang, $translatedCount);
 
-        // Save pretty JSON with unicode characters (e.g. è, à, 日本語, العربية)
         file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
         return [
@@ -46,10 +42,6 @@ class TranslationService
         ];
     }
 
-    /**
-     * Recursively process nested JSON keys.
-     * Translates if key is missing, empty, OR still matches the original English text!
-     */
     private function processArray(array $source, array $target, string $targetLang, int &$count): array
     {
         foreach ($source as $key => $value) {
@@ -59,14 +51,11 @@ class TranslationService
                 $sourceText = (string)$value;
                 $currentVal = (string)($target[$key] ?? '');
 
-                // Translate if:
-                // 1. Target key does not exist
-                // 2. Target key is empty
-                // 3. Target value is identical to English source (means it was never translated before!)
+                // Needs translation if missing, empty, or still identical to English
                 $needsTranslation = !isset($target[$key]) || empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText);
 
                 if ($needsTranslation && !empty($sourceText)) {
-                    $translated = $this->requestTranslation($sourceText, 'en', $targetLang);
+                    $translated = $this->requestTranslationWithPlaceholderProtection($sourceText, 'en', $targetLang);
                     $target[$key] = $translated;
                     $count++;
                 }
@@ -76,8 +65,35 @@ class TranslationService
     }
 
     /**
-     * Call LibreTranslate API with strict endpoint normalization.
+     * Protect :placeholders (like :count, :name) from being translated into foreign words
      */
+    private function requestTranslationWithPlaceholderProtection(string $text, string $from, string $to): string
+    {
+        // 1. Mask all :placeholders with neutral tokens [[0]], [[1]], etc.
+        $tokens = [];
+        $maskedText = preg_replace_callback('/:([a-zA-Z0-9_]+)/', function ($matches) use (&$tokens) {
+            $placeholder = $matches[0];
+            $tokenIndex = count($tokens);
+            $token = "[[X{$tokenIndex}X]]";
+            $tokens[$token] = $placeholder;
+            return $token;
+        }, $text);
+
+        // 2. Call LibreTranslate API
+        $translatedMasked = $this->requestTranslation($maskedText, $from, $to);
+
+        // 3. Unmask tokens back into exact original :placeholders
+        $finalText = $translatedMasked;
+        foreach ($tokens as $token => $originalPlaceholder) {
+            $finalText = str_replace($token, $originalPlaceholder, $finalText);
+            // Handle cases where MT engine might add spaces like [[ X0X ]]
+            $spacedToken = str_replace(['[[', ']]'], ['[[ ', ' ]]'], $token);
+            $finalText = str_replace($spacedToken, $originalPlaceholder, $finalText);
+        }
+
+        return $finalText;
+    }
+
     private function requestTranslation(string $text, string $from, string $to): string
     {
         $payload = [
@@ -91,7 +107,6 @@ class TranslationService
             $payload['api_key'] = $this->apiKey;
         }
 
-        // Normalize URL: ensure /translate is only appended once!
         $url = $this->endpoint;
         if (!str_ends_with($url, '/translate')) {
             $url .= '/translate';
@@ -116,12 +131,12 @@ class TranslationService
         }
 
         if ($httpCode !== 200 || !$res) {
-            throw new Exception("LibreTranslate failed with HTTP {$httpCode} at {$url}: {$res}");
+            throw new Exception("LibreTranslate failed with HTTP {$httpCode}");
         }
 
         $json = json_decode((string)$res, true);
         if (!empty($json['error'])) {
-            throw new Exception("LibreTranslate API error: " . $json['error']);
+            throw new Exception("LibreTranslate error: " . $json['error']);
         }
 
         return $json['translatedText'] ?? $text;
