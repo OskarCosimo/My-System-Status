@@ -80,12 +80,17 @@ $allMaintenances = $allMaintenances ?? [];
 
     /* Interactive modal stat cards */
     .modal-stat-card {
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        transition: all 0.15s ease-in-out;
         cursor: pointer;
+        user-select: none;
     }
     .modal-stat-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+        border-color: #0d6efd !important;
+    }
+    .modal-stat-card:active {
+        transform: translateY(0);
     }
 </style>
 
@@ -362,9 +367,12 @@ $allMaintenances = $allMaintenances ?? [];
                             'monitor_id'    => $monitor['id'],
                             'monitor'       => $monitor['name'],
                             'checks'        => $totalChecks,
+                            'up_checks'     => $upChecks,
                             'uptime_pct'    => ($totalChecks > 0) ? $dailyUptimePct : null,
                             'blackouts'     => $blackChecks,
+                            'blackout_pct'  => $blackPct,
                             'outages'       => $downChecks,
+                            'outage_pct'    => $downPct,
                             'incidents'     => array_map(fn($inc) => [
                                 'title'       => $inc['title'],
                                 'impact'      => strtoupper($inc['impact']),
@@ -494,16 +502,19 @@ $allMaintenances = $allMaintenances ?? [];
                                             }
 
                                             $childPayload = [
-                                                'date'       => $cDate,
-                                                'date_raw'   => $cDayDate,
-                                                'monitor_id' => $child['id'],
-                                                'monitor'    => $child['name'],
-                                                'checks'     => $cTotal,
-                                                'uptime_pct' => ($cTotal > 0) ? round((($cTotal - $cDown - $cBlack) / $cTotal) * 100, 2) : null,
-                                                'blackouts'  => $cBlack,
-                                                'outages'    => $cDown,
-                                                'incidents'  => [],
-                                                'maintenances' => []
+                                                'date'          => $cDate,
+                                                'date_raw'      => $cDayDate,
+                                                'monitor_id'    => $child['id'],
+                                                'monitor'       => $child['name'],
+                                                'checks'        => $cTotal,
+                                                'up_checks'     => max(0, $cTotal - $cDown - $cBlack),
+                                                'uptime_pct'    => ($cTotal > 0) ? round((($cTotal - $cDown - $cBlack) / $cTotal) * 100, 2) : null,
+                                                'blackouts'     => $cBlack,
+                                                'blackout_pct'  => ($cTotal > 0) ? round(($cBlack / $cTotal) * 100, 1) : 0,
+                                                'outages'       => $cDown,
+                                                'outage_pct'    => ($cTotal > 0) ? round(($cDown / $cTotal) * 100, 1) : 0,
+                                                'incidents'     => [],
+                                                'maintenances'  => []
                                             ];
                                     ?>
                                         <div class="uptime-bar" 
@@ -602,7 +613,7 @@ $allMaintenances = $allMaintenances ?? [];
     <?php endif; ?>
 </div>
 
-<!-- Modal 1: Daily History Inspector with Interactive Checks Breakdown (DataTables) -->
+<!-- Modal 1: Daily History Inspector with Interactive Stats Breakdown -->
 <div class="modal fade" id="dayDetailModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content shadow">
@@ -614,52 +625,97 @@ $allMaintenances = $allMaintenances ?? [];
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <!-- Checks Counters Row (Clickable Cards) -->
+                <!-- 4 Interactive Stat Cards -->
                 <div class="row g-2 mb-3 text-center">
+                    <!-- 1. Daily Uptime (Clickable -> Opens SVG Donut Chart Breakdown) -->
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border">
-                            <div class="small text-muted"><?= __('public.daily_uptime') ?></div>
+                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleUptimeDonutChart()" title="Click to view visual health distribution">
+                            <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
+                                <span><?= __('public.daily_uptime') ?></span>
+                                <i class="bi bi-pie-chart text-success small"></i>
+                            </div>
                             <h5 class="fw-bold mb-0 text-success" id="dayModalUptimePct">100%</h5>
                         </div>
                     </div>
+                    <!-- 2. Checks Executed (Clickable -> Opens DataTables All Checks) -->
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('all')" title="Click to view all checks executed">
-                            <div class="small text-muted"><?= __('public.checks_executed') ?></div>
+                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('all')" title="Click to view all telemetry checks">
+                            <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
+                                <span><?= __('public.checks_executed') ?></span>
+                                <i class="bi bi-list-ul text-primary small"></i>
+                            </div>
                             <h5 class="fw-bold mb-0 text-dark" id="dayModalChecksCount">0</h5>
                         </div>
                     </div>
+                    <!-- 3. Downtime Hits (Clickable -> Opens DataTables Outages) -->
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('down')" title="Click to filter outages">
-                            <div class="small text-muted"><?= __('public.downtime_hits') ?></div>
+                            <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
+                                <span><?= __('public.downtime_hits') ?></span>
+                                <i class="bi bi-exclamation-octagon text-danger small"></i>
+                            </div>
                             <h5 class="fw-bold mb-0 text-danger" id="dayModalOutagesCount">0</h5>
                         </div>
                     </div>
+                    <!-- 4. System Blackouts (Clickable -> Opens DataTables Blackouts) -->
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('blackout')" title="Click to view blackouts">
-                            <div class="small text-muted"><?= __('public.system_blackouts') ?></div>
+                            <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
+                                <span><?= __('public.system_blackouts') ?></span>
+                                <i class="bi bi-power text-dark small"></i>
+                            </div>
                             <h5 class="fw-bold mb-0 text-dark" id="dayModalBlackoutsCount">0</h5>
                         </div>
                     </div>
                 </div>
 
-                <!-- Toggle Button for Checks Details -->
-                <div class="mb-3 text-center" id="btnChecksToggleWrapper">
-                    <button class="btn btn-sm btn-outline-primary w-100 py-2 d-flex align-items-center justify-content-center gap-2" 
-                            type="button" 
-                            id="btnToggleDayLogs" 
-                            onclick="toggleChecksTable()">
-                        <i class="bi bi-list-check fs-6"></i>
-                        <span id="btnToggleDayLogsText">View Individual Checks Telemetry</span>
-                        <i class="bi bi-chevron-down" id="toggleChevron"></i>
-                    </button>
+                <!-- A. Collapsible SVG Donut Chart Section (Opened by clicking Daily Uptime) -->
+                <div class="collapse mb-4" id="dayModalDonutContainer">
+                    <div class="card border bg-light p-3 shadow-sm">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="fw-bold mb-0 small text-dark"><i class="bi bi-pie-chart-fill text-success me-1"></i> Daily Health Distribution</h6>
+                            <button type="button" class="btn-close btn-sm" onclick="bootstrap.Collapse.getInstance(document.getElementById('dayModalDonutContainer')).hide()"></button>
+                        </div>
+                        <div class="row align-items-center g-3">
+                            <!-- Left: SVG Donut Ring Chart -->
+                            <div class="col-sm-5 text-center">
+                                <div class="position-relative d-inline-block" style="width: 140px; height: 140px;">
+                                    <svg id="dayModalDonutSvg" viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg); border-radius: 50%;">
+                                        <!-- Donut slices generated dynamically in JS -->
+                                    </svg>
+                                    <div class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
+                                        <h4 class="fw-bold mb-0 text-dark" id="donutCenterUptime">100%</h4>
+                                        <small class="text-muted" style="font-size: 10px;">UPTIME</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Right: Legend Breakdown -->
+                            <div class="col-sm-7">
+                                <ul class="list-group list-group-flush bg-transparent small">
+                                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-1 border-0">
+                                        <span><span style="display:inline-block; width:10px; height:10px; background:#10b981; border-radius:50%; margin-right:6px;"></span>Operational Checks:</span>
+                                        <strong class="text-success" id="donutLegUp">100% (0)</strong>
+                                    </li>
+                                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-1 border-0">
+                                        <span><span style="display:inline-block; width:10px; height:10px; background:#ef4444; border-radius:50%; margin-right:6px;"></span>Outage / Downtime:</span>
+                                        <strong class="text-danger" id="donutLegDown">0% (0)</strong>
+                                    </li>
+                                    <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-1 border-0">
+                                        <span><span style="display:inline-block; width:10px; height:10px; background:#0f172a; border-radius:50%; margin-right:6px;"></span>System Blackouts:</span>
+                                        <strong class="text-dark" id="donutLegBlack">0% (0)</strong>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- DataTables Container Inside Modal (Initially Collapsed) -->
+                <!-- B. Collapsible DataTables Table Section (Opened by clicking Checks, Outages or Blackouts) -->
                 <div class="collapse mb-4" id="dayModalLogsContainer">
                     <div class="card border bg-light p-3 shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <h6 class="fw-bold mb-0 small text-dark"><i class="bi bi-activity text-primary me-1"></i> Raw Heartbeat Telemetry</h6>
-                            <div id="logsTableFilterBadge"></div>
+                            <button type="button" class="btn-close btn-sm" onclick="bootstrap.Collapse.getInstance(document.getElementById('dayModalLogsContainer')).hide()"></button>
                         </div>
                         <div class="table-responsive">
                             <table id="dayModalLogsTable" class="table table-sm table-hover align-middle mb-0 w-100 bg-white rounded border">
@@ -736,6 +792,7 @@ $allMaintenances = $allMaintenances ?? [];
                         <div class="mb-3">
                             <label class="form-label fw-semibold"><?= __('public.email_address') ?></label>
                             <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+                            <div class="text-muted small mt-1"><?= __('public.subscribe_verification_note') ?></div>
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
@@ -786,12 +843,9 @@ function openDayDetailModalFromElement(el) {
         currentDayModalData = data;
         isLogsTableLoaded = false;
 
-        // Reset Telemetry collapse and button
-        const container = document.getElementById('dayModalLogsContainer');
-        container.classList.remove('show');
-        document.getElementById('toggleChevron').className = 'bi bi-chevron-down';
-        document.getElementById('btnToggleDayLogsText').textContent = 'View Individual Checks Telemetry (' + data.checks + ')';
-        document.getElementById('btnChecksToggleWrapper').style.display = (data.checks > 0) ? 'block' : 'none';
+        // Hide both collapsible containers on modal open
+        bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalDonutContainer'), { toggle: false }).hide();
+        bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalLogsContainer'), { toggle: false }).hide();
 
         if (dayLogsDataTable) {
             dayLogsDataTable.destroy();
@@ -920,26 +974,68 @@ function openDayDetailModalFromElement(el) {
     }
 }
 
-// AJAX Toggle & Filter for Day Checks Table
-async function toggleChecksTable(filterStatus = null) {
+// 1. Interactive Donut Ring Chart Toggle
+function toggleUptimeDonutChart() {
+    if (!currentDayModalData || currentDayModalData.checks === 0) return;
+
+    const container = document.getElementById('dayModalDonutContainer');
+    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(container);
+    
+    // Close logs table if open
+    bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalLogsContainer'), { toggle: false }).hide();
+
+    collapseInstance.toggle();
+
+    // Render pure SVG Donut Ring
+    const total = currentDayModalData.checks;
+    const up    = currentDayModalData.up_checks || 0;
+    const down  = currentDayModalData.outages || 0;
+    const black = currentDayModalData.blackouts || 0;
+
+    const upPct    = (total > 0) ? ((up / total) * 100).toFixed(1) : '100.0';
+    const downPct  = (total > 0) ? ((down / total) * 100).toFixed(1) : '0.0';
+    const blackPct = (total > 0) ? ((black / total) * 100).toFixed(1) : '0.0';
+
+    document.getElementById('donutCenterUptime').textContent = currentDayModalData.uptime_pct + '%';
+    document.getElementById('donutLegUp').textContent = `${upPct}% (${up})`;
+    document.getElementById('donutLegDown').textContent = `${downPct}% (${down})`;
+    document.getElementById('donutLegBlack').textContent = `${blackPct}% (${black})`;
+
+    // Generate SVG slices (Stroke circumference is 100)
+    let offset = 0;
+    let svgHtml = '<circle cx="18" cy="18" r="15.915" fill="none" stroke="#e2e8f0" stroke-width="3"></circle>';
+
+    if (up > 0) {
+        const strokeVal = ((up / total) * 100);
+        svgHtml += `<circle cx="18" cy="18" r="15.915" fill="none" stroke="#10b981" stroke-width="3" stroke-dasharray="${strokeVal} ${100 - strokeVal}" stroke-dashoffset="${-offset}"></circle>`;
+        offset += strokeVal;
+    }
+    if (down > 0) {
+        const strokeVal = ((down / total) * 100);
+        svgHtml += `<circle cx="18" cy="18" r="15.915" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="${strokeVal} ${100 - strokeVal}" stroke-dashoffset="${-offset}"></circle>`;
+        offset += strokeVal;
+    }
+    if (black > 0) {
+        const strokeVal = ((black / total) * 100);
+        svgHtml += `<circle cx="18" cy="18" r="15.915" fill="none" stroke="#0f172a" stroke-width="3" stroke-dasharray="${strokeVal} ${100 - strokeVal}" stroke-dashoffset="${-offset}"></circle>`;
+    }
+
+    document.getElementById('dayModalDonutSvg').innerHTML = svgHtml;
+}
+
+// 2. Interactive DataTables Checks Table Toggle
+async function toggleChecksTable(filterStatus = 'all') {
     if (!currentDayModalData || currentDayModalData.checks === 0) return;
 
     const container = document.getElementById('dayModalLogsContainer');
-    const chevron   = document.getElementById('toggleChevron');
+    const collapseInstance = bootstrap.Collapse.getOrCreateInstance(container);
 
-    // If already shown and no specific filter requested, toggle close
-    if (container.classList.contains('show') && filterStatus === null) {
-        container.classList.remove('show');
-        chevron.className = 'bi bi-chevron-down';
-        return;
-    }
+    // Close donut chart if open
+    bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalDonutContainer'), { toggle: false }).hide();
 
-    container.classList.add('show');
-    chevron.className = 'bi bi-chevron-up';
+    collapseInstance.show();
 
     if (!isLogsTableLoaded) {
-        document.getElementById('btnToggleDayLogsText').textContent = 'Loading telemetry...';
-        
         try {
             const url = `/api/v1/monitor/day-logs?monitor_id=${currentDayModalData.monitor_id}&date=${currentDayModalData.date_raw}`;
             const res = await fetch(url);
@@ -975,13 +1071,10 @@ async function toggleChecksTable(filterStatus = null) {
             }
         } catch (err) {
             console.error('Error loading day logs:', err);
-        } finally {
-            document.getElementById('btnToggleDayLogsText').textContent = 'Hide Checks Telemetry';
         }
     }
 
-    // Apply quick filter if clicked on a stat card (e.g. down, blackout)
-    if (dayLogsDataTable && filterStatus) {
+    if (dayLogsDataTable) {
         if (filterStatus === 'all') {
             dayLogsDataTable.search('').columns().search('').draw();
         } else {
