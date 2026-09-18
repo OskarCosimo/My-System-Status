@@ -55,16 +55,14 @@ $router->get('/subscribe/verify', [\App\Controllers\StatusPageController::class,
 $router->get('/subscribe/unsubscribe', [\App\Controllers\StatusPageController::class, 'unsubscribe']);
 $router->post('/subscribe/request-unsubscribe', [\App\Controllers\StatusPageController::class, 'requestUnsubscribe']);
 $router->get('/subscribe/confirm-unsubscribe', [\App\Controllers\StatusPageController::class, 'confirmUnsubscribe']);
-// Admin API Keys Management
-$router->get('/admin/api-keys', [\App\Controllers\Admin\ApiKeyController::class, 'index']);
-$router->post('/admin/api-keys/store', [\App\Controllers\Admin\ApiKeyController::class, 'store']);
-$router->post('/admin/api-keys/delete', [\App\Controllers\Admin\ApiKeyController::class, 'delete']);
 // Public REST API Endpoints (Protected by API Key)
 $router->post('/api/v1/maintenance/enable', [\App\Controllers\Api\MaintenanceApiController::class, 'enable']);
 $router->post('/api/v1/maintenance/disable', [\App\Controllers\Api\MaintenanceApiController::class, 'disable']);
 // Dynamic Content Translations Endpoints
 $router->post('/admin/incidents/translate', [\App\Controllers\Admin\IncidentController::class, 'translate']);
 $router->post('/admin/maintenance/translate', [\App\Controllers\Admin\MaintenanceController::class, 'translate']);
+// Daily Telemetry Checks Breakdown for Modal
+$router->get('/api/v1/monitor/day-logs', [\App\Controllers\StatusPageController::class, 'getDayLogs']);
 
 // ==========================================
 // AUTHENTICATION & 2FA ROUTES
@@ -87,6 +85,11 @@ $router->get('/admin/monitors', [\App\Controllers\Admin\MonitorController::class
 $router->post('/admin/monitors/store', [\App\Controllers\Admin\MonitorController::class, 'store']);
 $router->post('/admin/monitors/delete', [\App\Controllers\Admin\MonitorController::class, 'delete']);
 $router->post('/admin/monitors/save-order', [\App\Controllers\Admin\MonitorController::class, 'saveOrder']);
+
+// Admin API Keys Management
+$router->get('/admin/api-keys', [\App\Controllers\Admin\ApiKeyController::class, 'index']);
+$router->post('/admin/api-keys/store', [\App\Controllers\Admin\ApiKeyController::class, 'store']);
+$router->post('/admin/api-keys/delete', [\App\Controllers\Admin\ApiKeyController::class, 'delete']);
 
 // Incidents & AI
 $router->get('/admin/incidents', [\App\Controllers\Admin\IncidentController::class, 'index']);
