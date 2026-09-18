@@ -204,6 +204,25 @@ $allMaintenances = $allMaintenances ?? [];
             ? date('Y-m-d', strtotime($monitor['created_at'])) 
             : date('Y-m-d');
 
+        // CLUSTER AGGREGATION: If monitor has children (like Cloudflare), aggregate children logs into parent history!
+        $monitorHistory = $uptimeHistory[$mId] ?? [];
+        if ($hasChildren) {
+            foreach ($monitor['children'] as $child) {
+                $cId = (int)$child['id'];
+                if (!empty($uptimeHistory[$cId])) {
+                    foreach ($uptimeHistory[$cId] as $dateKey => $cStats) {
+                        if (!isset($monitorHistory[$dateKey])) {
+                            $monitorHistory[$dateKey] = ['total' => 0, 'down' => 0, 'up' => 0, 'blackout' => 0];
+                        }
+                        $monitorHistory[$dateKey]['total']    += (int)($cStats['total'] ?? 0);
+                        $monitorHistory[$dateKey]['down']     += (int)($cStats['down'] ?? 0);
+                        $monitorHistory[$dateKey]['up']       += (int)($cStats['up'] ?? 0);
+                        $monitorHistory[$dateKey]['blackout'] += (int)($cStats['blackout'] ?? 0);
+                    }
+                }
+            }
+        }
+
         ob_start();
         ?>
         <li class="list-group-item py-4 px-2 px-sm-4">
@@ -257,7 +276,7 @@ $allMaintenances = $allMaintenances ?? [];
                         $dayDate       = date('Y-m-d', $dayTime);
                         $formattedDate = date('M d, Y', $dayTime);
 
-                        $dayData = $uptimeHistory[$mId][$dayDate] ?? null;
+                        $dayData = $monitorHistory[$dayDate] ?? null;
 
                         $totalChecks = (int)($dayData['total'] ?? 0);
                         $downChecks  = (int)($dayData['down'] ?? 0);
@@ -267,9 +286,6 @@ $allMaintenances = $allMaintenances ?? [];
                         $blackPct = ($totalChecks > 0) ? round(($blackChecks / $totalChecks) * 100, 1) : 0;
                         $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
                         $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
-
-                        // Check if day is prior to monitor creation date
-                        $isBeforeCreation = ($dayDate < $createdDate);
 
                         // Collect Incidents and Maintenances
                         $dayIncidents = [];
@@ -297,13 +313,23 @@ $allMaintenances = $allMaintenances ?? [];
                         $hasMaintenance = !empty($dayMaintenances);
                         $hasIncident    = !empty($dayIncidents);
 
-                        // ACCURATE COLORING LOGIC
+                        // FULL COLORING LOGIC WITH COMPLETE TODAY (DAY 0) COVERAGE
                         $barClass = 'uptime-bar';
                         $barStyle = '';
 
-                        if ($day === 0 && $isDown) {
-                            $barClass .= ' uptime-outage';
-                            $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                        if ($day === 0) {
+                            // TODAY: Always reflects the real-time operational state (Never Gray!)
+                            if ($isDown) {
+                                $barStyle = 'style="background-color: #ef4444;"';
+                                $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                            } elseif ($isDegraded) {
+                                // Day 0 Degraded: Vibrant Amber Yellow!
+                                $barStyle = 'style="background-color: #f59e0b;"';
+                                $statusDesc = "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
+                            } else {
+                                $barStyle = 'style="background-color: #10b981;"';
+                                $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
+                            }
                         } elseif ($blackChecks > 0 && $downChecks > 0) {
                             $vBlack = max(15, min(40, (int)$blackPct));
                             $vRed   = max(15, min(40, (int)$downPct));
@@ -407,7 +433,7 @@ $allMaintenances = $allMaintenances ?? [];
                 <span><?= __('public.today') ?></span>
             </div>
 
-            <!-- Sub-services Drawer -->
+            <!-- Sub-services Drawer with Accurate Status Rendering -->
             <?php if ($hasChildren): ?>
                 <div class="collapse mt-3 pt-3 border-top" id="subservices-<?= $monitor['id'] ?>">
                     <div class="ps-2 ps-sm-3 border-start border-3 border-primary-subtle d-flex flex-column gap-3">
@@ -417,9 +443,6 @@ $allMaintenances = $allMaintenances ?? [];
                                 $childDegraded = ($child['current_status'] === 'degraded');
                                 $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
                                 $cId           = (int)$child['id'];
-                                $cCreatedDate  = !empty($child['created_at']) 
-                                    ? date('Y-m-d', strtotime($child['created_at'])) 
-                                    : date('Y-m-d');
                             ?>
                             <div class="bg-light p-3 rounded-3 border">
                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
@@ -449,9 +472,18 @@ $allMaintenances = $allMaintenances ?? [];
                                             $cStyle = '';
                                             $cLabel = "<strong>{$cDate}</strong><br>";
 
-                                            if ($cDay === 0 && $childDown) {
-                                                $cStyle = 'style="background-color: #ef4444;"';
-                                                $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                                            if ($cDay === 0) {
+                                                // Sub-service Today status: Never Gray!
+                                                if ($childDown) {
+                                                    $cStyle = 'style="background-color: #ef4444;"';
+                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                                                } elseif ($childDegraded) {
+                                                    $cStyle = 'style="background-color: #f59e0b;"';
+                                                    $cLabel .= "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
+                                                } else {
+                                                    $cStyle = 'style="background-color: #10b981;"';
+                                                    $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
+                                                }
                                             } elseif ($cBlack > 0 && $cTotal > 0) {
                                                 $cBlackPct = round(($cBlack / $cTotal) * 100);
                                                 if ($cBlackPct >= 95) {
