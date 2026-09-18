@@ -51,8 +51,9 @@ class TranslationService
                 $sourceText = (string)$value;
                 $currentVal = (string)($target[$key] ?? '');
 
-                // Needs translation if missing, empty, or still identical to English
-                $needsTranslation = !isset($target[$key]) || empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText);
+                // Auto-repair: re-translate if missing, empty, matching English, or contains broken tokens like [[X0X] or :conto
+                $hasBrokenToken = str_contains($currentVal, 'X0X') || str_contains($currentVal, '[[') || str_contains($currentVal, ':conto');
+                $needsTranslation = !isset($target[$key]) || empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText) || $hasBrokenToken;
 
                 if ($needsTranslation && !empty($sourceText)) {
                     $translated = $this->requestTranslationWithPlaceholderProtection($sourceText, 'en', $targetLang);
@@ -65,33 +66,35 @@ class TranslationService
     }
 
     /**
-     * Protect :placeholders (like :count, :name) from being translated into foreign words
+     * Protect :placeholders using unique 6-digit natural numbers.
+     * Machine translation models NEVER drop or alter natural numbers!
      */
     private function requestTranslationWithPlaceholderProtection(string $text, string $from, string $to): string
     {
-        // 1. Mask all :placeholders with neutral tokens [[0]], [[1]], etc.
+        // 1. Mask :placeholders with unique natural 6-digit numbers (e.g. :count -> 987650)
         $tokens = [];
-        $maskedText = preg_replace_callback('/:([a-zA-Z0-9_]+)/', function ($matches) use (&$tokens) {
-            $placeholder = $matches[0];
-            $tokenIndex = count($tokens);
-            $token = "[[X{$tokenIndex}X]]";
-            $tokens[$token] = $placeholder;
-            return $token;
+        $baseNumber = 987650;
+
+        $maskedText = preg_replace_callback('/:([a-zA-Z0-9_]+)/', function ($matches) use (&$tokens, &$baseNumber) {
+            $placeholder = $matches[0]; // e.g. :count
+            $tokenNum = (string)$baseNumber++;
+            $tokens[$tokenNum] = $placeholder;
+            return $tokenNum;
         }, $text);
 
-        // 2. Call LibreTranslate API
-        $translatedMasked = $this->requestTranslation($maskedText, $from, $to);
+        // 2. Send clean number to LibreTranslate
+        $translated = $this->requestTranslation($maskedText, $from, $to);
 
-        // 3. Unmask tokens back into exact original :placeholders
-        $finalText = $translatedMasked;
-        foreach ($tokens as $token => $originalPlaceholder) {
-            $finalText = str_replace($token, $originalPlaceholder, $finalText);
-            // Handle cases where MT engine might add spaces like [[ X0X ]]
-            $spacedToken = str_replace(['[[', ']]'], ['[[ ', ' ]]'], $token);
-            $finalText = str_replace($spacedToken, $originalPlaceholder, $finalText);
+        // 3. Restore original :placeholders from numbers
+        foreach ($tokens as $tokenNum => $originalPlaceholder) {
+            $translated = str_replace($tokenNum, $originalPlaceholder, $translated);
         }
 
-        return $finalText;
+        // 4. Safety net cleanup for any old artifacts
+        $translated = preg_replace('/\[+X0X\]*/i', ':count', $translated);
+        $translated = str_replace([':conto', ':compte', ':cuenta'], ':count', $translated);
+
+        return $translated;
     }
 
     private function requestTranslation(string $text, string $from, string $to): string
