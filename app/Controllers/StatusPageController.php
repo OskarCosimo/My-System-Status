@@ -59,7 +59,8 @@ class StatusPageController
 
         foreach ($incidents as &$incident) {
             $upStmt = $this->db->prepare("
-                SELECT * FROM incident_updates 
+                SELECT id, status, message, created_at 
+                FROM incident_updates 
                 WHERE incident_id = ? 
                 ORDER BY created_at DESC
             ");
@@ -133,7 +134,7 @@ class StatusPageController
 
         foreach ($allIncidents as &$inc) {
             $upStmt = $this->db->prepare("
-                SELECT status, message, created_at 
+                SELECT id, status, message, created_at 
                 FROM incident_updates 
                 WHERE incident_id = ? 
                 ORDER BY created_at ASC
