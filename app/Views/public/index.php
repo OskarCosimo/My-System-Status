@@ -200,7 +200,6 @@ $allMaintenances = $allMaintenances ?? [];
         $isDegraded  = ($monitor['current_status'] === 'degraded');
         $mId         = (int)$monitor['id'];
         
-        // Monitor Creation Date: Used to show GRAY (No Data) on days prior to monitor creation
         $createdDate = !empty($monitor['created_at']) 
             ? date('Y-m-d', strtotime($monitor['created_at'])) 
             : date('Y-m-d');
@@ -298,16 +297,14 @@ $allMaintenances = $allMaintenances ?? [];
                         $hasMaintenance = !empty($dayMaintenances);
                         $hasIncident    = !empty($dayIncidents);
 
-                        // ACCURATE COLORING LOGIC: GRAY IF NO DATA OR BEFORE CREATION
+                        // ACCURATE COLORING LOGIC
                         $barClass = 'uptime-bar';
                         $barStyle = '';
 
                         if ($day === 0 && $isDown) {
-                            // Today active down: Red
                             $barClass .= ' uptime-outage';
                             $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
                         } elseif ($blackChecks > 0 && $downChecks > 0) {
-                            // Tri-gradient: Black on top, Green middle, Red bottom
                             $vBlack = max(15, min(40, (int)$blackPct));
                             $vRed   = max(15, min(40, (int)$downPct));
                             $gStart = $vBlack;
@@ -315,7 +312,6 @@ $allMaintenances = $allMaintenances ?? [];
                             $barStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$gStart}%, #10b981 {$gStart}%, #10b981 {$gEnd}%, #ef4444 {$gEnd}%, #ef4444 100%);\"";
                             $statusDesc = "<span style='color: #0f172a;'>⬛</span> Blackout: {$blackPct}% &bull; <span style='color: #ef4444;'>●</span> Downtime: {$downPct}%";
                         } elseif ($blackChecks > 0) {
-                            // Blackout descends from top down
                             if ($blackPct >= 95.0) {
                                 $barStyle = 'style="background-color: #0f172a;"';
                             } else {
@@ -324,7 +320,6 @@ $allMaintenances = $allMaintenances ?? [];
                             }
                             $statusDesc = "<span style='color: #0f172a;'>⬛</span> " . __('public.system_blackout') . ": {$blackPct}%";
                         } elseif ($downChecks > 0) {
-                            // Outage rises from bottom up
                             if ($downPct >= 95.0) {
                                 $barStyle = 'style="background-color: #ef4444;"';
                             } else {
@@ -333,13 +328,11 @@ $allMaintenances = $allMaintenances ?? [];
                             }
                             $statusDesc = "<span style='color: #ef4444;'>●</span> Downtime: {$downPct}% ({$dailyUptimePct}% " . __('public.uptime') . ")";
                         } elseif ($totalChecks > 0) {
-                            // Checks executed & 100% operational: Green
                             $barStyle = 'style="background-color: #10b981;"';
                             $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                         } else {
-                            // GRAY BAR (NO DATA): Prior to creation date or no checks recorded
                             $barStyle = 'style="background-color: #e2e8f0;"';
-                            $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded', 'No data recorded');
+                            $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                         }
 
                         $label = "<strong>{$formattedDate}</strong><br>{$statusDesc}";
@@ -481,9 +474,8 @@ $allMaintenances = $allMaintenances ?? [];
                                                 $cStyle = 'style="background-color: #10b981;"';
                                                 $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
                                             } else {
-                                                // GRAY BAR for sub-services without data
                                                 $cStyle = 'style="background-color: #e2e8f0;"';
-                                                $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded', 'No data recorded');
+                                                $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                             }
                                     ?>
                                         <div class="uptime-bar" 
@@ -744,7 +736,7 @@ function openDayDetailModalFromElement(el) {
         } else {
             uptimeElem.textContent = 'N/A';
             uptimeElem.className = 'fw-bold mb-0 text-secondary';
-            cleanTitle.textContent = '<?= addslashes(__('public.no_data_recorded', 'No data recorded')) ?>';
+            cleanTitle.textContent = '<?= addslashes(__('public.no_data_recorded')) ?>';
             cleanDesc.textContent = 'No monitoring checks were executed for this service on this date.';
             cleanMsg.className = 'alert alert-light border d-flex align-items-center gap-2 mb-0 text-muted';
         }
