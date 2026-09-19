@@ -176,7 +176,7 @@ $allMaintenances = $allMaintenances ?? [];
 
     <!-- Active Incidents -->
     <?php if (!empty($incidents)): ?>
-        <h5 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> <?= __('public.active_incidents') ?></h5>
+        <h5 class="fw-bold text-danger mb-3"><i class="bi bi-exclamation-triangle-fill me-2"></i> Active Incidents</h5>
         <?php foreach ($incidents as $incident): ?>
             <div class="card border-danger mb-3 shadow-sm">
                 <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
@@ -221,6 +221,25 @@ $allMaintenances = $allMaintenances ?? [];
         $createdDate = !empty($monitor['created_at']) 
             ? date('Y-m-d', strtotime($monitor['created_at'])) 
             : date('Y-m-d');
+
+        // CLUSTER AGGREGATION: Parent combines telemetry from all sub-services by majority!
+        $monitorHistory = $uptimeHistory[$mId] ?? [];
+        if ($hasChildren) {
+            foreach ($monitor['children'] as $child) {
+                $cId = (int)$child['id'];
+                if (!empty($uptimeHistory[$cId])) {
+                    foreach ($uptimeHistory[$cId] as $dateKey => $cStats) {
+                        if (!isset($monitorHistory[$dateKey])) {
+                            $monitorHistory[$dateKey] = ['total' => 0, 'down' => 0, 'up' => 0, 'blackout' => 0];
+                        }
+                        $monitorHistory[$dateKey]['total']    += (int)($cStats['total'] ?? 0);
+                        $monitorHistory[$dateKey]['down']     += (int)($cStats['down'] ?? 0);
+                        $monitorHistory[$dateKey]['up']       += (int)($cStats['up'] ?? 0);
+                        $monitorHistory[$dateKey]['blackout'] += (int)($cStats['blackout'] ?? 0);
+                    }
+                }
+            }
+        }
 
         ob_start();
         ?>
@@ -275,7 +294,7 @@ $allMaintenances = $allMaintenances ?? [];
                         $dayDate       = date('Y-m-d', $dayTime);
                         $formattedDate = date('M d, Y', $dayTime);
 
-                        $dayData = $uptimeHistory[$mId][$dayDate] ?? null;
+                        $dayData = $monitorHistory[$dayDate] ?? null;
 
                         $totalChecks = (int)($dayData['total'] ?? 0);
                         $downChecks  = (int)($dayData['down'] ?? 0);
@@ -285,9 +304,6 @@ $allMaintenances = $allMaintenances ?? [];
                         $blackPct = ($totalChecks > 0) ? round(($blackChecks / $totalChecks) * 100, 1) : 0;
                         $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
                         $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
-
-                        // Check if day is prior to monitor creation date
-                        $isBeforeCreation = ($dayDate < $createdDate);
 
                         // Collect Incidents and Maintenances
                         $dayIncidents = [];
@@ -318,9 +334,19 @@ $allMaintenances = $allMaintenances ?? [];
                         $barClass = 'uptime-bar';
                         $barStyle = '';
 
-                        if ($day === 0 && $isDown) {
-                            $barClass .= ' uptime-outage';
-                            $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                        // 1. DAY 0 (TODAY): GUARANTEED TO MATCH LIVE STATUS (Never Gray!)
+                        if ($day === 0) {
+                            if ($isDown) {
+                                $barStyle = 'style="background-color: #ef4444;"';
+                                $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                            } elseif ($isDegraded) {
+                                // Real-time degraded state (Amber Yellow)
+                                $barStyle = 'style="background-color: #f59e0b;"';
+                                $statusDesc = "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
+                            } else {
+                                $barStyle = 'style="background-color: #10b981;"';
+                                $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
+                            }
                         } elseif ($blackChecks > 0 && $downChecks > 0) {
                             $vBlack = max(15, min(40, (int)$blackPct));
                             $vRed   = max(15, min(40, (int)$downPct));
@@ -360,7 +386,6 @@ $allMaintenances = $allMaintenances ?? [];
                             $label .= "<br><span style='color: #ea580c;'>▲</span> " . count($dayIncidents) . " " . __('public.reported_incident');
                         }
 
-                        // Payload passed to modal on click
                         $modalPayload = [
                             'date'          => $formattedDate,
                             'date_raw'      => $dayDate,
@@ -390,7 +415,7 @@ $allMaintenances = $allMaintenances ?? [];
                                 'description' => $m['description'] ?? '',
                                 'status'      => strtoupper(str_replace('_', ' ', $m['status'])),
                                 'start_time'  => format_date($m['start_time'], 'M d, Y H:i'),
-                                'end_time'    => format_date($m['end_time'], 'M d, Y H:i T')
+                                'end_time'    => format_date($m['end_time'], 'M d, H:i T')
                             ], $dayMaintenances)
                         ];
 
@@ -440,9 +465,6 @@ $allMaintenances = $allMaintenances ?? [];
                                 $childDegraded = ($child['current_status'] === 'degraded');
                                 $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
                                 $cId           = (int)$child['id'];
-                                $cCreatedDate  = !empty($child['created_at']) 
-                                    ? date('Y-m-d', strtotime($child['created_at'])) 
-                                    : date('Y-m-d');
                             ?>
                             <div class="bg-light p-3 rounded-3 border">
                                 <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
@@ -472,9 +494,18 @@ $allMaintenances = $allMaintenances ?? [];
                                             $cStyle = '';
                                             $cLabel = "<strong>{$cDate}</strong><br>";
 
-                                            if ($cDay === 0 && $childDown) {
-                                                $cStyle = 'style="background-color: #ef4444;"';
-                                                $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                                            // Sub-service Day 0 status: strictly matches real-time status!
+                                            if ($cDay === 0) {
+                                                if ($childDown) {
+                                                    $cStyle = 'style="background-color: #ef4444;"';
+                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                                                } elseif ($childDegraded) {
+                                                    $cStyle = 'style="background-color: #f59e0b;"';
+                                                    $cLabel .= "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
+                                                } else {
+                                                    $cStyle = 'style="background-color: #10b981;"';
+                                                    $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
+                                                }
                                             } elseif ($cBlack > 0 && $cTotal > 0) {
                                                 $cBlackPct = round(($cBlack / $cTotal) * 100);
                                                 if ($cBlackPct >= 95) {
@@ -627,7 +658,6 @@ $allMaintenances = $allMaintenances ?? [];
             <div class="modal-body p-4">
                 <!-- 4 Interactive Stat Cards -->
                 <div class="row g-2 mb-3 text-center">
-                    <!-- 1. Daily Uptime (Clickable -> Opens SVG Donut Chart Breakdown) -->
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleUptimeDonutChart()" title="Click to view visual health distribution">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
@@ -637,7 +667,6 @@ $allMaintenances = $allMaintenances ?? [];
                             <h5 class="fw-bold mb-0 text-success" id="dayModalUptimePct">100%</h5>
                         </div>
                     </div>
-                    <!-- 2. Checks Executed (Clickable -> Opens DataTables All Checks) -->
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('all')" title="Click to view all telemetry checks">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
@@ -647,7 +676,6 @@ $allMaintenances = $allMaintenances ?? [];
                             <h5 class="fw-bold mb-0 text-dark" id="dayModalChecksCount">0</h5>
                         </div>
                     </div>
-                    <!-- 3. Downtime Hits (Clickable -> Opens DataTables Outages) -->
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('down')" title="Click to filter outages">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
@@ -657,7 +685,6 @@ $allMaintenances = $allMaintenances ?? [];
                             <h5 class="fw-bold mb-0 text-danger" id="dayModalOutagesCount">0</h5>
                         </div>
                     </div>
-                    <!-- 4. System Blackouts (Clickable -> Opens DataTables Blackouts) -->
                     <div class="col-3">
                         <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('blackout')" title="Click to view blackouts">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
@@ -669,7 +696,7 @@ $allMaintenances = $allMaintenances ?? [];
                     </div>
                 </div>
 
-                <!-- A. Collapsible SVG Donut Chart Section (Opened by clicking Daily Uptime) -->
+                <!-- A. Collapsible SVG Donut Chart Section -->
                 <div class="collapse mb-4" id="dayModalDonutContainer">
                     <div class="card border bg-light p-3 shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -677,11 +704,9 @@ $allMaintenances = $allMaintenances ?? [];
                             <button type="button" class="btn-close btn-sm" onclick="bootstrap.Collapse.getInstance(document.getElementById('dayModalDonutContainer')).hide()"></button>
                         </div>
                         <div class="row align-items-center g-3">
-                            <!-- Left: SVG Donut Ring Chart -->
                             <div class="col-sm-5 text-center">
                                 <div class="position-relative d-inline-block" style="width: 140px; height: 140px;">
                                     <svg id="dayModalDonutSvg" viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg); border-radius: 50%;">
-                                        <!-- Donut slices generated dynamically in JS -->
                                     </svg>
                                     <div class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
                                         <h4 class="fw-bold mb-0 text-dark" id="donutCenterUptime">100%</h4>
@@ -689,7 +714,6 @@ $allMaintenances = $allMaintenances ?? [];
                                     </div>
                                 </div>
                             </div>
-                            <!-- Right: Legend Breakdown -->
                             <div class="col-sm-7">
                                 <ul class="list-group list-group-flush bg-transparent small">
                                     <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-1 border-0">
@@ -710,7 +734,7 @@ $allMaintenances = $allMaintenances ?? [];
                     </div>
                 </div>
 
-                <!-- B. Collapsible DataTables Table Section (Opened by clicking Checks, Outages or Blackouts) -->
+                <!-- B. Collapsible DataTables Table Section -->
                 <div class="collapse mb-4" id="dayModalLogsContainer">
                     <div class="card border bg-light p-3 shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -1001,7 +1025,6 @@ function toggleUptimeDonutChart() {
     document.getElementById('donutLegDown').textContent = `${downPct}% (${down})`;
     document.getElementById('donutLegBlack').textContent = `${blackPct}% (${black})`;
 
-    // Generate SVG slices (Stroke circumference is 100)
     let offset = 0;
     let svgHtml = '<circle cx="18" cy="18" r="15.915" fill="none" stroke="#e2e8f0" stroke-width="3"></circle>';
 
