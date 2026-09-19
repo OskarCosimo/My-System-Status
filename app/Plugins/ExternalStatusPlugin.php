@@ -380,17 +380,20 @@ class ExternalStatusPlugin
 
     private function recordCheckLog(int $monitorId, string $status): void
     {
-        $shortStatus = ($status === 'operational') ? 'up' : (($status === 'degraded') ? 'degraded' : 'down');
+        // Map to valid MySQL ENUM values: 'up' for operational, 'down' for degraded/outage
+        $shortStatus = ($status === 'operational') ? 'up' : 'down';
         $httpCode    = ($status === 'operational') ? 200 : (($status === 'degraded') ? 400 : 502);
+        $errMessage  = ($status === 'operational') ? null : "Service reported {$status} performance";
 
         try {
             $stmt = $this->db->prepare("
                 INSERT INTO monitor_logs (monitor_id, status, response_time_ms, http_code, error_message, created_at)
                 VALUES (?, ?, 0, ?, ?, NOW())
             ");
-            $err = ($status === 'operational') ? null : "Service reported {$status}";
-            $stmt->execute([$monitorId, $shortStatus, $httpCode, $err]);
-        } catch (\Throwable $e) {}
+            $stmt->execute([$monitorId, $shortStatus, $httpCode, $errMessage]);
+        } catch (\Throwable $e) {
+            // Silently ignore if check fails
+        }
     }
 
     private function disableFeedMonitors(string $targetPrefix): void
