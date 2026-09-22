@@ -14,6 +14,7 @@ $locale  = I18n::getLocale();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="/manifest.json">
     <title><?= $appName ?> &mdash; Status</title>
 
     <!-- Bootstrap 5.3 CSS & Icons -->
@@ -159,6 +160,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el, { html: true }));
 });
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .catch((error) => {
+        // Service worker registration failed
+      });
+  });
+}
 </script>
 </body>
 </html>
