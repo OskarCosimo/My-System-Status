@@ -8,6 +8,7 @@ $title   = $pageTitle ?? $appName;
 ?>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
 <title><?= htmlspecialchars($title) ?></title>
 
 <!-- Favicon -->
@@ -98,3 +99,13 @@ $title   = $pageTitle ?? $appName;
     -webkit-overflow-scrolling: touch;
 }
 </style>
+<script>
+    if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .catch((error) => {
+        // Service worker registration failed
+      });
+  });
+}
+</script>
