@@ -4,10 +4,12 @@ use App\Services\SettingService;
 use App\Services\DateService;
 use App\Core\I18n;
 
-$appName = htmlspecialchars(setting('app_name', 'My System Status'));
-$appUrl  = app_url();
-$userTz  = DateService::getActiveTimezone();
-$locale  = I18n::getLocale();
+$appName    = htmlspecialchars(setting('app_name', 'My System Status'));
+$appUrl     = app_url();
+$userTz     = DateService::getActiveTimezone();
+$locale     = I18n::getLocale();
+$termsUrl   = trim(setting('terms_url', ''));
+$privacyUrl = trim(setting('privacy_policy_url', ''));
 ?>
 <!DOCTYPE html>
 <html lang="<?= $locale ?>">
@@ -179,14 +181,22 @@ $locale  = I18n::getLocale();
     <?= $content ?>
 </main>
 
-<!-- Public Footer -->
+<!-- Public Footer with Dynamic Legal Links -->
 <footer class="footer">
     <div class="container text-center text-muted small" style="max-width: 900px;">
-        <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span>&copy; <?= date('Y') ?> <?= $appName ?>. All rights reserved.</span>
-            <div class="d-flex gap-3 mt-2 mt-sm-0">
-                <a href="/api/v1/alerts" target="_blank" class="text-decoration-none text-muted">API</a>
-                <a href="https://github.com/myetv/my-system-status" target="_blank" class="text-decoration-none text-muted">Powered by My System Status</a>
+            <div class="d-flex gap-3">
+                <?php if (!empty($termsUrl)): ?>
+                    <a href="<?= htmlspecialchars($termsUrl) ?>" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-muted">
+                        <?= __('public.terms_of_service', 'Terms of Service') ?>
+                    </a>
+                <?php endif; ?>
+                <?php if (!empty($privacyUrl)): ?>
+                    <a href="<?= htmlspecialchars($privacyUrl) ?>" target="_blank" rel="noopener noreferrer" class="text-decoration-none text-muted">
+                        <?= __('public.privacy_policy', 'Privacy Policy') ?>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
     </div>
