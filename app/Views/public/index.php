@@ -13,18 +13,40 @@ $allMaintenances = $allMaintenances ?? [];
         display: flex;
         gap: 2px;
         align-items: stretch;
-        height: 56px;
+        height: 48px;
         width: 100%;
         max-width: 100%;
         box-sizing: border-box;
         overflow: visible;
         touch-action: pan-y;
     }
-    
+
+    /* Mobile: 3 rows of 30 days with enlarged touch targets */
     @media (max-width: 576px) {
         .uptime-graph {
-            gap: 1px;
-            height: 50px;
+            flex-wrap: wrap;
+            height: auto;
+            gap: 3px 2px;
+            padding: 4px 0;
+        }
+
+        .uptime-day-col {
+            /* 30 items per row: ~3.333% minus gap */
+            flex: 0 0 calc((100% - 58px) / 30) !important;
+            height: 32px !important;
+            padding: 2px 0 !important;
+        }
+
+        .uptime-arrow-top {
+            top: -3px !important;
+            width: 7px !important;
+            height: 5px !important;
+        }
+
+        .uptime-arrow-bottom {
+            bottom: -3px !important;
+            width: 7px !important;
+            height: 5px !important;
         }
     }
 
@@ -33,7 +55,7 @@ $allMaintenances = $allMaintenances ?? [];
         min-width: 0;
         height: 100%;
         position: relative;
-        padding: 11px 0;
+        padding: 9px 0;
         box-sizing: border-box;
         display: flex;
         align-items: center;
@@ -52,13 +74,13 @@ $allMaintenances = $allMaintenances ?? [];
     .uptime-day-col:hover .uptime-bar,
     .uptime-day-col:active .uptime-bar {
         filter: brightness(1.2);
-        transform: scaleY(1.12);
+        transform: scaleY(1.15);
         z-index: 5;
     }
 
     .uptime-arrow-top {
         position: absolute;
-        top: 1px;
+        top: 0px;
         left: 50%;
         transform: translateX(-50%);
         width: 8px;
@@ -69,7 +91,7 @@ $allMaintenances = $allMaintenances ?? [];
 
     .uptime-arrow-bottom {
         position: absolute;
-        bottom: 1px;
+        bottom: 0px;
         left: 50%;
         transform: translateX(-50%);
         width: 8px;
@@ -91,6 +113,16 @@ $allMaintenances = $allMaintenances ?? [];
     }
     .modal-stat-card:active {
         transform: translateY(0);
+    }
+
+    /* Monitor Individual Card Polish */
+    .monitor-card {
+        border-radius: 10px;
+        transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .monitor-card:hover {
+        border-color: #cbd5e1;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
     }
 </style>
 
@@ -222,7 +254,7 @@ $allMaintenances = $allMaintenances ?? [];
             ? date('Y-m-d', strtotime($monitor['created_at'])) 
             : date('Y-m-d');
 
-        // CLUSTER AGGREGATION: Parent combines telemetry from all sub-services by majority!
+        // CLUSTER AGGREGATION: Parent combines telemetry from all sub-services by majority
         $monitorHistory = $uptimeHistory[$mId] ?? [];
         if ($hasChildren) {
             foreach ($monitor['children'] as $child) {
@@ -243,8 +275,9 @@ $allMaintenances = $allMaintenances ?? [];
 
         ob_start();
         ?>
-        <li class="list-group-item py-4 px-2 px-sm-4">
-            <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <div class="card shadow-sm border mb-3 monitor-card">
+            <!-- Card Header: Title, Subscription, Sub-services Trigger, and Current Status Badge -->
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="fw-bold fs-6 text-dark"><?= htmlspecialchars($monitor['name']) ?></span>
 
@@ -286,285 +319,286 @@ $allMaintenances = $allMaintenances ?? [];
                 </div>
             </div>
 
-            <!-- 90-Day Interactive Uptime Graph -->
-            <div class="uptime-graph" role="group" aria-label="90 Days Uptime History">
-                <?php
-                    for ($day = 89; $day >= 0; $day--):
-                        $dayTime       = strtotime("-{$day} days");
-                        $dayDate       = date('Y-m-d', $dayTime);
-                        $formattedDate = date('M d, Y', $dayTime);
+            <!-- Card Body: 90-Day Interactive Bars & Details -->
+            <div class="card-body p-3 p-sm-4">
+                <!-- 90-Day Interactive Uptime Graph -->
+                <div class="uptime-graph" role="group" aria-label="90 Days Uptime History">
+                    <?php
+                        for ($day = 89; $day >= 0; $day--):
+                            $dayTime       = strtotime("-{$day} days");
+                            $dayDate       = date('Y-m-d', $dayTime);
+                            $formattedDate = date('M d, Y', $dayTime);
 
-                        $dayData = $monitorHistory[$dayDate] ?? null;
+                            $dayData = $monitorHistory[$dayDate] ?? null;
 
-                        $totalChecks = (int)($dayData['total'] ?? 0);
-                        $downChecks  = (int)($dayData['down'] ?? 0);
-                        $blackChecks = (int)($dayData['blackout'] ?? 0);
-                        $upChecks    = (int)($dayData['up'] ?? max(0, $totalChecks - $downChecks - $blackChecks));
+                            $totalChecks = (int)($dayData['total'] ?? 0);
+                            $downChecks  = (int)($dayData['down'] ?? 0);
+                            $blackChecks = (int)($dayData['blackout'] ?? 0);
+                            $upChecks    = (int)($dayData['up'] ?? max(0, $totalChecks - $downChecks - $blackChecks));
 
-                        $blackPct = ($totalChecks > 0) ? round(($blackChecks / $totalChecks) * 100, 1) : 0;
-                        $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
-                        $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
+                            $blackPct = ($totalChecks > 0) ? round(($blackChecks / $totalChecks) * 100, 1) : 0;
+                            $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
+                            $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
 
-                        // Collect Incidents and Maintenances
-                        $dayIncidents = [];
-                        foreach ($allIncidents as $inc) {
-                            if (empty($inc['monitor_id']) || (int)$inc['monitor_id'] === $mId) {
-                                $incStart = date('Y-m-d', strtotime($inc['created_at']));
-                                $incEnd   = date('Y-m-d', strtotime($inc['updated_at']));
-                                if ($dayDate >= $incStart && $dayDate <= $incEnd) {
-                                    $dayIncidents[] = $inc;
+                            // Collect Incidents and Maintenances
+                            $dayIncidents = [];
+                            foreach ($allIncidents as $inc) {
+                                if (empty($inc['monitor_id']) || (int)$inc['monitor_id'] === $mId) {
+                                    $incStart = date('Y-m-d', strtotime($inc['created_at']));
+                                    $incEnd   = date('Y-m-d', strtotime($inc['updated_at']));
+                                    if ($dayDate >= $incStart && $dayDate <= $incEnd) {
+                                        $dayIncidents[] = $inc;
+                                    }
                                 }
                             }
-                        }
 
-                        $dayMaintenances = [];
-                        foreach ($allMaintenances as $maint) {
-                            if (empty($maint['monitor_id']) || (int)$maint['monitor_id'] === $mId) {
-                                $mStart = date('Y-m-d', strtotime($maint['start_time']));
-                                $mEnd   = date('Y-m-d', strtotime($maint['end_time']));
-                                if ($dayDate >= $mStart && $dayDate <= $mEnd) {
-                                    $dayMaintenances[] = $maint;
+                            $dayMaintenances = [];
+                            foreach ($allMaintenances as $maint) {
+                                if (empty($maint['monitor_id']) || (int)$maint['monitor_id'] === $mId) {
+                                    $mStart = date('Y-m-d', strtotime($maint['start_time']));
+                                    $mEnd   = date('Y-m-d', strtotime($maint['end_time']));
+                                    if ($dayDate >= $mStart && $dayDate <= $mEnd) {
+                                        $dayMaintenances[] = $maint;
+                                    }
                                 }
                             }
-                        }
 
-                        $hasMaintenance = !empty($dayMaintenances);
-                        $hasIncident    = !empty($dayIncidents);
+                            $hasMaintenance = !empty($dayMaintenances);
+                            $hasIncident    = !empty($dayIncidents);
 
-                        $barClass = 'uptime-bar';
-                        $barStyle = '';
+                            $barClass = 'uptime-bar';
+                            $barStyle = '';
 
-                        // 1. DAY 0 (TODAY): GUARANTEED TO MATCH LIVE STATUS (Never Gray!)
-                        if ($day === 0) {
-                            if ($isDown) {
-                                $barStyle = 'style="background-color: #ef4444;"';
-                                $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
-                            } elseif ($isDegraded) {
-                                // Real-time degraded state (Amber Yellow)
-                                $barStyle = 'style="background-color: #f59e0b;"';
-                                $statusDesc = "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
-                            } else {
+                            // 1. DAY 0 (TODAY): GUARANTEED TO MATCH LIVE STATUS (Never Gray!)
+                            if ($day === 0) {
+                                if ($isDown) {
+                                    $barStyle = 'style="background-color: #ef4444;"';
+                                    $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                                } elseif ($isDegraded) {
+                                    $barStyle = 'style="background-color: #f59e0b;"';
+                                    $statusDesc = "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
+                                } else {
+                                    $barStyle = 'style="background-color: #10b981;"';
+                                    $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
+                                }
+                            } elseif ($blackChecks > 0 && $downChecks > 0) {
+                                $vBlack = max(15, min(40, (int)$blackPct));
+                                $vRed   = max(15, min(40, (int)$downPct));
+                                $gStart = $vBlack;
+                                $gEnd   = 100 - $vRed;
+                                $barStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$gStart}%, #10b981 {$gStart}%, #10b981 {$gEnd}%, #ef4444 {$gEnd}%, #ef4444 100%);\"";
+                                $statusDesc = "<span style='color: #0f172a;'>⬛</span> Blackout: {$blackPct}% &bull; <span style='color: #ef4444;'>●</span> Downtime: {$downPct}%";
+                            } elseif ($blackChecks > 0) {
+                                if ($blackPct >= 95.0) {
+                                    $barStyle = 'style="background-color: #0f172a;"';
+                                } else {
+                                    $vBlack = max(15, min(85, (int)$blackPct));
+                                    $barStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$vBlack}%, #10b981 {$vBlack}%, #10b981 100%);\"";
+                                }
+                                $statusDesc = "<span style='color: #0f172a;'>⬛</span> " . __('public.system_blackout') . ": {$blackPct}%";
+                            } elseif ($downChecks > 0) {
+                                if ($downPct >= 95.0) {
+                                    $barStyle = 'style="background-color: #ef4444;"';
+                                } else {
+                                    $vRed = max(15, min(85, (int)$downPct));
+                                    $barStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
+                                }
+                                $statusDesc = "<span style='color: #ef4444;'>●</span> Downtime: {$downPct}% ({$dailyUptimePct}% " . __('public.uptime') . ")";
+                            } elseif ($totalChecks > 0) {
                                 $barStyle = 'style="background-color: #10b981;"';
                                 $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
-                            }
-                        } elseif ($blackChecks > 0 && $downChecks > 0) {
-                            $vBlack = max(15, min(40, (int)$blackPct));
-                            $vRed   = max(15, min(40, (int)$downPct));
-                            $gStart = $vBlack;
-                            $gEnd   = 100 - $vRed;
-                            $barStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$gStart}%, #10b981 {$gStart}%, #10b981 {$gEnd}%, #ef4444 {$gEnd}%, #ef4444 100%);\"";
-                            $statusDesc = "<span style='color: #0f172a;'>⬛</span> Blackout: {$blackPct}% &bull; <span style='color: #ef4444;'>●</span> Downtime: {$downPct}%";
-                        } elseif ($blackChecks > 0) {
-                            if ($blackPct >= 95.0) {
-                                $barStyle = 'style="background-color: #0f172a;"';
                             } else {
-                                $vBlack = max(15, min(85, (int)$blackPct));
-                                $barStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$vBlack}%, #10b981 {$vBlack}%, #10b981 100%);\"";
+                                $barStyle = 'style="background-color: #e2e8f0;"';
+                                $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                             }
-                            $statusDesc = "<span style='color: #0f172a;'>⬛</span> " . __('public.system_blackout') . ": {$blackPct}%";
-                        } elseif ($downChecks > 0) {
-                            if ($downPct >= 95.0) {
-                                $barStyle = 'style="background-color: #ef4444;"';
-                            } else {
-                                $vRed = max(15, min(85, (int)$downPct));
-                                $barStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
+
+                            $label = "<strong>{$formattedDate}</strong><br>{$statusDesc}";
+                            if ($hasMaintenance) {
+                                $label .= "<br><span style='color: #0ea5e9;'>▼</span> " . count($dayMaintenances) . " " . __('maintenance.title');
                             }
-                            $statusDesc = "<span style='color: #ef4444;'>●</span> Downtime: {$downPct}% ({$dailyUptimePct}% " . __('public.uptime') . ")";
-                        } elseif ($totalChecks > 0) {
-                            $barStyle = 'style="background-color: #10b981;"';
-                            $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
-                        } else {
-                            $barStyle = 'style="background-color: #e2e8f0;"';
-                            $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
-                        }
+                            if ($hasIncident) {
+                                $label .= "<br><span style='color: #ea580c;'>▲</span> " . count($dayIncidents) . " " . __('public.reported_incident');
+                            }
 
-                        $label = "<strong>{$formattedDate}</strong><br>{$statusDesc}";
-                        if ($hasMaintenance) {
-                            $label .= "<br><span style='color: #0ea5e9;'>▼</span> " . count($dayMaintenances) . " " . __('maintenance.title');
-                        }
-                        if ($hasIncident) {
-                            $label .= "<br><span style='color: #ea580c;'>▲</span> " . count($dayIncidents) . " " . __('public.reported_incident');
-                        }
+                            $modalPayload = [
+                                'date'          => $formattedDate,
+                                'date_raw'      => $dayDate,
+                                'monitor_id'    => $monitor['id'],
+                                'monitor'       => $monitor['name'],
+                                'checks'        => $totalChecks,
+                                'up_checks'     => $upChecks,
+                                'uptime_pct'    => ($totalChecks > 0) ? $dailyUptimePct : null,
+                                'blackouts'     => $blackChecks,
+                                'blackout_pct'  => $blackPct,
+                                'outages'       => $downChecks,
+                                'outage_pct'    => $downPct,
+                                'incidents'     => array_map(fn($inc) => [
+                                    'title'       => $inc['title'],
+                                    'impact'      => strtoupper($inc['impact']),
+                                    'status'      => strtoupper($inc['status']),
+                                    'created_at'  => format_date($inc['created_at'], 'M d, Y H:i'),
+                                    'updated_at'  => format_date($inc['updated_at'], 'M d, Y H:i'),
+                                    'updates'     => array_map(fn($u) => [
+                                        'status'  => strtoupper($u['status']),
+                                        'message' => $u['message'],
+                                        'time'    => format_date($u['created_at'], 'M d, H:i')
+                                    ], $inc['updates'] ?? [])
+                                ], $dayIncidents),
+                                'maintenances'  => array_map(fn($m) => [
+                                    'title'       => $m['title'],
+                                    'description' => $m['description'] ?? '',
+                                    'status'      => strtoupper(str_replace('_', ' ', $m['status'])),
+                                    'start_time'  => format_date($m['start_time'], 'M d, Y H:i'),
+                                    'end_time'    => format_date($m['end_time'], 'M d, H:i T')
+                                ], $dayMaintenances)
+                            ];
 
-                        $modalPayload = [
-                            'date'          => $formattedDate,
-                            'date_raw'      => $dayDate,
-                            'monitor_id'    => $monitor['id'],
-                            'monitor'       => $monitor['name'],
-                            'checks'        => $totalChecks,
-                            'up_checks'     => $upChecks,
-                            'uptime_pct'    => ($totalChecks > 0) ? $dailyUptimePct : null,
-                            'blackouts'     => $blackChecks,
-                            'blackout_pct'  => $blackPct,
-                            'outages'       => $downChecks,
-                            'outage_pct'    => $downPct,
-                            'incidents'     => array_map(fn($inc) => [
-                                'title'       => $inc['title'],
-                                'impact'      => strtoupper($inc['impact']),
-                                'status'      => strtoupper($inc['status']),
-                                'created_at'  => format_date($inc['created_at'], 'M d, Y H:i'),
-                                'updated_at'  => format_date($inc['updated_at'], 'M d, Y H:i'),
-                                'updates'     => array_map(fn($u) => [
-                                    'status'  => strtoupper($u['status']),
-                                    'message' => $u['message'],
-                                    'time'    => format_date($u['created_at'], 'M d, H:i')
-                                ], $inc['updates'] ?? [])
-                            ], $dayIncidents),
-                            'maintenances'  => array_map(fn($m) => [
-                                'title'       => $m['title'],
-                                'description' => $m['description'] ?? '',
-                                'status'      => strtoupper(str_replace('_', ' ', $m['status'])),
-                                'start_time'  => format_date($m['start_time'], 'M d, Y H:i'),
-                                'end_time'    => format_date($m['end_time'], 'M d, H:i T')
-                            ], $dayMaintenances)
-                        ];
+                            $colClasses = 'uptime-day-col';
+                            if ($hasMaintenance) $colClasses .= ' has-maint';
+                            if ($hasIncident)    $colClasses .= ' has-inc';
+                    ?>
+                        <div class="<?= $colClasses ?>" 
+                             data-bs-toggle="tooltip" 
+                             data-bs-placement="top" 
+                             data-bs-html="true" 
+                             title="<?= htmlspecialchars($label, ENT_QUOTES) ?>"
+                             data-day-payload='<?= htmlspecialchars(json_encode($modalPayload, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'
+                             onclick="openDayDetailModalFromElement(this)">
 
-                        $colClasses = 'uptime-day-col';
-                        if ($hasMaintenance) $colClasses .= ' has-maint';
-                        if ($hasIncident)    $colClasses .= ' has-inc';
-                ?>
-                    <div class="<?= $colClasses ?>" 
-                         data-bs-toggle="tooltip" 
-                         data-bs-placement="top" 
-                         data-bs-html="true" 
-                         title="<?= htmlspecialchars($label, ENT_QUOTES) ?>"
-                         data-day-payload='<?= htmlspecialchars(json_encode($modalPayload, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'
-                         onclick="openDayDetailModalFromElement(this)">
+                            <?php if ($hasMaintenance): ?>
+                                <svg class="uptime-arrow-top" viewBox="0 0 10 7">
+                                    <polygon points="0,0 10,0 5,7" fill="#0ea5e9" />
+                                </svg>
+                            <?php endif; ?>
 
-                        <?php if ($hasMaintenance): ?>
-                            <svg class="uptime-arrow-top" viewBox="0 0 10 7">
-                                <polygon points="0,0 10,0 5,7" fill="#0ea5e9" />
-                            </svg>
-                        <?php endif; ?>
+                            <div class="<?= $barClass ?>" <?= $barStyle ?>></div>
 
-                        <div class="<?= $barClass ?>" <?= $barStyle ?>></div>
+                            <?php if ($hasIncident): ?>
+                                <svg class="uptime-arrow-bottom" viewBox="0 0 10 7">
+                                    <polygon points="5,0 10,7 0,7" fill="#ea580c" />
+                                </svg>
+                            <?php endif; ?>
 
-                        <?php if ($hasIncident): ?>
-                            <svg class="uptime-arrow-bottom" viewBox="0 0 10 7">
-                                <polygon points="5,0 10,7 0,7" fill="#ea580c" />
-                            </svg>
-                        <?php endif; ?>
+                        </div>
+                    <?php endfor; ?>
+                </div>
 
-                    </div>
-                <?php endfor; ?>
-            </div>
+                <div class="d-flex justify-content-between text-muted small mt-2">
+                    <span><?= __('public.days_ago', ['count' => 90]) ?></span>
+                    <span class="fw-semibold text-dark"><?= number_format($uptimePct, 2) ?>% <?= __('public.uptime') ?></span>
+                    <span><?= __('public.today') ?></span>
+                </div>
 
-            <div class="d-flex justify-content-between text-muted small mt-2">
-                <span><?= __('public.days_ago', ['count' => 90]) ?></span>
-                <span class="fw-semibold text-dark"><?= number_format($uptimePct, 2) ?>% <?= __('public.uptime') ?></span>
-                <span><?= __('public.today') ?></span>
-            </div>
+                <!-- Sub-services Drawer -->
+                <?php if ($hasChildren): ?>
+                    <div class="collapse mt-3 pt-3 border-top" id="subservices-<?= $monitor['id'] ?>">
+                        <div class="ps-2 ps-sm-3 border-start border-3 border-primary-subtle d-flex flex-column gap-3">
+                            <?php foreach ($monitor['children'] as $child): ?>
+                                <?php
+                                    $childDown     = ($child['current_status'] === 'down');
+                                    $childDegraded = ($child['current_status'] === 'degraded');
+                                    $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
+                                    $cId           = (int)$child['id'];
+                                ?>
+                                <div class="bg-light p-3 rounded-3 border">
+                                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
+                                        <span class="fw-semibold text-dark small">
+                                            <i class="bi bi-arrow-return-right me-1 text-muted"></i>
+                                            <?= htmlspecialchars($child['name']) ?>
+                                        </span>
+                                        <span class="badge bg-<?= $child['current_status'] === 'operational' ? 'success' : ($child['current_status'] === 'degraded' ? 'warning text-dark' : 'danger') ?> py-1 px-2" style="font-size: 10px;">
+                                            <?= strtoupper($child['current_status']) ?>
+                                        </span>
+                                    </div>
 
-            <!-- Sub-services Drawer -->
-            <?php if ($hasChildren): ?>
-                <div class="collapse mt-3 pt-3 border-top" id="subservices-<?= $monitor['id'] ?>">
-                    <div class="ps-2 ps-sm-3 border-start border-3 border-primary-subtle d-flex flex-column gap-3">
-                        <?php foreach ($monitor['children'] as $child): ?>
-                            <?php
-                                $childDown     = ($child['current_status'] === 'down');
-                                $childDegraded = ($child['current_status'] === 'degraded');
-                                $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
-                                $cId           = (int)$child['id'];
-                            ?>
-                            <div class="bg-light p-3 rounded-3 border">
-                                <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
-                                    <span class="fw-semibold text-dark small">
-                                        <i class="bi bi-arrow-return-right me-1 text-muted"></i>
-                                        <?= htmlspecialchars($child['name']) ?>
-                                    </span>
-                                    <span class="badge bg-<?= $child['current_status'] === 'operational' ? 'success' : ($child['current_status'] === 'degraded' ? 'warning text-dark' : 'danger') ?> py-1 px-2" style="font-size: 10px;">
-                                        <?= strtoupper($child['current_status']) ?>
-                                    </span>
-                                </div>
+                                    <!-- Sub-service 90-Day Mini Bar -->
+                                    <div class="uptime-graph" style="height: 20px;" role="group">
+                                        <?php
+                                            for ($cDay = 89; $cDay >= 0; $cDay--):
+                                                $cDayTime  = strtotime("-{$cDay} days");
+                                                $cDayDate  = date('Y-m-d', $cDayTime);
+                                                $cDate     = date('M d, Y', $cDayTime);
 
-                                <!-- Sub-service 90-Day Mini Bar -->
-                                <div class="uptime-graph" style="height: 20px;" role="group">
-                                    <?php
-                                        for ($cDay = 89; $cDay >= 0; $cDay--):
-                                            $cDayTime  = strtotime("-{$cDay} days");
-                                            $cDayDate  = date('Y-m-d', $cDayTime);
-                                            $cDate     = date('M d, Y', $cDayTime);
+                                                $cData = $uptimeHistory[$cId][$cDayDate] ?? null;
 
-                                            $cData = $uptimeHistory[$cId][$cDayDate] ?? null;
+                                                $cTotal = (int)($cData['total'] ?? 0);
+                                                $cDown  = (int)($cData['down'] ?? 0);
+                                                $cBlack = (int)($cData['blackout'] ?? 0);
 
-                                            $cTotal = (int)($cData['total'] ?? 0);
-                                            $cDown  = (int)($cData['down'] ?? 0);
-                                            $cBlack = (int)($cData['blackout'] ?? 0);
+                                                $cStyle = '';
+                                                $cLabel = "<strong>{$cDate}</strong><br>";
 
-                                            $cStyle = '';
-                                            $cLabel = "<strong>{$cDate}</strong><br>";
-
-                                            // Sub-service Day 0 status: strictly matches real-time status!
-                                            if ($cDay === 0) {
-                                                if ($childDown) {
-                                                    $cStyle = 'style="background-color: #ef4444;"';
-                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
-                                                } elseif ($childDegraded) {
-                                                    $cStyle = 'style="background-color: #f59e0b;"';
-                                                    $cLabel .= "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
-                                                } else {
+                                                if ($cDay === 0) {
+                                                    if ($childDown) {
+                                                        $cStyle = 'style="background-color: #ef4444;"';
+                                                        $cLabel .= "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
+                                                    } elseif ($childDegraded) {
+                                                        $cStyle = 'style="background-color: #f59e0b;"';
+                                                        $cLabel .= "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
+                                                    } else {
+                                                        $cStyle = 'style="background-color: #10b981;"';
+                                                        $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
+                                                    }
+                                                } elseif ($cBlack > 0 && $cTotal > 0) {
+                                                    $cBlackPct = round(($cBlack / $cTotal) * 100);
+                                                    if ($cBlackPct >= 95) {
+                                                        $cStyle = 'style="background-color: #0f172a;"';
+                                                    } else {
+                                                        $vBlack = max(15, min(85, $cBlackPct));
+                                                        $cStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$vBlack}%, #10b981 {$vBlack}%, #10b981 100%);\"";
+                                                    }
+                                                    $cLabel .= "<span style='color: #0f172a;'>⬛</span> " . __('public.system_blackout') . ": {$cBlackPct}%";
+                                                } elseif ($cDown > 0 && $cTotal > 0) {
+                                                    $cDownPct = round(($cDown / $cTotal) * 100);
+                                                    if ($cDownPct >= 95) {
+                                                        $cStyle = 'style="background-color: #ef4444;"';
+                                                    } else {
+                                                        $vRed = max(15, min(85, $cDownPct));
+                                                        $cStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
+                                                    }
+                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> Downtime: {$cDownPct}%";
+                                                } elseif ($cTotal > 0) {
                                                     $cStyle = 'style="background-color: #10b981;"';
                                                     $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
-                                                }
-                                            } elseif ($cBlack > 0 && $cTotal > 0) {
-                                                $cBlackPct = round(($cBlack / $cTotal) * 100);
-                                                if ($cBlackPct >= 95) {
-                                                    $cStyle = 'style="background-color: #0f172a;"';
                                                 } else {
-                                                    $vBlack = max(15, min(85, $cBlackPct));
-                                                    $cStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$vBlack}%, #10b981 {$vBlack}%, #10b981 100%);\"";
+                                                    $cStyle = 'style="background-color: #e2e8f0;"';
+                                                    $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                                 }
-                                                $cLabel .= "<span style='color: #0f172a;'>⬛</span> " . __('public.system_blackout') . ": {$cBlackPct}%";
-                                            } elseif ($cDown > 0 && $cTotal > 0) {
-                                                $cDownPct = round(($cDown / $cTotal) * 100);
-                                                if ($cDownPct >= 95) {
-                                                    $cStyle = 'style="background-color: #ef4444;"';
-                                                } else {
-                                                    $vRed = max(15, min(85, $cDownPct));
-                                                    $cStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
-                                                }
-                                                $cLabel .= "<span style='color: #ef4444;'>●</span> Downtime: {$cDownPct}%";
-                                            } elseif ($cTotal > 0) {
-                                                $cStyle = 'style="background-color: #10b981;"';
-                                                $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
-                                            } else {
-                                                $cStyle = 'style="background-color: #e2e8f0;"';
-                                                $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
-                                            }
 
-                                            $childPayload = [
-                                                'date'          => $cDate,
-                                                'date_raw'      => $cDayDate,
-                                                'monitor_id'    => $child['id'],
-                                                'monitor'       => $child['name'],
-                                                'checks'        => $cTotal,
-                                                'up_checks'     => max(0, $cTotal - $cDown - $cBlack),
-                                                'uptime_pct'    => ($cTotal > 0) ? round((($cTotal - $cDown - $cBlack) / $cTotal) * 100, 2) : null,
-                                                'blackouts'     => $cBlack,
-                                                'blackout_pct'  => ($cTotal > 0) ? round(($cBlack / $cTotal) * 100, 1) : 0,
-                                                'outages'       => $cDown,
-                                                'outage_pct'    => ($cTotal > 0) ? round(($cDown / $cTotal) * 100, 1) : 0,
-                                                'incidents'     => [],
-                                                'maintenances'  => []
-                                            ];
-                                    ?>
-                                        <div class="uptime-bar" 
-                                             <?= $cStyle ?>
-                                             data-bs-toggle="tooltip" 
-                                             data-bs-placement="top" 
-                                             data-bs-html="true" 
-                                             title="<?= htmlspecialchars($cLabel, ENT_QUOTES) ?>"
-                                             data-day-payload='<?= htmlspecialchars(json_encode($childPayload, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'
-                                             onclick="openDayDetailModalFromElement(this)">
-                                        </div>
-                                    <?php endfor; ?>
+                                                $childPayload = [
+                                                    'date'          => $cDate,
+                                                    'date_raw'      => $cDayDate,
+                                                    'monitor_id'    => $child['id'],
+                                                    'monitor'       => $child['name'],
+                                                    'checks'        => $cTotal,
+                                                    'up_checks'     => max(0, $cTotal - $cDown - $cBlack),
+                                                    'uptime_pct'    => ($cTotal > 0) ? round((($cTotal - $cDown - $cBlack) / $cTotal) * 100, 2) : null,
+                                                    'blackouts'     => $cBlack,
+                                                    'blackout_pct'  => ($cTotal > 0) ? round(($cBlack / $cTotal) * 100, 1) : 0,
+                                                    'outages'       => $cDown,
+                                                    'outage_pct'    => ($cTotal > 0) ? round(($cDown / $cTotal) * 100, 1) : 0,
+                                                    'incidents'     => [],
+                                                    'maintenances'  => []
+                                                ];
+                                        ?>
+                                            <div class="uptime-bar" 
+                                                 <?= $cStyle ?>
+                                                 data-bs-toggle="tooltip" 
+                                                 data-bs-placement="top" 
+                                                 data-bs-html="true" 
+                                                 title="<?= htmlspecialchars($cLabel, ENT_QUOTES) ?>"
+                                                 data-day-payload='<?= htmlspecialchars(json_encode($childPayload, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'
+                                                 onclick="openDayDetailModalFromElement(this)">
+                                            </div>
+                                        <?php endfor; ?>
+                                    </div>
                                 </div>
-                            </div>
-                        <?php endforeach; ?>
+                            <?php endforeach; ?>
+                        </div>
                     </div>
-                </div>
-            <?php endif; ?>
-        </li>
+                <?php endif; ?>
+            </div>
+        </div>
         <?php
         return ob_get_clean();
     };
@@ -575,18 +609,18 @@ $allMaintenances = $allMaintenances ?? [];
 
     <!-- 2. PRIMARY CORE INFRASTRUCTURE SECTION -->
     <?php if (!empty($primaryMonitors)): ?>
-        <div class="card shadow-sm border-0 mb-5">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h5 class="mb-0 fw-bold"><i class="bi bi-hdd-rack text-primary me-2"></i><?= __('public.core_infrastructure') ?></h5>
                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
                     <?= __('public.primary_systems') ?>
                 </span>
             </div>
-            <ul class="list-group list-group-flush">
+            <div>
                 <?php foreach ($primaryMonitors as $monitor): ?>
                     <?= $renderMonitorRow($monitor) ?>
                 <?php endforeach; ?>
-            </ul>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -619,18 +653,18 @@ $allMaintenances = $allMaintenances ?? [];
             </div>
         </div>
 
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
                 <h5 class="mb-0 fw-bold"><i class="bi bi-cloud-check text-secondary me-2"></i><?= __('public.external_cloud') ?></h5>
                 <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-2 py-1">
                     <?= __('public.external_dependencies') ?>
                 </span>
             </div>
-            <ul class="list-group list-group-flush">
+            <div>
                 <?php foreach ($secondaryMonitors as $monitor): ?>
                     <?= $renderMonitorRow($monitor) ?>
                 <?php endforeach; ?>
-            </ul>
+            </div>
         </div>
     <?php endif; ?>
 
