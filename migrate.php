@@ -135,47 +135,62 @@ try {
     }
 
     // --- v1.0.16: Add 'blackout' status to monitor_logs for system gap detection ---
-if (table_exists($pdo, 'monitor_logs')) {
-    $pdo->exec("ALTER TABLE `monitor_logs` MODIFY COLUMN `status` ENUM('up', 'down', 'timeout', 'blackout') NOT NULL;");
-}
+    if (table_exists($pdo, 'monitor_logs')) {
+        $pdo->exec("ALTER TABLE `monitor_logs` MODIFY COLUMN `status` ENUM('up', 'down', 'timeout', 'blackout') NOT NULL;");
+    }
 
-// --- v1.0.18: Add monitor_id to incidents and maintenances ---
-if (table_exists($pdo, 'incidents') && !column_exists($pdo, 'incidents', 'monitor_id')) {
-    $pdo->exec("ALTER TABLE `incidents` ADD COLUMN `monitor_id` INT UNSIGNED NULL DEFAULT NULL AFTER `id`;");
-    $pdo->exec("ALTER TABLE `incidents` ADD INDEX `idx_inc_monitor` (`monitor_id`);");
-}
-if (table_exists($pdo, 'maintenances') && !column_exists($pdo, 'maintenances', 'monitor_id')) {
-    $pdo->exec("ALTER TABLE `maintenances` ADD COLUMN `monitor_id` INT UNSIGNED NULL DEFAULT NULL AFTER `id`;");
-    $pdo->exec("ALTER TABLE `maintenances` ADD INDEX `idx_maint_monitor` (`monitor_id`);");
-}
+    // --- v1.0.18: Add monitor_id to incidents and maintenances ---
+    if (table_exists($pdo, 'incidents') && !column_exists($pdo, 'incidents', 'monitor_id')) {
+        $pdo->exec("ALTER TABLE `incidents` ADD COLUMN `monitor_id` INT UNSIGNED NULL DEFAULT NULL AFTER `id`;");
+        $pdo->exec("ALTER TABLE `incidents` ADD INDEX `idx_inc_monitor` (`monitor_id`);");
+    }
+    if (table_exists($pdo, 'maintenances') && !column_exists($pdo, 'maintenances', 'monitor_id')) {
+        $pdo->exec("ALTER TABLE `maintenances` ADD COLUMN `monitor_id` INT UNSIGNED NULL DEFAULT NULL AFTER `id`;");
+        $pdo->exec("ALTER TABLE `maintenances` ADD INDEX `idx_maint_monitor` (`monitor_id`);");
+    }
 
-// --- v1.0.30: Add api_keys table for secure REST API endpoints ---
-$pdo->exec("
-    CREATE TABLE IF NOT EXISTS `api_keys` (
-        `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        `name` VARCHAR(100) NOT NULL,
-        `key_hash` VARCHAR(64) NOT NULL UNIQUE,
-        `key_prefix` VARCHAR(32) NOT NULL,
-        `last_used_at` DATETIME NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        INDEX `idx_key_hash` (`key_hash`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-");
+    // --- v1.0.30: Add api_keys table for secure REST API endpoints ---
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `api_keys` (
+            `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `name` VARCHAR(100) NOT NULL,
+            `key_hash` VARCHAR(64) NOT NULL UNIQUE,
+            `key_prefix` VARCHAR(32) NOT NULL,
+            `last_used_at` DATETIME NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_key_hash` (`key_hash`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
 
-// --- v1.0.35: Add translations_cache table for dynamic content caching ---
-$pdo->exec("
-    CREATE TABLE IF NOT EXISTS `translations_cache` (
-        `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        `entity_type` VARCHAR(50) NOT NULL,
-        `entity_id` INT UNSIGNED NOT NULL,
-        `locale` VARCHAR(10) NOT NULL,
-        `field` VARCHAR(50) NOT NULL,
-        `content` TEXT NOT NULL,
-        `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE KEY `uniq_translation` (`entity_type`, `entity_id`, `locale`, `field`),
-        INDEX `idx_lookup` (`entity_type`, `entity_id`, `locale`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-");
+    // --- v1.0.35: Add translations_cache table for dynamic content caching ---
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `translations_cache` (
+            `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `entity_type` VARCHAR(50) NOT NULL,
+            `entity_id` INT UNSIGNED NOT NULL,
+            `locale` VARCHAR(10) NOT NULL,
+            `field` VARCHAR(50) NOT NULL,
+            `content` TEXT NOT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `uniq_translation` (`entity_type`, `entity_id`, `locale`, `field`),
+            INDEX `idx_lookup` (`entity_type`, `entity_id`, `locale`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
+
+    // --- v1.0.55: Add user_remember_tokens table for persistent remember-me authentication ---
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS `user_remember_tokens` (
+            `id` BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            `user_id` INT UNSIGNED NOT NULL,
+            `selector` VARCHAR(32) NOT NULL UNIQUE,
+            `token_hash` VARCHAR(64) NOT NULL,
+            `expires_at` DATETIME NOT NULL,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_selector` (`selector`),
+            INDEX `idx_user` (`user_id`),
+            FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
 
     if (php_sapi_name() === 'cli') {
         echo "Database schema is fully up to date.\n";
