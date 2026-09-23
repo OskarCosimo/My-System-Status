@@ -12,7 +12,7 @@ $enabledLocales  = array_keys(SettingService::getEnabledLocales());
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0">Platform Settings</h2>
-            <p class="text-muted">Manage system configuration, mail servers, security, and external services.</p>
+            <p class="text-muted">Manage system configuration, mail servers, legal links, security, and external services.</p>
         </div>
     </div>
 
@@ -80,6 +80,19 @@ $enabledLocales  = array_keys(SettingService::getEnabledLocales());
                         <input type="url" name="app_url" value="<?= htmlspecialchars(setting('app_url', app_url())) ?>" class="form-control" placeholder="https://status.example.com" required>
                         <small class="text-muted">Used for subscriber email verification links and OAuth callbacks.</small>
                     </div>
+
+                    <!-- Footer Legal Links -->
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Terms of Service URL</label>
+                        <input type="url" name="terms_url" value="<?= htmlspecialchars(setting('terms_url', '')) ?>" class="form-control" placeholder="https://example.com/terms">
+                        <small class="text-muted">Displayed in the public page footer (leave empty to hide).</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Privacy Policy URL</label>
+                        <input type="url" name="privacy_policy_url" value="<?= htmlspecialchars(setting('privacy_policy_url', '')) ?>" class="form-control" placeholder="https://example.com/privacy">
+                        <small class="text-muted">Displayed in the public page footer (leave empty to hide).</small>
+                    </div>
+
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Default System Timezone (Layer 1)</label>
                         <select name="app_timezone" class="form-select">
@@ -92,7 +105,7 @@ $enabledLocales  = array_keys(SettingService::getEnabledLocales());
                         <small class="text-muted">Fallback timezone when browser auto-detection is not active.</small>
                     </div>
 
-                    <!-- Supported Languages in Header Selection (20 World Languages) -->
+                    <!-- Supported Languages in Header Selection -->
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">Enabled Header Languages</label>
                         <div class="p-3 bg-light rounded-3 border" style="max-height: 220px; overflow-y: auto;">
@@ -446,7 +459,7 @@ $enabledLocales  = array_keys(SettingService::getEnabledLocales());
     </form>
 </div>
 
-<!-- Modal: Sync Language JSONs via LibreTranslate (Single or All Enabled Batch) -->
+<!-- Modal: Sync Language JSONs via LibreTranslate -->
 <div class="modal fade" id="syncJsonModal" tabindex="-1">
     <div class="modal-dialog">
         <form action="/admin/translations/sync" method="POST" class="modal-content shadow">
@@ -463,7 +476,6 @@ $enabledLocales  = array_keys(SettingService::getEnabledLocales());
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Target Translation Scope</label>
                     <select name="target_lang" class="form-select" required>
-                        <!-- Batch Option at the Top -->
                         <option value="all" class="fw-bold text-primary" selected>
                             ★ All Enabled Languages (Batch Sync)
                         </option>
