@@ -14,6 +14,32 @@ $title   = $pageTitle ?? $appName;
 <!-- Favicon -->
 <link rel="icon" type="image/png" href="<?= $baseUrl ?>/assets/img/favicon.png">
 
+<!-- Early Theme Switcher Execution to Prevent FOUC -->
+<script>
+    (() => {
+        'use strict';
+        const getStoredTheme = () => localStorage.getItem('theme');
+        const getPreferredTheme = () => {
+            const storedTheme = getStoredTheme();
+            if (storedTheme) {
+                return storedTheme;
+            }
+            return 'auto';
+        };
+
+        const applyTheme = (theme) => {
+            if (theme === 'auto') {
+                const systemScheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-bs-theme', systemScheme);
+            } else {
+                document.documentElement.setAttribute('data-bs-theme', theme);
+            }
+        };
+
+        applyTheme(getPreferredTheme());
+    })();
+</script>
+
 <!-- Bootstrap 5 CSS & Bootstrap Icons -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
@@ -48,7 +74,7 @@ $title   = $pageTitle ?? $appName;
     }
 
     .sidebar-link {
-        color: #495057;
+        color: var(--bs-body-color);
         padding: 10px 16px;
         display: flex;
         align-items: center;
@@ -60,8 +86,8 @@ $title   = $pageTitle ?? $appName;
     }
 
     .sidebar-link:hover, .sidebar-link.active {
-        background-color: #e9ecef;
-        color: #0d6efd;
+        background-color: var(--bs-tertiary-bg);
+        color: var(--bs-primary);
         font-weight: 600;
     }
 
@@ -90,22 +116,23 @@ $title   = $pageTitle ?? $appName;
     }
 
     #page-content-wrapper {
-    min-width: 0;
-    width: 100%;
-    overflow-x: hidden;
-}
-.table-responsive {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
-}
+        min-width: 0;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .table-responsive {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
 </style>
 <script>
     if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .catch((error) => {
-        // Service worker registration failed
-      });
-  });
-}
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .catch((error) => {
+                    // Service worker registration failed
+                });
+        });
+    }
 </script>
