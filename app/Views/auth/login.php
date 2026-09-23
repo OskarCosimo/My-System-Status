@@ -29,19 +29,19 @@ $turnstileSiteKey = setting('turnstile_site_key', '');
             </div>
 
             <?php if (isset($_GET['error']) && $_GET['error'] === 'rate_limited'): ?>
-    <div class="alert alert-danger py-2 small text-center">
-        <i class="bi bi-shield-x me-1"></i>
-        Too many failed attempts. Your IP is temporarily locked for <strong><?= htmlspecialchars($_GET['wait'] ?? '15') ?> minutes</strong>.
-    </div>
-<?php elseif (isset($_GET['error']) && $_GET['error'] === 'turnstile_failed'): ?>
-    <div class="alert alert-danger py-2 small text-center">
-        Bot verification failed. Please check Turnstile and try again.
-    </div>
-<?php elseif (isset($_GET['error'])): ?>
-    <div class="alert alert-danger py-2 small text-center">
-        Invalid email or password. Please try again.
-    </div>
-<?php endif; ?>
+                <div class="alert alert-danger py-2 small text-center">
+                    <i class="bi bi-shield-x me-1"></i>
+                    Too many failed attempts. Your IP is temporarily locked for <strong><?= htmlspecialchars($_GET['wait'] ?? '15') ?> minutes</strong>.
+                </div>
+            <?php elseif (isset($_GET['error']) && $_GET['error'] === 'turnstile_failed'): ?>
+                <div class="alert alert-danger py-2 small text-center">
+                    Bot verification failed. Please check Turnstile and try again.
+                </div>
+            <?php elseif (isset($_GET['error'])): ?>
+                <div class="alert alert-danger py-2 small text-center">
+                    Invalid email or password. Please try again.
+                </div>
+            <?php endif; ?>
 
             <form action="/auth/authenticate" method="POST">
                 <div class="mb-3">
@@ -51,6 +51,14 @@ $turnstileSiteKey = setting('turnstile_site_key', '');
                 <div class="mb-3">
                     <label class="form-label small fw-semibold">Password</label>
                     <input type="password" name="password" class="form-control" required placeholder="••••••••">
+                </div>
+
+                <!-- Remember Me Checkbox -->
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" name="remember_me" id="rememberMe" value="1" checked>
+                    <label class="form-check-label small text-muted user-select-none" for="rememberMe">
+                        Stay signed in on this device (6 months)
+                    </label>
                 </div>
 
                 <!-- Cloudflare Turnstile Captcha Widget -->
