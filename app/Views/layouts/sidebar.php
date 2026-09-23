@@ -13,15 +13,15 @@ $navItems = [
     ['uri' => '/admin/plugins',     'icon' => 'bi-puzzle',             'label' => __('nav.plugins')],
     ['uri' => '/admin/logs',        'icon' => 'bi-journal-text',       'label' => __('nav.logs')],
     ['uri' => '/admin/settings',    'icon' => 'bi-gear',               'label' => __('nav.settings')],
-    ['uri' => '/admin/api-keys', 'icon' => 'bi-key', 'label' => 'API Keys'],
+    ['uri' => '/admin/api-keys',    'icon' => 'bi-key',                'label' => 'API Keys'],
     ['uri' => '/admin/updater',     'icon' => 'bi-arrow-repeat',       'label' => __('nav.updates')]
 ];
 ?>
-<div class="bg-white border-end shadow-sm" id="sidebar-wrapper">
+<div class="bg-body border-end shadow-sm" id="sidebar-wrapper">
     <!-- Brand Logo / Title -->
     <div class="sidebar-heading p-3 border-bottom d-flex align-items-center gap-2">
         <i class="bi bi-shield-check text-primary fs-3"></i>
-        <span class="fs-5 fw-bold text-dark sidebar-brand-text"><?= $appName ?></span>
+        <span class="fs-5 fw-bold text-body sidebar-brand-text"><?= $appName ?></span>
     </div>
     
     <!-- Navigation Links -->
