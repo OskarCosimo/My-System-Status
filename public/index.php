@@ -3,6 +3,19 @@
 
 declare(strict_types=1);
 
+// Configure secure session cookie lifetime & flags
+$isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+    || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+session_set_cookie_params([
+    'lifetime' => 86400 * 180, // 6 months cookie lifetime for active PWA sessions
+    'path'     => '/',
+    'domain'   => '',
+    'secure'   => $isSecure,
+    'httponly' => true,
+    'samesite' => 'Lax'
+]);
+
 session_start();
 
 // 1. PSR-4 Class Autoloader
@@ -34,10 +47,15 @@ if (!file_exists(dirname(__DIR__) . '/install/installed.lock') && file_exists(di
     exit;
 }
 
-// 4. Initialize i18n
+// 4. Auto-login via Persistent Remember-Me Cookie if session is empty
+if (empty($_SESSION['user_id'])) {
+    \App\Services\RememberMeService::verifyAndLogin();
+}
+
+// 5. Initialize i18n
 \App\Core\I18n::init();
 
-// 5. Initialize Router
+// 6. Initialize Router
 $router = new \App\Core\Router();
 
 // ==========================================
