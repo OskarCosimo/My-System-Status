@@ -37,18 +37,10 @@ class SettingController
             SettingService::set($cbKey, isset($_POST[$cbKey]) ? '1' : '0');
         }
 
-        // 2. Multi-language checkboxes handling (e.g. en,it,es)
-        $selectedLocales = $_POST['enabled_locales'] ?? ['en', 'it'];
-        if (is_array($selectedLocales)) {
-            if (!in_array('en', $selectedLocales, true)) {
-                $selectedLocales[] = 'en'; // English is always kept
-            }
-            SettingService::set('enabled_locales', implode(',', array_map('trim', $selectedLocales)));
-        }
-
-        // 3. Standard text / select inputs
+        // 2. Standard text / select / url inputs
         $textKeys = [
             'app_name', 'app_url', 'app_timezone',
+            'terms_url', 'privacy_policy_url',
             'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_encryption', 'smtp_from',
             'oauth_myetv_client_id', 'oauth_myetv_client_secret',
             'oauth_google_client_id', 'oauth_google_client_secret',
@@ -71,7 +63,7 @@ class SettingController
             }
         }
 
-        // 4. Immediately poll Cloudflare Tunnel with forceInsert = true so new tunnels are created in database
+        // 3. Immediately poll Cloudflare Tunnel with forceInsert = true so new tunnels are created in database
         try {
             $plugin = new ExternalStatusPlugin();
             $plugin->syncAll(true);
