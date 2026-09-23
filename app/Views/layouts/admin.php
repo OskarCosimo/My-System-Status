@@ -8,7 +8,7 @@ $appUrl  = app_url();
 $userTz  = DateService::getActiveTimezone();
 ?>
 <!DOCTYPE html>
-<html lang="<?= \App\Core\I18n::getLocale() ?>" data-bs-theme="light">
+<html lang="<?= \App\Core\I18n::getLocale() ?>">
 <head>
     <?php require __DIR__ . '/header.php'; ?>
     <style>
@@ -34,7 +34,7 @@ $userTz  = DateService::getActiveTimezone();
     <!-- Page Content Wrapper -->
     <div id="page-content-wrapper" class="w-100 min-vw-0">
         <!-- Top Navbar -->
-        <nav class="navbar navbar-expand navbar-light bg-white border-bottom px-2 px-md-4 py-2 shadow-sm admin-navbar">
+        <nav class="navbar navbar-expand bg-body border-bottom px-2 px-md-4 py-2 shadow-sm admin-navbar">
             <button class="btn btn-sm btn-outline-secondary flex-shrink-0" id="sidebarToggle" title="Toggle Sidebar">
                 <i class="bi bi-list fs-5"></i>
             </button>
@@ -46,6 +46,37 @@ $userTz  = DateService::getActiveTimezone();
                     <i class="bi bi-box-arrow-up-right"></i>
                     <span class="d-none d-md-inline ms-1"><?= __('nav.view_public_page') ?></span>
                 </a>
+
+                <!-- Theme Switcher (Light / Dark / Auto) -->
+                <div class="dropdown theme-switcher">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center" id="bd-theme" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Toggle Theme">
+                        <i class="bi bi-circle-half theme-icon-active"></i>
+                        <span class="visually-hidden" id="bd-theme-text">Toggle Theme</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="bd-theme-text">
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="light">
+                                <i class="bi bi-sun-fill opacity-50"></i>
+                                Light
+                                <i class="bi bi-check2 ms-auto d-none check-mark"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="dark">
+                                <i class="bi bi-moon-stars-fill opacity-50"></i>
+                                Dark
+                                <i class="bi bi-check2 ms-auto d-none check-mark"></i>
+                            </button>
+                        </li>
+                        <li>
+                            <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="auto">
+                                <i class="bi bi-circle-half opacity-50"></i>
+                                Auto
+                                <i class="bi bi-check2 ms-auto d-none check-mark"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
 
                 <!-- Timezone Selector -->
                 <div class="dropdown">
@@ -82,7 +113,7 @@ $userTz  = DateService::getActiveTimezone();
                     </ul>
                 </div>
 
-                <!-- User Profile Link (Clickable with icon) -->
+                <!-- User Profile Link -->
                 <a href="/admin/profile" class="btn btn-sm btn-outline-dark d-flex align-items-center gap-1 text-decoration-none text-nowrap" title="Edit Profile, Password & 2FA">
                     <i class="bi bi-person-circle text-primary"></i>
                     <span class="fw-semibold d-none d-sm-inline"><?= htmlspecialchars($_SESSION['user_name'] ?? 'Admin') ?></span>
