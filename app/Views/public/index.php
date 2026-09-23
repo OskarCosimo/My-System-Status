@@ -121,7 +121,7 @@ $allMaintenances = $allMaintenances ?? [];
         transition: box-shadow 0.2s ease, border-color 0.2s ease;
     }
     .monitor-card:hover {
-        border-color: #cbd5e1;
+        border-color: var(--bs-border-color-translucent);
         box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
     }
 </style>
@@ -217,7 +217,7 @@ $allMaintenances = $allMaintenances ?? [];
                 </div>
                 <div class="card-body">
                     <?php if (!empty($incident['ai_summary'])): ?>
-                        <div class="alert alert-light border mb-3">
+                        <div class="alert alert-body border mb-3">
                             <small class="text-muted d-block fw-bold mb-1"><i class="bi bi-robot me-1 text-primary"></i> AI Incident Summary</small>
                             <?= nl2br(htmlspecialchars($incident['ai_summary'])) ?>
                         </div>
@@ -254,7 +254,7 @@ $allMaintenances = $allMaintenances ?? [];
             ? date('Y-m-d', strtotime($monitor['created_at'])) 
             : date('Y-m-d');
 
-        // CLUSTER AGGREGATION: Parent combines telemetry from all sub-services by majority
+        // Cluster Aggregation: Parent combines telemetry from all sub-services
         $monitorHistory = $uptimeHistory[$mId] ?? [];
         if ($hasChildren) {
             foreach ($monitor['children'] as $child) {
@@ -277,9 +277,9 @@ $allMaintenances = $allMaintenances ?? [];
         ?>
         <div class="card shadow-sm border mb-3 monitor-card">
             <!-- Card Header: Title, Subscription, Sub-services Trigger, and Current Status Badge -->
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card-header bg-body py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2 flex-wrap">
-                    <span class="fw-bold fs-6 text-dark"><?= htmlspecialchars($monitor['name']) ?></span>
+                    <span class="fw-bold fs-6 text-body"><?= htmlspecialchars($monitor['name']) ?></span>
 
                     <!-- Single Probe Subscribe Button -->
                     <button class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill shadow-none d-flex align-items-center gap-1" 
@@ -340,7 +340,6 @@ $allMaintenances = $allMaintenances ?? [];
                             $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 1) : 0;
                             $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
 
-                            // Collect Incidents and Maintenances
                             $dayIncidents = [];
                             foreach ($allIncidents as $inc) {
                                 if (empty($inc['monitor_id']) || (int)$inc['monitor_id'] === $mId) {
@@ -369,7 +368,6 @@ $allMaintenances = $allMaintenances ?? [];
                             $barClass = 'uptime-bar';
                             $barStyle = '';
 
-                            // 1. DAY 0 (TODAY): GUARANTEED TO MATCH LIVE STATUS (Never Gray!)
                             if ($day === 0) {
                                 if ($isDown) {
                                     $barStyle = 'style="background-color: #ef4444;"';
@@ -408,7 +406,7 @@ $allMaintenances = $allMaintenances ?? [];
                                 $barStyle = 'style="background-color: #10b981;"';
                                 $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                             } else {
-                                $barStyle = 'style="background-color: #e2e8f0;"';
+                                $barStyle = 'style="background-color: var(--bs-secondary-bg);"';
                                 $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                             }
 
@@ -485,7 +483,7 @@ $allMaintenances = $allMaintenances ?? [];
 
                 <div class="d-flex justify-content-between text-muted small mt-2">
                     <span><?= __('public.days_ago', ['count' => 90]) ?></span>
-                    <span class="fw-semibold text-dark"><?= number_format($uptimePct, 2) ?>% <?= __('public.uptime') ?></span>
+                    <span class="fw-semibold text-body"><?= number_format($uptimePct, 2) ?>% <?= __('public.uptime') ?></span>
                     <span><?= __('public.today') ?></span>
                 </div>
 
@@ -500,9 +498,9 @@ $allMaintenances = $allMaintenances ?? [];
                                     $childUptime   = (float)($child['uptime_percentage'] ?? 100.00);
                                     $cId           = (int)$child['id'];
                                 ?>
-                                <div class="bg-light p-3 rounded-3 border">
+                                <div class="bg-body-secondary p-3 rounded-3 border">
                                     <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
-                                        <span class="fw-semibold text-dark small">
+                                        <span class="fw-semibold text-body small">
                                             <i class="bi bi-arrow-return-right me-1 text-muted"></i>
                                             <?= htmlspecialchars($child['name']) ?>
                                         </span>
@@ -561,7 +559,7 @@ $allMaintenances = $allMaintenances ?? [];
                                                     $cStyle = 'style="background-color: #10b981;"';
                                                     $cLabel .= "<span style='color: #10b981;'>●</span> " . __('status.operational');
                                                 } else {
-                                                    $cStyle = 'style="background-color: #e2e8f0;"';
+                                                    $cStyle = 'style="background-color: var(--bs-secondary-bg);"';
                                                     $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                                 }
 
@@ -684,7 +682,7 @@ $allMaintenances = $allMaintenances ?? [];
         <div class="modal-content shadow">
             <div class="modal-header">
                 <div>
-                    <h5 class="modal-title fw-bold text-dark" id="dayModalDateTitle"><?= __('public.daily_report') ?></h5>
+                    <h5 class="modal-title fw-bold text-body" id="dayModalDateTitle"><?= __('public.daily_report') ?></h5>
                     <small class="text-muted" id="dayModalMonitorName">Service Name</small>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -693,7 +691,7 @@ $allMaintenances = $allMaintenances ?? [];
                 <!-- 4 Interactive Stat Cards -->
                 <div class="row g-2 mb-3 text-center">
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleUptimeDonutChart()" title="Click to view visual health distribution">
+                        <div class="p-2 bg-body-secondary rounded border modal-stat-card" onclick="toggleUptimeDonutChart()" title="Click to view visual health distribution">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
                                 <span><?= __('public.daily_uptime') ?></span>
                                 <i class="bi bi-pie-chart text-success small"></i>
@@ -702,16 +700,16 @@ $allMaintenances = $allMaintenances ?? [];
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('all')" title="Click to view all telemetry checks">
+                        <div class="p-2 bg-body-secondary rounded border modal-stat-card" onclick="toggleChecksTable('all')" title="Click to view all telemetry checks">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
                                 <span><?= __('public.checks_executed') ?></span>
                                 <i class="bi bi-list-ul text-primary small"></i>
                             </div>
-                            <h5 class="fw-bold mb-0 text-dark" id="dayModalChecksCount">0</h5>
+                            <h5 class="fw-bold mb-0 text-body" id="dayModalChecksCount">0</h5>
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('down')" title="Click to filter outages">
+                        <div class="p-2 bg-body-secondary rounded border modal-stat-card" onclick="toggleChecksTable('down')" title="Click to filter outages">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
                                 <span><?= __('public.downtime_hits') ?></span>
                                 <i class="bi bi-exclamation-octagon text-danger small"></i>
@@ -720,21 +718,21 @@ $allMaintenances = $allMaintenances ?? [];
                         </div>
                     </div>
                     <div class="col-3">
-                        <div class="p-2 bg-light rounded border modal-stat-card" onclick="toggleChecksTable('blackout')" title="Click to view blackouts">
+                        <div class="p-2 bg-body-secondary rounded border modal-stat-card" onclick="toggleChecksTable('blackout')" title="Click to view blackouts">
                             <div class="small text-muted d-flex align-items-center justify-content-center gap-1">
                                 <span><?= __('public.system_blackouts') ?></span>
-                                <i class="bi bi-power text-dark small"></i>
+                                <i class="bi bi-power text-body small"></i>
                             </div>
-                            <h5 class="fw-bold mb-0 text-dark" id="dayModalBlackoutsCount">0</h5>
+                            <h5 class="fw-bold mb-0 text-body" id="dayModalBlackoutsCount">0</h5>
                         </div>
                     </div>
                 </div>
 
                 <!-- A. Collapsible SVG Donut Chart Section -->
                 <div class="collapse mb-4" id="dayModalDonutContainer">
-                    <div class="card border bg-light p-3 shadow-sm">
+                    <div class="card border bg-body-secondary p-3 shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold mb-0 small text-dark"><i class="bi bi-pie-chart-fill text-success me-1"></i> Daily Health Distribution</h6>
+                            <h6 class="fw-bold mb-0 small text-body"><i class="bi bi-pie-chart-fill text-success me-1"></i> Daily Health Distribution</h6>
                             <button type="button" class="btn-close btn-sm" onclick="bootstrap.Collapse.getInstance(document.getElementById('dayModalDonutContainer')).hide()"></button>
                         </div>
                         <div class="row align-items-center g-3">
@@ -743,7 +741,7 @@ $allMaintenances = $allMaintenances ?? [];
                                     <svg id="dayModalDonutSvg" viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg); border-radius: 50%;">
                                     </svg>
                                     <div class="position-absolute top-50 start-50 translate-middle text-center" style="pointer-events: none;">
-                                        <h4 class="fw-bold mb-0 text-dark" id="donutCenterUptime">100%</h4>
+                                        <h4 class="fw-bold mb-0 text-body" id="donutCenterUptime">100%</h4>
                                         <small class="text-muted" style="font-size: 10px;">UPTIME</small>
                                     </div>
                                 </div>
@@ -760,7 +758,7 @@ $allMaintenances = $allMaintenances ?? [];
                                     </li>
                                     <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-1 border-0">
                                         <span><span style="display:inline-block; width:10px; height:10px; background:#0f172a; border-radius:50%; margin-right:6px;"></span>System Blackouts:</span>
-                                        <strong class="text-dark" id="donutLegBlack">0% (0)</strong>
+                                        <strong class="text-body" id="donutLegBlack">0% (0)</strong>
                                     </li>
                                 </ul>
                             </div>
@@ -770,13 +768,13 @@ $allMaintenances = $allMaintenances ?? [];
 
                 <!-- B. Collapsible DataTables Table Section -->
                 <div class="collapse mb-4" id="dayModalLogsContainer">
-                    <div class="card border bg-light p-3 shadow-sm">
+                    <div class="card border bg-body-secondary p-3 shadow-sm">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold mb-0 small text-dark"><i class="bi bi-activity text-primary me-1"></i> Raw Heartbeat Telemetry</h6>
+                            <h6 class="fw-bold mb-0 small text-body"><i class="bi bi-activity text-primary me-1"></i> Raw Heartbeat Telemetry</h6>
                             <button type="button" class="btn-close btn-sm" onclick="bootstrap.Collapse.getInstance(document.getElementById('dayModalLogsContainer')).hide()"></button>
                         </div>
                         <div class="table-responsive">
-                            <table id="dayModalLogsTable" class="table table-sm table-hover align-middle mb-0 w-100 bg-white rounded border">
+                            <table id="dayModalLogsTable" class="table table-sm table-hover align-middle mb-0 w-100 bg-body rounded border">
                                 <thead class="table-light">
                                     <tr>
                                         <th style="width: 100px;">Time</th>
@@ -842,7 +840,7 @@ $allMaintenances = $allMaintenances ?? [];
                         
                         <div class="mb-3">
                             <label class="form-label text-muted small mb-1"><?= __('public.target_service') ?>:</label>
-                            <div class="p-2 bg-light rounded-3 border fw-bold text-dark small d-flex align-items-center gap-2" id="modalTargetServiceName">
+                            <div class="p-2 bg-body-secondary rounded-3 border fw-bold text-body small d-flex align-items-center gap-2" id="modalTargetServiceName">
                                 <i class="bi bi-hdd-network text-primary"></i> <?= __('public.all_core_services') ?>
                             </div>
                         </div>
@@ -862,7 +860,7 @@ $allMaintenances = $allMaintenances ?? [];
                 <!-- TAB 2: UNSUBSCRIBE FORM -->
                 <div class="tab-pane fade" id="tabUnsubscribe">
                     <form action="/subscribe/request-unsubscribe" method="POST">
-                        <div class="alert alert-light border small text-muted mb-3">
+                        <div class="alert alert-body border small text-muted mb-3">
                             <i class="bi bi-shield-lock text-danger me-1"></i>
                             <?= __('public.unsubscribe_info') ?>
                         </div>
@@ -901,7 +899,6 @@ function openDayDetailModalFromElement(el) {
         currentDayModalData = data;
         isLogsTableLoaded = false;
 
-        // Hide both collapsible containers on modal open
         bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalDonutContainer'), { toggle: false }).hide();
         bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalLogsContainer'), { toggle: false }).hide();
 
@@ -955,13 +952,13 @@ function openDayDetailModalFromElement(el) {
                 maintHtml += `
                     <div class="card border-info mb-3 shadow-sm">
                         <div class="card-header bg-info bg-opacity-25 py-2 d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-dark"><i class="bi bi-tools text-info me-1"></i> <?= addslashes(__('maintenance.title')) ?></span>
+                            <span class="fw-bold text-body"><i class="bi bi-tools text-info me-1"></i> <?= addslashes(__('maintenance.title')) ?></span>
                             <span class="badge bg-info text-dark">${m.status}</span>
                         </div>
                         <div class="card-body">
-                            <h6 class="fw-bold mb-2 text-dark">${m.title}</h6>
+                            <h6 class="fw-bold mb-2 text-body">${m.title}</h6>
                             <p class="small text-muted mb-2">${m.description || '<?= addslashes(__('common.description')) ?>'}</p>
-                            <div class="p-2 bg-light rounded border small text-dark">
+                            <div class="p-2 bg-body-secondary rounded border small text-body">
                                 <i class="bi bi-clock me-1 text-primary"></i> <strong><?= addslashes(__('public.window')) ?>:</strong> ${m.start_time} — ${m.end_time}
                             </div>
                         </div>
@@ -986,7 +983,7 @@ function openDayDetailModalFromElement(el) {
                         timelineHtml += `
                             <div class="mb-2 position-relative">
                                 <span class="badge bg-secondary me-1">${u.time}</span>
-                                <strong class="small text-dark text-capitalize">${u.status}:</strong>
+                                <strong class="small text-body text-capitalize">${u.status}:</strong>
                                 <p class="mb-0 text-muted small ps-2">${u.message}</p>
                             </div>
                         `;
@@ -995,14 +992,14 @@ function openDayDetailModalFromElement(el) {
                 incHtml += `
                     <div class="card border-warning mb-3 shadow-sm">
                         <div class="card-header bg-warning bg-opacity-25 py-2 d-flex justify-content-between align-items-center">
-                            <span class="fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> <?= addslashes(__('public.reported_incident')) ?></span>
+                            <span class="fw-bold text-body"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> <?= addslashes(__('public.reported_incident')) ?></span>
                             <div class="d-flex gap-1">
                                 <span class="badge bg-danger">${inc.impact}</span>
                                 <span class="badge bg-dark">${inc.status}</span>
                             </div>
                         </div>
                         <div class="card-body">
-                            <h6 class="fw-bold mb-2 text-dark">${inc.title}</h6>
+                            <h6 class="fw-bold mb-2 text-body">${inc.title}</h6>
                             <div class="small text-muted mb-3">
                                 <i class="bi bi-calendar-event me-1"></i> <strong><?= addslashes(__('public.opened')) ?>:</strong> ${inc.created_at} &bull; 
                                 <i class="bi bi-clock-history me-1"></i> <strong><?= addslashes(__('public.updated')) ?>:</strong> ${inc.updated_at}
@@ -1039,12 +1036,10 @@ function toggleUptimeDonutChart() {
     const container = document.getElementById('dayModalDonutContainer');
     const collapseInstance = bootstrap.Collapse.getOrCreateInstance(container);
     
-    // Close logs table if open
     bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalLogsContainer'), { toggle: false }).hide();
 
     collapseInstance.toggle();
 
-    // Render pure SVG Donut Ring
     const total = currentDayModalData.checks;
     const up    = currentDayModalData.up_checks || 0;
     const down  = currentDayModalData.outages || 0;
@@ -1087,7 +1082,6 @@ async function toggleChecksTable(filterStatus = 'all') {
     const container = document.getElementById('dayModalLogsContainer');
     const collapseInstance = bootstrap.Collapse.getOrCreateInstance(container);
 
-    // Close donut chart if open
     bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalDonutContainer'), { toggle: false }).hide();
 
     collapseInstance.show();
