@@ -49,9 +49,11 @@ class EdgeProbeService
             return true;
         }
 
+        // Explicitly set method to GET to mirror MonitorService behavior
         $targets = array_map(fn($m) => [
             'id'              => (int)$m['id'],
             'url'             => $m['target'],
+            'method'          => 'GET',
             'timeout_seconds' => (int)$m['timeout_seconds']
         ], $monitors);
 
