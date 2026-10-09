@@ -1,8 +1,10 @@
 <!-- path: app/Views/public/index.php -->
 <?php
-$uptimeHistory   = $uptimeHistory ?? [];
-$allIncidents    = $allIncidents ?? [];
-$allMaintenances = $allMaintenances ?? [];
+$uptimeHistory     = $uptimeHistory ?? [];
+$allIncidents      = $allIncidents ?? [];
+$allMaintenances   = $allMaintenances ?? [];
+$singleIncident    = $singleIncident ?? null;
+$singleMaintenance = $singleMaintenance ?? null;
 ?>
 <!-- DataTables CSS for Modal -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
@@ -196,6 +198,111 @@ $allMaintenances = $allMaintenances ?? [];
         <div class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i> You have been successfully unsubscribed from all alert notifications.
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Direct Share Link Card: Single Incident -->
+    <?php if (!empty($singleIncident)): ?>
+        <div class="card border-danger shadow-sm mb-5">
+            <div class="card-header bg-danger text-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                    <strong class="fs-6"><?= htmlspecialchars($singleIncident['title']) ?></strong>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-danger text-uppercase"><?= htmlspecialchars($singleIncident['status']) ?></span>
+                    <a href="/" class="btn btn-sm btn-outline-light py-0 px-2" title="Close single view">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap gap-3 mb-3 text-body-secondary small">
+                    <div>
+                        <i class="bi bi-hdd-network text-primary me-1"></i>
+                        <strong>Service:</strong> <?= htmlspecialchars($singleIncident['monitor_name'] ?? 'All Services (Global)') ?>
+                    </div>
+                    <div>
+                        <i class="bi bi-shield-exclamation text-danger me-1"></i>
+                        <strong>Impact:</strong> <span class="badge bg-secondary text-uppercase"><?= htmlspecialchars($singleIncident['impact']) ?></span>
+                    </div>
+                    <div>
+                        <i class="bi bi-clock me-1"></i>
+                        <strong>Timeline:</strong> <?= format_date($singleIncident['start_time'] ?? $singleIncident['created_at'], 'M d, Y H:i') ?>
+                        <?php if (!empty($singleIncident['end_time'])): ?>
+                            &mdash; <?= format_date($singleIncident['end_time'], 'M d, Y H:i T') ?>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <?php if (!empty($singleIncident['ai_summary'])): ?>
+                    <div class="alert alert-body border mb-4">
+                        <small class="text-body-secondary d-block fw-bold mb-1"><i class="bi bi-robot me-1 text-primary"></i> AI Public Summary</small>
+                        <?= nl2br(htmlspecialchars($singleIncident['ai_summary'])) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($singleIncident['updates'])): ?>
+                    <h6 class="fw-bold mb-3"><i class="bi bi-clock-history me-1 text-secondary"></i> Chronological Updates</h6>
+                    <div class="timeline ps-3 border-start">
+                        <?php foreach ($singleIncident['updates'] as $update): ?>
+                            <div class="mb-3 position-relative">
+                                <span class="badge bg-secondary"><?= format_date($update['created_at'], 'M d, H:i') ?></span>
+                                <strong class="ms-2 text-capitalize text-body"><?= htmlspecialchars($update['status']) ?>:</strong>
+                                <p class="mb-0 text-body-secondary mt-1"><?= nl2br(htmlspecialchars($update['message'])) ?></p>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="mt-3 pt-3 border-top text-end">
+                    <a href="/" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> View Full Status Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- Direct Share Link Card: Single Maintenance -->
+    <?php if (!empty($singleMaintenance)): ?>
+        <div class="card border-info shadow-sm mb-5">
+            <div class="card-header bg-info text-dark py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-tools fs-5"></i>
+                    <strong class="fs-6"><?= htmlspecialchars($singleMaintenance['title']) ?></strong>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-dark text-white text-uppercase"><?= htmlspecialchars(str_replace('_', ' ', $singleMaintenance['status'])) ?></span>
+                    <a href="/" class="btn btn-sm btn-outline-dark py-0 px-2" title="Close single view">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap gap-3 mb-3 text-body-secondary small">
+                    <div>
+                        <i class="bi bi-hdd-network text-primary me-1"></i>
+                        <strong>Service:</strong> <?= htmlspecialchars($singleMaintenance['monitor_name'] ?? 'All Services (Global)') ?>
+                    </div>
+                    <div>
+                        <i class="bi bi-calendar-event text-info me-1"></i>
+                        <strong>Window:</strong> <?= format_date($singleMaintenance['start_time'], 'M d, Y H:i') ?> &mdash; <?= format_date($singleMaintenance['end_time'], 'M d, Y H:i T') ?>
+                    </div>
+                </div>
+
+                <?php if (!empty($singleMaintenance['description'])): ?>
+                    <div class="bg-body-secondary p-3 rounded border mb-3 text-body">
+                        <?= nl2br(htmlspecialchars($singleMaintenance['description'])) ?>
+                    </div>
+                <?php endif; ?>
+
+                <div class="mt-3 pt-3 border-top text-end">
+                    <a href="/" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> View Full Status Dashboard
+                    </a>
+                </div>
+            </div>
         </div>
     <?php endif; ?>
 
@@ -579,8 +686,8 @@ $allMaintenances = $allMaintenances ?? [];
                                         </span>
                                     </div>
 
-                                    <!-- Sub-service 90-Day Mini Bar (Strictly its own metrics) -->
-                                    <div class="uptime-graph" style="height: 20px;" role="group">
+                                    <!-- Sub-service 90-Day Mini Bar (Strictly its own metrics and child-specific arrows) -->
+                                    <div class="uptime-graph" style="height: 24px;" role="group">
                                         <?php
                                             for ($cDay = 89; $cDay >= 0; $cDay--):
                                                 $cDayTime  = strtotime("-{$cDay} days");
@@ -597,6 +704,36 @@ $allMaintenances = $allMaintenances ?? [];
                                                 $cBlackPct = ($cTotal > 0) ? round(($cBlack / $cTotal) * 100, 2) : 0;
                                                 $cDownPct  = ($cTotal > 0) ? round(($cDown / $cTotal) * 100, 2) : 0;
                                                 $cUpPct    = ($cTotal > 0) ? round(($cUp / $cTotal) * 100, 2) : 100.00;
+
+                                                // Sub-service specific Incidents
+                                                $cDayIncidents = [];
+                                                foreach ($allIncidents as $inc) {
+                                                    if ((int)($inc['monitor_id'] ?? 0) === $cId) {
+                                                        $rawStart = $inc['start_time'] ?? $inc['created_at'];
+                                                        $rawEnd   = $inc['end_time'] ?? ($inc['status'] === 'resolved' ? $inc['updated_at'] : gmdate('Y-m-d H:i:s'));
+                                                        $incStart = format_date($rawStart, 'Y-m-d');
+                                                        $incEnd   = format_date($rawEnd, 'Y-m-d');
+
+                                                        if ($cDayDate >= $incStart && $cDayDate <= $incEnd) {
+                                                            $cDayIncidents[] = $inc;
+                                                        }
+                                                    }
+                                                }
+
+                                                // Sub-service specific Maintenances
+                                                $cDayMaintenances = [];
+                                                foreach ($allMaintenances as $maint) {
+                                                    if ((int)($maint['monitor_id'] ?? 0) === $cId) {
+                                                        $mStart = format_date($maint['start_time'], 'Y-m-d');
+                                                        $mEnd   = format_date($maint['end_time'], 'Y-m-d');
+                                                        if ($cDayDate >= $mStart && $cDayDate <= $mEnd) {
+                                                            $cDayMaintenances[] = $maint;
+                                                        }
+                                                    }
+                                                }
+
+                                                $cHasMaint = !empty($cDayMaintenances);
+                                                $cHasInc   = !empty($cDayIncidents);
 
                                                 $cStyle = '';
                                                 $cLabel = "<strong>{$cDate}</strong><br>";
@@ -640,6 +777,13 @@ $allMaintenances = $allMaintenances ?? [];
                                                     $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                                 }
 
+                                                if ($cHasMaint) {
+                                                    $cLabel .= "<br><span style='color: #0ea5e9;'>▼</span> " . count($cDayMaintenances) . " " . __('maintenance.title');
+                                                }
+                                                if ($cHasInc) {
+                                                    $cLabel .= "<br><span style='color: #ea580c;'>▲</span> " . count($cDayIncidents) . " " . __('public.reported_incident');
+                                                }
+
                                                 $childPayload = [
                                                     'date'          => $cDate,
                                                     'date_raw'      => $cDayDate,
@@ -653,18 +797,54 @@ $allMaintenances = $allMaintenances ?? [];
                                                     'outages'       => $cDown,
                                                     'outage_pct'    => $cDownPct,
                                                     'child_issues'  => [],
-                                                    'incidents'     => [],
-                                                    'maintenances'  => []
+                                                    'incidents'     => array_map(fn($inc) => [
+                                                        'title'       => $inc['title'],
+                                                        'impact'      => strtoupper($inc['impact']),
+                                                        'status'      => strtoupper($inc['status']),
+                                                        'created_at'  => format_date($inc['start_time'] ?? $inc['created_at'], 'M d, Y H:i'),
+                                                        'updated_at'  => format_date($inc['end_time'] ?? $inc['updated_at'], 'M d, Y H:i'),
+                                                        'updates'     => array_map(fn($u) => [
+                                                            'status'  => strtoupper($u['status']),
+                                                            'message' => $u['message'],
+                                                            'time'    => format_date($u['created_at'], 'M d, H:i')
+                                                        ], $inc['updates'] ?? [])
+                                                    ], $cDayIncidents),
+                                                    'maintenances'  => array_map(fn($m) => [
+                                                        'title'       => $m['title'],
+                                                        'description' => $m['description'] ?? '',
+                                                        'status'      => strtoupper(str_replace('_', ' ', $m['status'])),
+                                                        'start_time'  => format_date($m['start_time'], 'M d, Y H:i'),
+                                                        'end_time'    => format_date($m['end_time'], 'M d, H:i T')
+                                                    ], $cDayMaintenances)
                                                 ];
+
+                                                $cColClasses = 'uptime-day-col';
+                                                if ($cHasMaint) $cColClasses .= ' has-maint';
+                                                if ($cHasInc)   $cColClasses .= ' has-inc';
                                         ?>
-                                            <div class="uptime-bar" 
-                                                 <?= $cStyle ?>
+                                            <div class="<?= $cColClasses ?>"
+                                                 style="padding: 4px 0;"
                                                  data-bs-toggle="tooltip" 
                                                  data-bs-placement="top" 
                                                  data-bs-html="true" 
                                                  title="<?= htmlspecialchars($cLabel, ENT_QUOTES) ?>"
                                                  data-day-payload='<?= htmlspecialchars(json_encode($childPayload, JSON_HEX_APOS | JSON_HEX_QUOT), ENT_QUOTES, 'UTF-8') ?>'
                                                  onclick="openDayDetailModalFromElement(this)">
+
+                                                <?php if ($cHasMaint): ?>
+                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7" style="width: 7px; height: 5px;">
+                                                        <polygon points="0,0 10,0 5,7" fill="#0ea5e9" />
+                                                    </svg>
+                                                <?php endif; ?>
+
+                                                <div class="uptime-bar" <?= $cStyle ?>></div>
+
+                                                <?php if ($cHasInc): ?>
+                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7" style="width: 7px; height: 5px;">
+                                                        <polygon points="5,0 10,7 0,7" fill="#ea580c" />
+                                                    </svg>
+                                                <?php endif; ?>
+
                                             </div>
                                         <?php endfor; ?>
                                     </div>
