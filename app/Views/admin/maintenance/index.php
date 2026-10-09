@@ -138,9 +138,17 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                         <small class="text-body-secondary"><?= format_date($m['end_time'], 'M d, Y H:i') ?></small>
                                     </td>
                                     <td class="text-end">
-                                        <!-- Quick Mark as Completed Button -->
+                                        <!-- Copy Direct Share Link Button -->
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1" 
+                                                onclick="copyShareLink('<?= app_url() ?>/?maintenance=<?= $m['id'] ?>', this)" 
+                                                title="Copy Direct Shareable Link">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+
+                                        <!-- Quick Mark as Completed Button (Preserves monitor_id) -->
                                         <form action="/admin/maintenance/update" method="POST" class="d-inline">
                                             <input type="hidden" name="maintenance_id" value="<?= $m['id'] ?>">
+                                            <input type="hidden" name="monitor_id" value="<?= $m['monitor_id'] ?? '' ?>">
                                             <input type="hidden" name="title" value="<?= htmlspecialchars($m['title']) ?>">
                                             <input type="hidden" name="description" value="<?= htmlspecialchars($m['description'] ?? '') ?>">
                                             <input type="hidden" name="start_time" value="<?= $m['start_local'] ?>">
@@ -217,6 +225,13 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                         </span>
                                     </td>
                                     <td class="text-end">
+                                        <!-- Copy Direct Share Link Button -->
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1" 
+                                                onclick="copyShareLink('<?= app_url() ?>/?maintenance=<?= $p['id'] ?>', this)" 
+                                                title="Copy Direct Shareable Link">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+
                                         <button class="btn btn-sm btn-outline-secondary me-1" 
                                                 onclick="openEditMaintenanceModal(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['title'])) ?>', '<?= htmlspecialchars(addslashes($p['description'] ?? '')) ?>', '<?= $p['start_local'] ?>', '<?= $p['end_local'] ?>', '<?= $p['status'] ?>', '<?= $p['monitor_id'] ?? '' ?>', '<?= htmlspecialchars(addslashes($p['timezone'] ?? $activeTimezone)) ?>')"
                                                 title="Edit Details">
@@ -457,5 +472,22 @@ function openEditMaintenanceModal(id, title, desc, start, end, status, monitorId
         document.getElementById('editMaintTimezone').value = timezone;
     }
     new bootstrap.Modal(document.getElementById('editMaintenanceModal')).show();
+}
+
+// Copy direct share link to clipboard with visual feedback
+function copyShareLink(url, btn) {
+    navigator.clipboard.writeText(url).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 text-success"></i>';
+        btn.classList.remove('btn-outline-info');
+        btn.classList.add('btn-outline-success');
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-outline-info');
+        }, 1500);
+    }).catch(err => {
+        prompt('Direct link:', url);
+    });
 }
 </script>
