@@ -5,6 +5,11 @@ $allIncidents      = $allIncidents ?? [];
 $allMaintenances   = $allMaintenances ?? [];
 $singleIncident    = $singleIncident ?? null;
 $singleMaintenance = $singleMaintenance ?? null;
+$activeTimezone    = $activeTimezone ?? \App\Services\DateService::getActiveTimezone();
+
+// Reference today's timestamp in the active timezone
+$todayTzStr  = \App\Services\DateService::toLocal(gmdate('Y-m-d H:i:s'), $activeTimezone);
+$todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
 ?>
 <!-- Defensive Bootstrap 5.3 & Icons include to guarantee styling across environments -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -339,7 +344,7 @@ $singleMaintenance = $singleMaintenance ?? null;
         <div class="card border-info mb-4 shadow-sm">
             <div class="card-header bg-info text-dark fw-bold d-flex justify-content-between align-items-center flex-wrap gap-1">
                 <span><i class="bi bi-tools me-2"></i> <?= __('maintenance.title') ?></span>
-                <small class="badge bg-dark bg-opacity-25 text-white"><i class="bi bi-clock me-1"></i> <?= \App\Services\DateService::getActiveTimezone() ?></small>
+                <small class="badge bg-dark bg-opacity-25 text-white"><i class="bi bi-clock me-1"></i> <?= $activeTimezone ?></small>
             </div>
             <div class="card-body">
                 <?php foreach ($maintenances as $maint): ?>
@@ -401,7 +406,7 @@ $singleMaintenance = $singleMaintenance ?? null;
 
     <!-- Reusable Monitor Row Function -->
     <?php
-    $renderMonitorRow = function(array $monitor) use ($uptimeHistory, $allIncidents, $allMaintenances) {
+    $renderMonitorRow = function(array $monitor) use ($uptimeHistory, $allIncidents, $allMaintenances, $activeTimezone, $todayTzBase) {
         $hasChildren = !empty($monitor['children']);
         $uptimePct   = (float)($monitor['uptime_percentage'] ?? 100.00);
         $isDown      = ($monitor['current_status'] === 'down');
@@ -484,7 +489,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                 <div class="uptime-graph" role="group" aria-label="90 Days Uptime History">
                     <?php
                         for ($day = 89; $day >= 0; $day--):
-                            $dayTime       = strtotime("-{$day} days");
+                            $dayTime       = strtotime("-{$day} days", $todayTzBase);
                             $dayDate       = date('Y-m-d', $dayTime);
                             $formattedDate = date('M d, Y', $dayTime);
 
@@ -506,8 +511,8 @@ $singleMaintenance = $singleMaintenance ?? null;
                                 if ($incMonId === null || $incMonId === $mId) {
                                     $rawStart = $inc['start_time'] ?? $inc['created_at'];
                                     $rawEnd   = $inc['end_time'] ?? ($inc['status'] === 'resolved' ? $inc['updated_at'] : gmdate('Y-m-d H:i:s'));
-                                    $incStart = format_date($rawStart, 'Y-m-d');
-                                    $incEnd   = format_date($rawEnd, 'Y-m-d');
+                                    $incStart = substr(\App\Services\DateService::toLocal($rawStart, $activeTimezone), 0, 10);
+                                    $incEnd   = substr(\App\Services\DateService::toLocal($rawEnd, $activeTimezone), 0, 10);
 
                                     if ($dayDate >= $incStart && $dayDate <= $incEnd) {
                                         $dayIncidents[] = $inc;
@@ -520,8 +525,8 @@ $singleMaintenance = $singleMaintenance ?? null;
                             foreach ($allMaintenances as $maint) {
                                 $maintMonId = !empty($maint['monitor_id']) ? (int)$maint['monitor_id'] : null;
                                 if ($maintMonId === null || $maintMonId === $mId) {
-                                    $mStart = format_date($maint['start_time'], 'Y-m-d');
-                                    $mEnd   = format_date($maint['end_time'], 'Y-m-d');
+                                    $mStart = substr(\App\Services\DateService::toLocal($maint['start_time'], $activeTimezone), 0, 10);
+                                    $mEnd   = substr(\App\Services\DateService::toLocal($maint['end_time'], $activeTimezone), 0, 10);
                                     if ($dayDate >= $mStart && $dayDate <= $mEnd) {
                                         $dayMaintenances[] = $maint;
                                     }
@@ -573,14 +578,13 @@ $singleMaintenance = $singleMaintenance ?? null;
                                 $barStyle = 'style="background-color: #ef4444;"';
                                 $statusDesc = "<span style='color: #ef4444;'>●</span> " . __('status.major_outage');
                             } elseif ($day === 0 && $isDegraded && !$hasChildren) {
-                                // Only standalone monitors without sub-services color the whole bar yellow
                                 $barStyle = 'style="background-color: #f59e0b;"';
                                 $statusDesc = "<span style='color: #f59e0b;'>●</span> " . __('status.degraded');
                             } elseif ($totalChecks > 0 || $day === 0) {
                                 $barStyle = 'style="background-color: #10b981;"';
                                 $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                             } else {
-                                $barStyle = 'style="background-color: var(--bs-secondary-bg, #e9ecef);"';
+                                $barStyle = 'style="background-color: var(--bs-secondary-bg, #6c757d);"';
                                 $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                             }
 
@@ -694,10 +698,10 @@ $singleMaintenance = $singleMaintenance ?? null;
                                     </div>
 
                                     <!-- Sub-service 90-Day Mini Bar (Strictly its own metrics and child-specific arrows) -->
-                                    <div class="uptime-graph" style="height: 28px; overflow: visible; margin: 4px 0;" role="group">
+                                    <div class="uptime-graph" style="height: 28px; overflow: visible; margin: 6px 0;" role="group">
                                         <?php
                                             for ($cDay = 89; $cDay >= 0; $cDay--):
-                                                $cDayTime  = strtotime("-{$cDay} days");
+                                                $cDayTime  = strtotime("-{$cDay} days", $todayTzBase);
                                                 $cDayDate  = date('Y-m-d', $cDayTime);
                                                 $cDate     = date('M d, Y', $cDayTime);
 
@@ -719,8 +723,8 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                     if ($incMonId === $cId) {
                                                         $rawStart = $inc['start_time'] ?? $inc['created_at'];
                                                         $rawEnd   = $inc['end_time'] ?? ($inc['status'] === 'resolved' ? $inc['updated_at'] : gmdate('Y-m-d H:i:s'));
-                                                        $incStart = format_date($rawStart, 'Y-m-d');
-                                                        $incEnd   = format_date($rawEnd, 'Y-m-d');
+                                                        $incStart = substr(\App\Services\DateService::toLocal($rawStart, $activeTimezone), 0, 10);
+                                                        $incEnd   = substr(\App\Services\DateService::toLocal($rawEnd, $activeTimezone), 0, 10);
 
                                                         if ($cDayDate >= $incStart && $cDayDate <= $incEnd) {
                                                             $cDayIncidents[] = $inc;
@@ -733,8 +737,8 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                 foreach ($allMaintenances as $maint) {
                                                     $maintMonId = !empty($maint['monitor_id']) ? (int)$maint['monitor_id'] : null;
                                                     if ($maintMonId === $cId) {
-                                                        $mStart = format_date($maint['start_time'], 'Y-m-d');
-                                                        $mEnd   = format_date($maint['end_time'], 'Y-m-d');
+                                                        $mStart = substr(\App\Services\DateService::toLocal($maint['start_time'], $activeTimezone), 0, 10);
+                                                        $mEnd   = substr(\App\Services\DateService::toLocal($maint['end_time'], $activeTimezone), 0, 10);
                                                         if ($cDayDate >= $mStart && $cDayDate <= $mEnd) {
                                                             $cDayMaintenances[] = $maint;
                                                         }
@@ -766,7 +770,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                     if ($cDownPct >= 95.0) {
                                                         $cStyle = 'style="background-color: #ef4444;"';
                                                     } else {
-                                                        $vRed = max(18, min(85, (int)$cDownPct));
+                                                        $vRed = max(18, min(85, (int)$downPct));
                                                         $cStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
                                                     }
                                                     $cLabel .= "<span style='color: #ef4444;'>●</span> Downtime: {$cDownPct}% ({$cUpPct}% " . __('public.uptime') . ")";
@@ -782,7 +786,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                     $cStyle = 'style="background-color: #10b981;"';
                                                     $cLabel .= "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                                                 } else {
-                                                    $cStyle = 'style="background-color: var(--bs-secondary-bg, #e9ecef);"';
+                                                    $cStyle = 'style="background-color: var(--bs-secondary-bg, #6c757d);"';
                                                     $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                                 }
 
@@ -832,7 +836,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                 if ($cHasInc)   $cColClasses .= ' has-inc';
                                         ?>
                                             <div class="<?= $cColClasses ?>"
-                                                 style="padding: 4px 0;"
+                                                 style="padding: 4px 0; min-height: 28px; position: relative;"
                                                  data-bs-toggle="tooltip" 
                                                  data-bs-placement="top" 
                                                  data-bs-html="true" 
@@ -841,7 +845,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                  onclick="openDayDetailModalFromElement(this)">
 
                                                 <?php if ($cHasMaint): ?>
-                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7" style="top: -2px; width: 8px; height: 6px;">
+                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7" style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 8px; height: 6px; z-index: 10;">
                                                         <polygon points="0,0 10,0 5,7" fill="#0ea5e9" />
                                                     </svg>
                                                 <?php endif; ?>
@@ -849,7 +853,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                 <div class="uptime-bar" <?= $cStyle ?>></div>
 
                                                 <?php if ($cHasInc): ?>
-                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7" style="bottom: -2px; width: 8px; height: 6px;">
+                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7" style="position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); width: 8px; height: 6px; z-index: 10;">
                                                         <polygon points="5,0 10,7 0,7" fill="#ea580c" />
                                                     </svg>
                                                 <?php endif; ?>
@@ -1155,7 +1159,8 @@ $singleMaintenance = $singleMaintenance ?? null;
     </div>
 </div>
 
-<!-- DataTables Scripts for Interactive Modal Telemetry -->
+<!-- Scripts for Bootstrap, DataTables & Modal Interactions -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
@@ -1174,8 +1179,14 @@ function openDayDetailModalFromElement(el) {
         currentDayModalData = data;
         isLogsTableLoaded = false;
 
-        bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalDonutContainer'), { toggle: false }).hide();
-        bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalLogsContainer'), { toggle: false }).hide();
+        const donutEl = document.getElementById('dayModalDonutContainer');
+        if (donutEl && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            bootstrap.Collapse.getOrCreateInstance(donutEl, { toggle: false }).hide();
+        }
+        const logsEl = document.getElementById('dayModalLogsContainer');
+        if (logsEl && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            bootstrap.Collapse.getOrCreateInstance(logsEl, { toggle: false }).hide();
+        }
 
         if (dayLogsDataTable) {
             dayLogsDataTable.destroy();
@@ -1305,7 +1316,10 @@ function openDayDetailModalFromElement(el) {
             cleanMsg.classList.remove('d-none');
         }
 
-        new bootstrap.Modal(document.getElementById('dayDetailModal')).show();
+        const modalEl = document.getElementById('dayDetailModal');
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
     } catch (e) {
         console.error('Error opening day detail modal:', e);
     }
@@ -1316,9 +1330,14 @@ function toggleUptimeDonutChart() {
     if (!currentDayModalData || currentDayModalData.checks === 0) return;
 
     const container = document.getElementById('dayModalDonutContainer');
+    if (!container || typeof bootstrap === 'undefined' || !bootstrap.Collapse) return;
+    
     const collapseInstance = bootstrap.Collapse.getOrCreateInstance(container);
     
-    bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalLogsContainer'), { toggle: false }).hide();
+    const logsEl = document.getElementById('dayModalLogsContainer');
+    if (logsEl) {
+        bootstrap.Collapse.getOrCreateInstance(logsEl, { toggle: false }).hide();
+    }
 
     collapseInstance.toggle();
 
@@ -1362,9 +1381,14 @@ async function toggleChecksTable(filterStatus = 'all') {
     if (!currentDayModalData || currentDayModalData.checks === 0) return;
 
     const container = document.getElementById('dayModalLogsContainer');
+    if (!container || typeof bootstrap === 'undefined' || !bootstrap.Collapse) return;
+
     const collapseInstance = bootstrap.Collapse.getOrCreateInstance(container);
 
-    bootstrap.Collapse.getOrCreateInstance(document.getElementById('dayModalDonutContainer'), { toggle: false }).hide();
+    const donutEl = document.getElementById('dayModalDonutContainer');
+    if (donutEl) {
+        bootstrap.Collapse.getOrCreateInstance(donutEl, { toggle: false }).hide();
+    }
 
     collapseInstance.show();
 
@@ -1421,10 +1445,13 @@ function openSubscriptionModal(monitorId, monitorName) {
     document.getElementById('modalTargetServiceName').innerHTML = '<i class="bi bi-hdd-network text-primary"></i> ' + monitorName;
 
     const subscribeTabTrigger = document.querySelector('#subscriptionModal .nav-link[data-bs-target="#tabSubscribe"]');
-    if (subscribeTabTrigger) {
+    if (subscribeTabTrigger && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
         bootstrap.Tab.getOrCreateInstance(subscribeTabTrigger).show();
     }
 
-    new bootstrap.Modal(document.getElementById('subscriptionModal')).show();
+    const subModal = document.getElementById('subscriptionModal');
+    if (subModal && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        bootstrap.Modal.getOrCreateInstance(subModal).show();
+    }
 }
 </script>
