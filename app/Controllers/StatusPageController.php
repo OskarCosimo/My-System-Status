@@ -36,7 +36,7 @@ class StatusPageController
             $childStmt = $this->db->prepare("
                 SELECT * FROM monitors 
                 WHERE is_active = 1 AND parent_id = ? 
-                ORDER BY name ASC
+                ORDER BY sort_order ASC, name ASC
             ");
             $childStmt->execute([$m['id']]);
             $m['children'] = $childStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -100,7 +100,7 @@ class StatusPageController
             }
         }
 
-        // 6. Real 90-Day Probe Logs Aggregation (calculated independently per monitor)
+        // 6. Real 90-Day Probe Logs Aggregation
         $histStmt = $this->db->query("
             SELECT monitor_id, DATE(created_at) as check_date,
                    SUM(LOWER(status) = 'blackout') as blackout_count,
@@ -129,7 +129,9 @@ class StatusPageController
         $incStmt = $this->db->query("
             SELECT id, monitor_id, title, impact, status, ai_summary, start_time, end_time, timezone, created_at, updated_at 
             FROM incidents 
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY) OR status != 'resolved'
+            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY) 
+               OR start_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+               OR status != 'resolved'
         ");
         $allIncidents = $incStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -148,7 +150,9 @@ class StatusPageController
         $maintStmt = $this->db->query("
             SELECT id, monitor_id, title, description, status, start_time, end_time, timezone 
             FROM maintenances 
-            WHERE start_time >= DATE_SUB(NOW(), INTERVAL 90 DAY) OR end_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+            WHERE start_time >= DATE_SUB(NOW(), INTERVAL 90 DAY) 
+               OR end_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
+               OR status IN ('scheduled', 'in_progress')
         ");
         $allMaintenances = $maintStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -206,7 +210,7 @@ class StatusPageController
                 }
                 unset($maint);
 
-                // Translate All Historical Maintenances (for modal inspection)
+                // Translate All Historical Maintenances
                 foreach ($allMaintenances as &$maint) {
                     $maint['title'] = $transService->getOrTranslate('maintenance', (int)$maint['id'], 'title', $maint['title'], $currentLocale);
                     if (!empty($maint['description'])) {
@@ -228,7 +232,7 @@ class StatusPageController
                 }
                 unset($inc);
 
-                // Translate All Historical Incidents (for modal inspection)
+                // Translate All Historical Incidents
                 foreach ($allIncidents as &$inc) {
                     $inc['title'] = $transService->getOrTranslate('incident', (int)$inc['id'], 'title', $inc['title'], $currentLocale);
                     if (!empty($inc['ai_summary'])) {
