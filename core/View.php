@@ -12,11 +12,17 @@ class View
     {
         extract($data);
 
-        $baseDir = dirname(__DIR__) . '/app/Views/';
+        $baseDir  = dirname(__DIR__) . '/app/Views/';
         $viewFile = $baseDir . ltrim($viewPath, '/') . '.php';
 
+        // Check view file existence with lowercase fallback for Linux compatibility
         if (!file_exists($viewFile)) {
-            throw new \Exception("View [{$viewPath}] not found at {$viewFile}");
+            $altView = dirname(__DIR__) . '/app/views/' . ltrim($viewPath, '/') . '.php';
+            if (file_exists($altView)) {
+                $viewFile = $altView;
+            } else {
+                throw new \Exception("View [{$viewPath}] not found at {$viewFile}");
+            }
         }
 
         // Capture view content
@@ -26,10 +32,22 @@ class View
 
         // Render inside layout if specified
         if ($layout) {
-            $layoutFile = $baseDir . ltrim($layout, '/') . '.php';
-            if (file_exists($layoutFile)) {
-                require $layoutFile;
-                return;
+            $normalizedLayout = ltrim($layout, '/');
+            $candidates = [
+                $baseDir . $normalizedLayout . '.php',
+                $baseDir . str_replace('layouts/', 'layout/', $normalizedLayout) . '.php',
+                $baseDir . str_replace('layout/', 'layouts/', $normalizedLayout) . '.php',
+                dirname(__DIR__) . '/app/views/' . $normalizedLayout . '.php',
+                dirname(__DIR__) . '/app/views/' . str_replace('layouts/', 'layout/', $normalizedLayout) . '.php',
+                $baseDir . 'layouts/' . basename($normalizedLayout) . '.php',
+                $baseDir . 'layout/' . basename($normalizedLayout) . '.php',
+            ];
+
+            foreach ($candidates as $cand) {
+                if (file_exists($cand)) {
+                    require $cand;
+                    return;
+                }
             }
         }
 
