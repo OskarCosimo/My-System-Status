@@ -1,3 +1,4 @@
+<!-- path: app/Views/public/index.php -->
 <?php
 $uptimeHistory     = $uptimeHistory ?? [];
 $allIncidents      = $allIncidents ?? [];
@@ -388,12 +389,8 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                     <div class="timeline ps-3 border-start">
                         <?php foreach ($incident['updates'] as $update): ?>
                             <div class="mb-3 position-relative">
-                                <span class="badge bg-secondary">
-                                    <time datetime="<?= htmlspecialchars($update['created_at']) ?>">
-                                        <?= format_date($update['created_at'], 'M d, H:i') ?>
-                                    </time>
-                                </span>
-                                <strong class="ms-2 text-capitalize"><?= $update['status'] ?>:</strong>
+                                <span class="badge bg-secondary"><?= format_date($update['created_at'], 'M d, H:i') ?></span>
+                                <strong class="ms-2 text-capitalize text-body"><?= htmlspecialchars($update['status']) ?>:</strong>
                                 <p class="mb-0 text-muted mt-1"><?= nl2br(htmlspecialchars($update['message'])) ?></p>
                             </div>
                         <?php endforeach; ?>
@@ -595,9 +592,13 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                             if ($hasIncident) {
                                 $label .= "<br><span style='color: #ea580c;'>▲</span> " . count($dayIncidents) . " " . __('public.reported_incident');
                             }
-                            if ($hasChildIssues) {
-                                $childNames = implode(', ', array_map(fn($c) => htmlspecialchars($c['name']), $childIssuesByDate[$dayDate]));
+                            
+                            $childIssueList = (!empty($childIssuesByDate[$dayDate]) && is_array($childIssuesByDate[$dayDate])) ? $childIssuesByDate[$dayDate] : [];
+                            if (!empty($childIssueList)) {
+                                $childNames = implode(', ', array_map(fn($c) => htmlspecialchars($c['name'] ?? ''), $childIssueList));
                                 $label .= "<br><span style='color: #f59e0b;'>⚠️</span> Secondary telemetry had issues: {$childNames}";
+                            } elseif ($hasChildIssues) {
+                                $label .= "<br><span style='color: #f59e0b;'>⚠️</span> Secondary telemetry reporting issues";
                             }
 
                             $modalPayload = [
@@ -612,19 +613,22 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                 'blackout_pct'  => $blackPct,
                                 'outages'       => $downChecks,
                                 'outage_pct'    => $downPct,
-                                'child_issues'  => $childIssuesByDate[$dayDate] ?? [],
-                                'incidents'     => array_map(fn($inc) => [
-                                    'title'       => $inc['title'] ?? '',
-                                    'impact'      => strtoupper($inc['impact'] ?? ''),
-                                    'status'      => strtoupper($inc['status'] ?? ''),
-                                    'created_at'  => format_date($inc['start_time'] ?? $inc['created_at'] ?? '', 'M d, Y H:i'),
-                                    'updated_at'  => format_date($inc['end_time'] ?? $inc['updated_at'] ?? '', 'M d, Y H:i'),
-                                    'updates'     => array_map(fn($u) => [
-                                        'status'  => strtoupper($u['status'] ?? ''),
-                                        'message' => $u['message'] ?? '',
-                                        'time'    => format_date($u['created_at'] ?? '', 'M d, H:i')
-                                    ], is_array($inc['updates'] ?? null) ? $inc['updates'] : [])
-                                ], is_array($dayIncidents ?? null) ? $dayIncidents : []),
+                                'child_issues'  => $childIssueList,
+                                'incidents'     => array_map(function($inc) {
+                                    $updates = is_array($inc['updates'] ?? null) ? $inc['updates'] : [];
+                                    return [
+                                        'title'       => $inc['title'] ?? '',
+                                        'impact'      => strtoupper($inc['impact'] ?? ''),
+                                        'status'      => strtoupper($inc['status'] ?? ''),
+                                        'created_at'  => format_date($inc['start_time'] ?? $inc['created_at'] ?? '', 'M d, Y H:i'),
+                                        'updated_at'  => format_date($inc['end_time'] ?? $inc['updated_at'] ?? '', 'M d, Y H:i'),
+                                        'updates'     => array_map(fn($u) => [
+                                            'status'  => strtoupper($u['status'] ?? ''),
+                                            'message' => $u['message'] ?? '',
+                                            'time'    => format_date($u['created_at'] ?? '', 'M d, H:i')
+                                        ], $updates)
+                                    ];
+                                }, is_array($dayIncidents ?? null) ? $dayIncidents : []),
                                 'maintenances'  => array_map(fn($m) => [
                                     'title'       => $m['title'] ?? '',
                                     'description' => $m['description'] ?? '',
@@ -770,10 +774,10 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                                     if ($cDownPct >= 95.0) {
                                                         $cStyle = 'style="background-color: #ef4444;"';
                                                     } else {
-                                                        $vRed = max(18, min(85, (int)$cDownPct));
+                                                        $vRed = max(18, min(85, (int)$downPct));
                                                         $cStyle = "style=\"background: linear-gradient(to top, #ef4444 0%, #ef4444 {$vRed}%, #10b981 {$vRed}%, #10b981 100%);\"";
                                                     }
-                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> Downtime: {$cDownPct}% ({$cUpPct}% " . __('public.uptime') . ")";
+                                                    $cLabel .= "<span style='color: #ef4444;'>●</span> Downtime: {$downPct}% ({$cUpPct}% " . __('public.uptime') . ")";
                                                 } elseif ($cDay === 0 && ($childDown || $childDegraded)) {
                                                     if ($childDown) {
                                                         $cStyle = 'style="background-color: #ef4444;"';
@@ -810,18 +814,21 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                                     'outages'       => $cDown,
                                                     'outage_pct'    => $cDownPct,
                                                     'child_issues'  => [],
-                                                    'incidents'     => array_map(fn($inc) => [
-                                                        'title'       => $inc['title'] ?? '',
-                                                        'impact'      => strtoupper($inc['impact'] ?? ''),
-                                                        'status'      => strtoupper($inc['status'] ?? ''),
-                                                        'created_at'  => format_date($inc['start_time'] ?? $inc['created_at'] ?? '', 'M d, Y H:i'),
-                                                        'updated_at'  => format_date($inc['end_time'] ?? $inc['updated_at'] ?? '', 'M d, Y H:i'),
-                                                        'updates'     => array_map(fn($u) => [
-                                                            'status'  => strtoupper($u['status'] ?? ''),
-                                                            'message' => $u['message'] ?? '',
-                                                            'time'    => format_date($u['created_at'] ?? '', 'M d, H:i')
-                                                        ], is_array($inc['updates'] ?? null) ? $inc['updates'] : [])
-                                                    ], is_array($cDayIncidents ?? null) ? $cDayIncidents : []),
+                                                    'incidents'     => array_map(function($inc) {
+                                                        $updates = is_array($inc['updates'] ?? null) ? $inc['updates'] : [];
+                                                        return [
+                                                            'title'       => $inc['title'] ?? '',
+                                                            'impact'      => strtoupper($inc['impact'] ?? ''),
+                                                            'status'      => strtoupper($inc['status'] ?? ''),
+                                                            'created_at'  => format_date($inc['start_time'] ?? $inc['created_at'] ?? '', 'M d, Y H:i'),
+                                                            'updated_at'  => format_date($inc['end_time'] ?? $inc['updated_at'] ?? '', 'M d, Y H:i'),
+                                                            'updates'     => array_map(fn($u) => [
+                                                                'status'  => strtoupper($u['status'] ?? ''),
+                                                                'message' => $u['message'] ?? '',
+                                                                'time'    => format_date($u['created_at'] ?? '', 'M d, H:i')
+                                                            ], $updates)
+                                                        ];
+                                                    }, is_array($cDayIncidents ?? null) ? $cDayIncidents : []),
                                                     'maintenances'  => array_map(fn($m) => [
                                                         'title'       => $m['title'] ?? '',
                                                         'description' => $m['description'] ?? '',
@@ -872,8 +879,8 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
         return ob_get_clean();
     };
 
-    $primaryMonitors   = array_values(array_filter($monitors, fn($m) => ((int)($m['is_primary'] ?? 0) === 1)));
-    $secondaryMonitors = array_values(array_filter($monitors, fn($m) => ((int)($m['is_primary'] ?? 0) === 0)));
+    $primaryMonitors   = array_values(array_filter($monitors ?? [], fn($m) => ((int)($m['is_primary'] ?? 0) === 1)));
+    $secondaryMonitors = array_values(array_filter($monitors ?? [], fn($m) => ((int)($m['is_primary'] ?? 0) === 0)));
     ?>
 
     <!-- 2. PRIMARY CORE INFRASTRUCTURE SECTION -->
