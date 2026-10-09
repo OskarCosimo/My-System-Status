@@ -129,6 +129,13 @@ $timezonesList     = $timezonesList ?? \App\Services\DateService::getTimezonesLi
                                         </small>
                                     </td>
                                     <td class="text-end">
+                                        <!-- Copy Direct Share Link Button -->
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1" 
+                                                onclick="copyShareLink('<?= app_url() ?>/?incident=<?= $inc['id'] ?>', this)" 
+                                                title="Copy Direct Shareable Link">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+
                                         <button class="btn btn-sm btn-primary me-1" 
                                                 onclick="openUpdateModal(<?= $inc['id'] ?>, '<?= htmlspecialchars(addslashes($inc['title'])) ?>', '<?= $inc['status'] ?>')"
                                                 title="Post Progress Note or Mark as Resolved">
@@ -203,6 +210,13 @@ $timezonesList     = $timezonesList ?? \App\Services\DateService::getTimezonesLi
                                         </small>
                                     </td>
                                     <td class="text-end">
+                                        <!-- Copy Direct Share Link Button -->
+                                        <button type="button" class="btn btn-sm btn-outline-info me-1" 
+                                                onclick="copyShareLink('<?= app_url() ?>/?incident=<?= $inc['id'] ?>', this)" 
+                                                title="Copy Direct Shareable Link">
+                                            <i class="bi bi-link-45deg"></i>
+                                        </button>
+
                                         <button class="btn btn-sm btn-outline-warning me-1" 
                                                 onclick="openUpdateModal(<?= $inc['id'] ?>, '<?= htmlspecialchars(addslashes($inc['title'])) ?>', 'monitoring')"
                                                 title="Reopen Incident">
@@ -401,7 +415,7 @@ $timezonesList     = $timezonesList ?? \App\Services\DateService::getTimezonesLi
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <label class="form-label fw-semibold mb-0">Public AI-Assisted Summary</label>
-                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnGenerateAi" onclick="fetchAiSummary()">
+                        <button type="button" class="btn-sm btn-outline-primary" id="btnGenerateAi" onclick="fetchAiSummary()">
                             <i class="bi bi-robot me-1"></i> Draft with AI
                         </button>
                     </div>
@@ -512,5 +526,22 @@ async function fetchAiSummary() {
         btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-robot me-1"></i> Draft with AI';
     }
+}
+
+// Copy direct share link to clipboard with visual feedback
+function copyShareLink(url, btn) {
+    navigator.clipboard.writeText(url).then(() => {
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 text-success"></i>';
+        btn.classList.remove('btn-outline-info');
+        btn.classList.add('btn-outline-success');
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('btn-outline-success');
+            btn.classList.add('btn-outline-info');
+        }, 1500);
+    }).catch(err => {
+        prompt('Direct link:', url);
+    });
 }
 </script>
