@@ -152,7 +152,46 @@ class StatusPageController
         ");
         $allMaintenances = $maintStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 8. Dynamic Content Translation & Cache (for non-English visitors)
+        // 8. Direct Link Lookup for single Incident or Maintenance (active or archived)
+        $singleIncident    = null;
+        $singleMaintenance = null;
+
+        $directIncidentId = isset($_GET['incident']) ? (int)$_GET['incident'] : 0;
+        if ($directIncidentId > 0) {
+            $stmt = $this->db->prepare("
+                SELECT i.*, m.name as monitor_name 
+                FROM incidents i 
+                LEFT JOIN monitors m ON m.id = i.monitor_id 
+                WHERE i.id = ? LIMIT 1
+            ");
+            $stmt->execute([$directIncidentId]);
+            $singleIncident = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+
+            if ($singleIncident) {
+                $upStmt = $this->db->prepare("
+                    SELECT id, status, message, created_at 
+                    FROM incident_updates 
+                    WHERE incident_id = ? 
+                    ORDER BY created_at DESC
+                ");
+                $upStmt->execute([$singleIncident['id']]);
+                $singleIncident['updates'] = $upStmt->fetchAll(PDO::FETCH_ASSOC);
+            }
+        }
+
+        $directMaintenanceId = isset($_GET['maintenance']) ? (int)$_GET['maintenance'] : 0;
+        if ($directMaintenanceId > 0) {
+            $stmt = $this->db->prepare("
+                SELECT ma.*, m.name as monitor_name 
+                FROM maintenances ma 
+                LEFT JOIN monitors m ON m.id = ma.monitor_id 
+                WHERE ma.id = ? LIMIT 1
+            ");
+            $stmt->execute([$directMaintenanceId]);
+            $singleMaintenance = $stmt->fetch(PDO::FETCH_ASSOC) ?: null;
+        }
+
+        // 9. Dynamic Content Translation & Cache (for non-English visitors)
         $currentLocale = \App\Core\I18n::getLocale();
         if ($currentLocale !== 'en') {
             $transService = new ContentTranslationService();
@@ -201,6 +240,26 @@ class StatusPageController
                     unset($up);
                 }
                 unset($inc);
+
+                // Translate Direct Link Incident
+                if ($singleIncident) {
+                    $singleIncident['title'] = $transService->getOrTranslate('incident', (int)$singleIncident['id'], 'title', $singleIncident['title'], $currentLocale);
+                    if (!empty($singleIncident['ai_summary'])) {
+                        $singleIncident['ai_summary'] = $transService->getOrTranslate('incident', (int)$singleIncident['id'], 'ai_summary', $singleIncident['ai_summary'], $currentLocale);
+                    }
+                    foreach ($singleIncident['updates'] as &$up) {
+                        $up['message'] = $transService->getOrTranslate('incident_update', (int)($up['id'] ?? $singleIncident['id']), 'message', $up['message'], $currentLocale);
+                    }
+                    unset($up);
+                }
+
+                // Translate Direct Link Maintenance
+                if ($singleMaintenance) {
+                    $singleMaintenance['title'] = $transService->getOrTranslate('maintenance', (int)$singleMaintenance['id'], 'title', $singleMaintenance['title'], $currentLocale);
+                    if (!empty($singleMaintenance['description'])) {
+                        $singleMaintenance['description'] = $transService->getOrTranslate('maintenance', (int)$singleMaintenance['id'], 'description', $singleMaintenance['description'], $currentLocale);
+                    }
+                }
             }
         }
 
@@ -215,7 +274,9 @@ class StatusPageController
             'uptimeHistory'     => $uptimeHistory,
             'allIncidents'      => $allIncidents,
             'allMaintenances'   => $allMaintenances,
-            'overallStatus'     => $primaryStatus
+            'overallStatus'     => $primaryStatus,
+            'singleIncident'    => $singleIncident,
+            'singleMaintenance' => $singleMaintenance
         ], 'layouts/public');
     }
 
