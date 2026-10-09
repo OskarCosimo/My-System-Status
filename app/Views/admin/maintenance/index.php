@@ -131,10 +131,10 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                         <strong class="text-body d-block"><?= htmlspecialchars($m['title']) ?></strong>
                                         <small class="text-body-secondary"><?= htmlspecialchars(mb_strimwidth($m['description'] ?? '', 0, 80, '...')) ?></small>
                                     </td>
-                                    <td>
+                                    <td data-order="<?= strtotime($m['start_time']) ?>">
                                         <small class="text-body-secondary"><?= format_date($m['start_time'], 'M d, Y H:i') ?></small>
                                     </td>
-                                    <td>
+                                    <td data-order="<?= strtotime($m['end_time']) ?>">
                                         <small class="text-body-secondary"><?= format_date($m['end_time'], 'M d, Y H:i') ?></small>
                                     </td>
                                     <td class="text-end">
@@ -214,7 +214,7 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                     <td>
                                         <span class="fw-semibold text-body"><?= htmlspecialchars($p['title']) ?></span>
                                     </td>
-                                    <td>
+                                    <td data-order="<?= strtotime($p['start_time']) ?>">
                                         <small class="text-body-secondary">
                                             <?= format_date($p['start_time'], 'M d, H:i') ?> &mdash; <?= format_date($p['end_time'], 'M d, H:i') ?>
                                         </small>
@@ -267,10 +267,6 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Title</label>
                     <input type="text" name="title" class="form-control" placeholder="e.g. Database Cluster Optimization" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Description</label>
-                    <textarea name="description" class="form-control" rows="3" placeholder="Describe the expected impact or downtime window..."></textarea>
                 </div>
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Target Service (Optional)</label>
@@ -422,10 +418,11 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     }
 
-    // 2. DataTables Initialization for Upcoming Maintenances
+    // 2. DataTables Initialization for Upcoming Maintenances (sorted by start time data-order)
     if ($('#upcomingMaintenanceTable').length > 0) {
         $('#upcomingMaintenanceTable').DataTable({
             pageLength: 10,
+            order: [[2, 'asc']],
             lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
             columnDefs: [{ orderable: false, targets: 4 }],
             language: {
@@ -439,7 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // 3. DataTables Initialization for Past Maintenances
+    // 3. DataTables Initialization for Past Maintenances (sorted strictly chronologically by timestamp data-order)
     if ($('#pastMaintenanceTable').length > 0) {
         $('#pastMaintenanceTable').DataTable({
             pageLength: 10,
