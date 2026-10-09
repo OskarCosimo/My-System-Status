@@ -23,6 +23,8 @@ class StatusPageController
 
     public function index(): void
     {
+        $activeTimezone = DateService::getActiveTimezone();
+
         // 1. Fetch root monitors ordered by custom sort order
         $stmt = $this->db->query("
             SELECT * FROM monitors 
@@ -125,13 +127,11 @@ class StatusPageController
             ];
         }
 
-        // 7. Map 90-Day Incidents (WITH timeline notes) and Maintenances per Monitor and Date
+        // 7. Fetch all historical and active Incidents and Maintenances safely
         $incStmt = $this->db->query("
             SELECT id, monitor_id, title, impact, status, ai_summary, start_time, end_time, timezone, created_at, updated_at 
             FROM incidents 
-            WHERE created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY) 
-               OR start_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
-               OR status != 'resolved'
+            ORDER BY COALESCE(start_time, created_at) DESC LIMIT 300
         ");
         $allIncidents = $incStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -150,9 +150,7 @@ class StatusPageController
         $maintStmt = $this->db->query("
             SELECT id, monitor_id, title, description, status, start_time, end_time, timezone 
             FROM maintenances 
-            WHERE start_time >= DATE_SUB(NOW(), INTERVAL 90 DAY) 
-               OR end_time >= DATE_SUB(NOW(), INTERVAL 90 DAY)
-               OR status IN ('scheduled', 'in_progress')
+            ORDER BY start_time DESC LIMIT 300
         ");
         $allMaintenances = $maintStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -280,7 +278,8 @@ class StatusPageController
             'allMaintenances'   => $allMaintenances,
             'overallStatus'     => $primaryStatus,
             'singleIncident'    => $singleIncident,
-            'singleMaintenance' => $singleMaintenance
+            'singleMaintenance' => $singleMaintenance,
+            'activeTimezone'    => $activeTimezone
         ], 'layouts/public');
     }
 
