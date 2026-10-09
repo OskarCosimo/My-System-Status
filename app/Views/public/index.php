@@ -6,6 +6,9 @@ $allMaintenances   = $allMaintenances ?? [];
 $singleIncident    = $singleIncident ?? null;
 $singleMaintenance = $singleMaintenance ?? null;
 ?>
+<!-- Defensive Bootstrap 5.3 & Icons include to guarantee styling across environments -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <!-- DataTables CSS for Modal -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 
@@ -39,13 +42,13 @@ $singleMaintenance = $singleMaintenance ?? null;
         }
 
         .uptime-arrow-top {
-            top: -3px !important;
+            top: -4px !important;
             width: 7px !important;
             height: 5px !important;
         }
 
         .uptime-arrow-bottom {
-            bottom: -3px !important;
+            bottom: -4px !important;
             width: 7px !important;
             height: 5px !important;
         }
@@ -496,9 +499,11 @@ $singleMaintenance = $singleMaintenance ?? null;
                             $downPct  = ($totalChecks > 0) ? round(($downChecks / $totalChecks) * 100, 2) : 0;
                             $dailyUptimePct = ($totalChecks > 0) ? round(($upChecks / $totalChecks) * 100, 2) : 100.00;
 
+                            // Parent Incidents: Global OR strictly assigned to this parent monitor
                             $dayIncidents = [];
                             foreach ($allIncidents as $inc) {
-                                if (empty($inc['monitor_id']) || (int)$inc['monitor_id'] === $mId) {
+                                $incMonId = !empty($inc['monitor_id']) ? (int)$inc['monitor_id'] : null;
+                                if ($incMonId === null || $incMonId === $mId) {
                                     $rawStart = $inc['start_time'] ?? $inc['created_at'];
                                     $rawEnd   = $inc['end_time'] ?? ($inc['status'] === 'resolved' ? $inc['updated_at'] : gmdate('Y-m-d H:i:s'));
                                     $incStart = format_date($rawStart, 'Y-m-d');
@@ -510,9 +515,11 @@ $singleMaintenance = $singleMaintenance ?? null;
                                 }
                             }
 
+                            // Parent Maintenances: Global OR strictly assigned to this parent monitor
                             $dayMaintenances = [];
                             foreach ($allMaintenances as $maint) {
-                                if (empty($maint['monitor_id']) || (int)$maint['monitor_id'] === $mId) {
+                                $maintMonId = !empty($maint['monitor_id']) ? (int)$maint['monitor_id'] : null;
+                                if ($maintMonId === null || $maintMonId === $mId) {
                                     $mStart = format_date($maint['start_time'], 'Y-m-d');
                                     $mEnd   = format_date($maint['end_time'], 'Y-m-d');
                                     if ($dayDate >= $mStart && $dayDate <= $mEnd) {
@@ -573,7 +580,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                 $barStyle = 'style="background-color: #10b981;"';
                                 $statusDesc = "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                             } else {
-                                $barStyle = 'style="background-color: var(--bs-secondary-bg);"';
+                                $barStyle = 'style="background-color: var(--bs-secondary-bg, #e9ecef);"';
                                 $statusDesc = "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                             }
 
@@ -687,7 +694,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                     </div>
 
                                     <!-- Sub-service 90-Day Mini Bar (Strictly its own metrics and child-specific arrows) -->
-                                    <div class="uptime-graph" style="height: 24px;" role="group">
+                                    <div class="uptime-graph" style="height: 28px; overflow: visible; margin: 4px 0;" role="group">
                                         <?php
                                             for ($cDay = 89; $cDay >= 0; $cDay--):
                                                 $cDayTime  = strtotime("-{$cDay} days");
@@ -705,10 +712,11 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                 $cDownPct  = ($cTotal > 0) ? round(($cDown / $cTotal) * 100, 2) : 0;
                                                 $cUpPct    = ($cTotal > 0) ? round(($cUp / $cTotal) * 100, 2) : 100.00;
 
-                                                // Sub-service specific Incidents
+                                                // Sub-service specific Incidents: STRICTLY assigned to this child probe
                                                 $cDayIncidents = [];
                                                 foreach ($allIncidents as $inc) {
-                                                    if ((int)($inc['monitor_id'] ?? 0) === $cId) {
+                                                    $incMonId = !empty($inc['monitor_id']) ? (int)$inc['monitor_id'] : null;
+                                                    if ($incMonId === $cId) {
                                                         $rawStart = $inc['start_time'] ?? $inc['created_at'];
                                                         $rawEnd   = $inc['end_time'] ?? ($inc['status'] === 'resolved' ? $inc['updated_at'] : gmdate('Y-m-d H:i:s'));
                                                         $incStart = format_date($rawStart, 'Y-m-d');
@@ -720,10 +728,11 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                     }
                                                 }
 
-                                                // Sub-service specific Maintenances
+                                                // Sub-service specific Maintenances: STRICTLY assigned to this child probe
                                                 $cDayMaintenances = [];
                                                 foreach ($allMaintenances as $maint) {
-                                                    if ((int)($maint['monitor_id'] ?? 0) === $cId) {
+                                                    $maintMonId = !empty($maint['monitor_id']) ? (int)$maint['monitor_id'] : null;
+                                                    if ($maintMonId === $cId) {
                                                         $mStart = format_date($maint['start_time'], 'Y-m-d');
                                                         $mEnd   = format_date($maint['end_time'], 'Y-m-d');
                                                         if ($cDayDate >= $mStart && $cDayDate <= $mEnd) {
@@ -740,7 +749,7 @@ $singleMaintenance = $singleMaintenance ?? null;
 
                                                 if ($cBlack > 0 && $cDown > 0) {
                                                     $vBlack = max(18, min(45, (int)$cBlackPct));
-                                                    $vRed   = max(18, min(45, (int)$cDownPct));
+                                                    $vRed   = max(18, min(45, (int)$downPct));
                                                     $gStart = $vBlack;
                                                     $gEnd   = 100 - $vRed;
                                                     $cStyle = "style=\"background: linear-gradient(to bottom, #0f172a 0%, #0f172a {$gStart}%, #10b981 {$gStart}%, #10b981 {$gEnd}%, #ef4444 {$gEnd}%, #ef4444 100%);\"";
@@ -773,7 +782,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                     $cStyle = 'style="background-color: #10b981;"';
                                                     $cLabel .= "<span style='color: #10b981;'>●</span> 100% " . __('status.operational');
                                                 } else {
-                                                    $cStyle = 'style="background-color: var(--bs-secondary-bg);"';
+                                                    $cStyle = 'style="background-color: var(--bs-secondary-bg, #e9ecef);"';
                                                     $cLabel .= "<span style='color: #94a3b8;'>●</span> " . __('public.no_data_recorded');
                                                 }
 
@@ -832,7 +841,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                  onclick="openDayDetailModalFromElement(this)">
 
                                                 <?php if ($cHasMaint): ?>
-                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7" style="width: 7px; height: 5px;">
+                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7" style="top: -2px; width: 8px; height: 6px;">
                                                         <polygon points="0,0 10,0 5,7" fill="#0ea5e9" />
                                                     </svg>
                                                 <?php endif; ?>
@@ -840,7 +849,7 @@ $singleMaintenance = $singleMaintenance ?? null;
                                                 <div class="uptime-bar" <?= $cStyle ?>></div>
 
                                                 <?php if ($cHasInc): ?>
-                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7" style="width: 7px; height: 5px;">
+                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7" style="bottom: -2px; width: 8px; height: 6px;">
                                                         <polygon points="5,0 10,7 0,7" fill="#ea580c" />
                                                     </svg>
                                                 <?php endif; ?>
