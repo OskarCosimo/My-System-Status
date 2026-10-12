@@ -193,12 +193,46 @@ export default {
             }
         }
 
-        // If a snapshot exists (via KV or local Cache), render with emergency notice banner
+        // If a snapshot exists (via KV or local Cache), render with emergency notice banner & visual outage state
         if (cachedHtml) {
             const emergencyBannerHtml = `
                 <div style="background-color: #0f172a; color: #ffffff; padding: 12px 16px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 14px; font-weight: bold; position: sticky; top: 0; z-index: 9999999; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);">
                     🚨 <span>Origin Status Server is Currently Offline &bull; Displaying Global Telemetry Snapshot (${snapshotTime})</span>
                 </div>
+            `;
+
+            // CSS rules to force red state on the main core banner and today's bar (:last-child)
+            const emergencyStyles = `
+                <style id="edge-offline-styles">
+                    .edge-core-banner-offline {
+                        background-color: #dc3545 !important;
+                    }
+                    .uptime-graph .uptime-day-col:last-child .uptime-bar {
+                        background: #ef4444 !important;
+                        background-color: #ef4444 !important;
+                    }
+                </style>
+            `;
+
+            // Client-side script to update the interactive tooltip on today's bar
+            const emergencyScript = `
+                <script id="edge-offline-script">
+                    document.addEventListener("DOMContentLoaded", function() {
+                        document.querySelectorAll(".uptime-graph").forEach(function(graph) {
+                            var lastCol = graph.querySelector(".uptime-day-col:last-child");
+                            if (lastCol) {
+                                var offlineTitle = "<strong>Today</strong><br><span style='color: #ef4444;'>●</span> Origin Server Offline";
+                                lastCol.setAttribute("data-bs-original-title", offlineTitle);
+                                lastCol.setAttribute("title", offlineTitle);
+                                var bar = lastCol.querySelector(".uptime-bar");
+                                if (bar) {
+                                    bar.style.backgroundColor = "#ef4444";
+                                    bar.style.background = "#ef4444";
+                                }
+                            }
+                        });
+                    });
+                </script>
             `;
 
             const response = new Response(cachedHtml, {
@@ -207,9 +241,31 @@ export default {
             });
 
             return new HTMLRewriter()
+                .on("head", {
+                    element(element) {
+                        element.append(emergencyStyles, { html: true });
+                    }
+                })
                 .on("body", {
                     element(element) {
                         element.prepend(emergencyBannerHtml, { html: true });
+                        element.append(emergencyScript, { html: true });
+                    }
+                })
+                // Target the primary core status banner (div.p-4.rounded-3.text-white)
+                .on("div.p-4.rounded-3.text-white", {
+                    element(element) {
+                        const currentClass = element.getAttribute("class") || "";
+                        const updatedClass = currentClass
+                            .replace("bg-success", "bg-danger")
+                            .replace("bg-warning", "bg-danger");
+                        element.setAttribute("class", updatedClass + " edge-core-banner-offline");
+                    }
+                })
+                // Replace the status text and icon inside the banner's h4
+                .on("div.p-4.rounded-3.text-white h4", {
+                    element(element) {
+                        element.setInnerContent('<i class="bi bi-shield-slash-fill me-2"></i> Origin Server Offline / Outage Detected', { html: true });
                     }
                 })
                 .on("a[href='/admin']", {
