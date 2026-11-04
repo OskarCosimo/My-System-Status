@@ -90,6 +90,8 @@ $router->post('/auth/authenticate', [\App\Controllers\AuthController::class, 'au
 $router->get('/auth/logout', [\App\Controllers\AuthController::class, 'logout']);
 $router->get('/auth/oauth', [\App\Controllers\AuthController::class, 'oauthRedirect']);
 $router->get('/auth/callback', [\App\Controllers\AuthController::class, 'oauthCallback']);
+$router->get('/auth/oauth-link', [\App\Controllers\AuthController::class, 'oauthLinkView']);
+$router->post('/auth/oauth-link-verify', [\App\Controllers\AuthController::class, 'oauthLinkVerify']);
 $router->get('/auth/2fa', [\App\Controllers\AuthController::class, 'twoFactorView']);
 $router->post('/auth/2fa-verify', [\App\Controllers\AuthController::class, 'twoFactorVerify']);
 
@@ -137,7 +139,6 @@ $router->post('/admin/plugins/save-feeds-config', [\App\Controllers\Admin\Plugin
 
 // Settings Routes
 $router->get('/admin/settings', [\App\Controllers\Admin\SettingController::class, 'index']);
-// Fallback redirect for direct GET requests or page reloads on the update endpoint
 $router->get('/admin/settings/update', function() {
     header('Location: /admin/settings');
     exit;
