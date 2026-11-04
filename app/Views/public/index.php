@@ -31,19 +31,64 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
         touch-action: pan-y;
     }
 
+    /* Sub-service 90-Day mini graph specific styling */
+    .uptime-graph.uptime-graph-sub {
+        height: 26px;
+        margin: 6px 0;
+    }
+
+    .uptime-graph.uptime-graph-sub .uptime-day-col {
+        padding: 3px 0;
+    }
+
+    .uptime-graph.uptime-graph-sub .uptime-arrow-top {
+        top: -3px;
+        width: 7px;
+        height: 5px;
+    }
+
+    .uptime-graph.uptime-graph-sub .uptime-arrow-bottom {
+        bottom: -3px;
+        width: 7px;
+        height: 5px;
+    }
+
     /* Mobile: 3 rows of 30 days with enlarged touch targets */
     @media (max-width: 576px) {
         .uptime-graph {
             flex-wrap: wrap;
-            height: auto;
+            height: auto !important;
             gap: 3px 2px;
             padding: 4px 0;
         }
 
         .uptime-day-col {
             flex: 0 0 calc((100% - 58px) / 30) !important;
+            max-width: calc((100% - 58px) / 30) !important;
             height: 32px !important;
             padding: 2px 0 !important;
+        }
+
+        /* Mobile adjustments for subservice containers and mini-bars */
+        .subservices-wrapper {
+            padding-left: 0.5rem !important;
+        }
+
+        .subservice-item {
+            padding: 0.65rem !important;
+        }
+
+        .uptime-graph.uptime-graph-sub {
+            height: auto !important;
+            gap: 2px 1.5px !important;
+            padding: 2px 0 !important;
+        }
+
+        .uptime-graph.uptime-graph-sub .uptime-day-col {
+            flex: 0 0 calc((100% - 43.5px) / 30) !important;
+            max-width: calc((100% - 43.5px) / 30) !important;
+            height: 22px !important;
+            padding: 1px 0 !important;
         }
 
         .uptime-arrow-top {
@@ -295,7 +340,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                     </div>
                     <div>
                         <i class="bi bi-calendar-event text-info me-1"></i>
-                        <strong>Window:</strong> <?= format_date($singleMaintenance['start_time'], 'M d, Y H:i') ?> &mdash; <?= format_date($singleMaintenance['end_time'], 'M d, Y H:i T') ?>
+                        <strong>Window:</strong> <?= format_date($singleMaintenance['start_time'], 'M d, Y H:i') ?> &mdash; <?= format_date($singleMaintenance['end_time'], 'M d, H:i T') ?>
                     </div>
                 </div>
 
@@ -450,14 +495,16 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                         <span><?= __('public.subscribe_unsubscribe') ?></span>
                     </button>
                     
-                    <!-- Sub-services Accordion Toggle Badge -->
+                    <!-- Sub-services Accordion Toggle Badge with Deterministic JS Trigger -->
                     <?php if ($hasChildren): ?>
                         <button class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill shadow-none" 
                                 style="font-size: 11px;" 
                                 type="button" 
-                                data-bs-toggle="collapse" 
-                                data-bs-target="#subservices-<?= $monitor['id'] ?>">
-                            <i class="bi bi-diagram-3 me-1"></i> <?= count($monitor['children']) ?> <?= __('public.sub_services') ?> <i class="bi bi-chevron-down ms-1"></i>
+                                data-subservice-toggle
+                                data-subservice-target="subservices-<?= $monitor['id'] ?>"
+                                aria-expanded="false"
+                                aria-controls="subservices-<?= $monitor['id'] ?>">
+                            <i class="bi bi-diagram-3 me-1"></i> <?= count($monitor['children']) ?> <?= __('public.sub_services') ?> <i class="bi bi-chevron-down ms-1 toggle-icon"></i>
                         </button>
                     <?php endif; ?>
                 </div>
@@ -681,7 +728,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                 <!-- Sub-services Drawer -->
                 <?php if ($hasChildren): ?>
                     <div class="collapse mt-3 pt-3 border-top" id="subservices-<?= $monitor['id'] ?>">
-                        <div class="ps-2 ps-sm-3 border-start border-3 border-primary-subtle d-flex flex-column gap-3">
+                        <div class="subservices-wrapper ps-2 ps-sm-3 border-start border-3 border-primary-subtle d-flex flex-column gap-3">
                             <?php foreach ($monitor['children'] as $child): ?>
                                 <?php
                                     $childDown     = ($child['current_status'] === 'down');
@@ -690,7 +737,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                     $cId           = (int)$child['id'];
                                     $childHistory  = $uptimeHistory[$cId] ?? [];
                                 ?>
-                                <div class="bg-body-secondary p-3 rounded-3 border">
+                                <div class="subservice-item bg-body-secondary p-3 rounded-3 border">
                                     <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-1">
                                         <span class="fw-semibold text-body small">
                                             <i class="bi bi-arrow-return-right me-1 text-muted"></i>
@@ -702,7 +749,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                     </div>
 
                                     <!-- Sub-service 90-Day Mini Bar (Strictly its own metrics and child-specific arrows) -->
-                                    <div class="uptime-graph" style="height: 28px; overflow: visible; margin: 6px 0;" role="group">
+                                    <div class="uptime-graph uptime-graph-sub" role="group">
                                         <?php
                                             for ($cDay = 89; $cDay >= 0; $cDay--):
                                                 $cDayTime  = strtotime("-{$cDay} days", $todayTzBase);
@@ -843,7 +890,6 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                                 if ($cHasInc)   $cColClasses .= ' has-inc';
                                         ?>
                                             <div class="<?= $cColClasses ?>"
-                                                 style="padding: 4px 0; min-height: 28px; position: relative;"
                                                  data-bs-toggle="tooltip" 
                                                  data-bs-placement="top" 
                                                  data-bs-html="true" 
@@ -852,7 +898,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                                  onclick="openDayDetailModalFromElement(this)">
 
                                                 <?php if ($cHasMaint): ?>
-                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7" style="position: absolute; top: -3px; left: 50%; transform: translateX(-50%); width: 8px; height: 6px; z-index: 10;">
+                                                    <svg class="uptime-arrow-top" viewBox="0 0 10 7">
                                                         <polygon points="0,0 10,0 5,7" fill="#0ea5e9" />
                                                     </svg>
                                                 <?php endif; ?>
@@ -860,7 +906,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
                                                 <div class="uptime-bar" <?= $cStyle ?>></div>
 
                                                 <?php if ($cHasInc): ?>
-                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7" style="position: absolute; bottom: -3px; left: 50%; transform: translateX(-50%); width: 8px; height: 6px; z-index: 10;">
+                                                    <svg class="uptime-arrow-bottom" viewBox="0 0 10 7">
                                                         <polygon points="5,0 10,7 0,7" fill="#ea580c" />
                                                     </svg>
                                                 <?php endif; ?>
@@ -1176,6 +1222,53 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
 let currentDayModalData = null;
 let dayLogsDataTable = null;
 let isLogsTableLoaded = false;
+
+// Sub-services Accordion explicit toggle handler to prevent double-listener conflicts
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('[data-subservice-toggle]');
+    if (!btn) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+
+    const targetId = btn.getAttribute('data-subservice-target');
+    const targetEl = document.getElementById(targetId);
+    if (!targetEl) return;
+
+    if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+        const bsCollapse = bootstrap.Collapse.getOrCreateInstance(targetEl, { toggle: false });
+        bsCollapse.toggle();
+    } else {
+        targetEl.classList.toggle('show');
+    }
+});
+
+// Sync sub-services chevron rotation and accessibility attributes
+document.addEventListener('show.bs.collapse', function(e) {
+    if (!e.target.id) return;
+    const btn = document.querySelector(`[data-subservice-target="${e.target.id}"]`);
+    if (btn) {
+        btn.setAttribute('aria-expanded', 'true');
+        const icon = btn.querySelector('.toggle-icon');
+        if (icon) {
+            icon.classList.remove('bi-chevron-down');
+            icon.classList.add('bi-chevron-up');
+        }
+    }
+});
+
+document.addEventListener('hide.bs.collapse', function(e) {
+    if (!e.target.id) return;
+    const btn = document.querySelector(`[data-subservice-target="${e.target.id}"]`);
+    if (btn) {
+        btn.setAttribute('aria-expanded', 'false');
+        const icon = btn.querySelector('.toggle-icon');
+        if (icon) {
+            icon.classList.remove('bi-chevron-up');
+            icon.classList.add('bi-chevron-down');
+        }
+    }
+});
 
 function openDayDetailModalFromElement(el) {
     const rawData = el.getAttribute('data-day-payload');
