@@ -73,6 +73,11 @@ $privacyUrl = trim(setting('privacy_policy_url', ''));
             padding: 24px 0;
         }
 
+        /* Prevent dropdown menus from ever overflowing viewport edges */
+        .dropdown-menu {
+            max-width: calc(100vw - 24px);
+        }
+
         /* Modern 90-Day Uptime Graph Styles */
         .uptime-graph {
             display: flex;
@@ -127,22 +132,22 @@ $privacyUrl = trim(setting('privacy_policy_url', ''));
 </head>
 <body>
 
-<!-- Public Top Navigation -->
-<nav class="navbar navbar-expand-lg bg-body border-bottom py-3 shadow-sm">
-    <div class="container" style="max-width: 900px;">
+<!-- Public Top Navigation with Adaptive Flex Wrapping -->
+<nav class="navbar navbar-expand-lg bg-body border-bottom py-2 py-sm-3 shadow-sm">
+    <div class="container d-flex flex-wrap justify-content-between align-items-center gap-2" style="max-width: 900px;">
         <a class="navbar-brand d-flex align-items-center gap-2 text-body text-decoration-none" href="/">
             <i class="bi bi-shield-check text-primary fs-3"></i>
             <span class="fs-4"><?= $appName ?></span>
         </a>
 
-        <div class="d-flex align-items-center gap-2">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
             <!-- Theme Switcher (Light / Dark / Auto) -->
             <div class="dropdown theme-switcher">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center" id="bd-theme-public" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Toggle Theme">
                     <i class="bi bi-circle-half theme-icon-active"></i>
                     <span class="visually-hidden" id="bd-theme-text-public">Toggle Theme</span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="bd-theme-text-public">
+                <ul class="dropdown-menu dropdown-menu-start shadow-sm" aria-labelledby="bd-theme-text-public">
                     <li>
                         <button type="button" class="dropdown-item d-flex align-items-center gap-2" data-bs-theme-value="light">
                             <i class="bi bi-sun-fill opacity-50"></i>
@@ -167,13 +172,13 @@ $privacyUrl = trim(setting('privacy_policy_url', ''));
                 </ul>
             </div>
 
-            <!-- Timezone Switcher -->
+            <!-- Timezone Switcher: Opens Start on Mobile to avoid left clipping, End on Desktop -->
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" title="Timezone">
                     <i class="bi bi-clock"></i>
                     <span class="d-none d-sm-inline"><?= htmlspecialchars($userTz) ?></span>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="max-height: 280px; overflow-y: auto;">
+                <ul class="dropdown-menu dropdown-menu-start dropdown-menu-md-end shadow-sm" style="max-height: 280px; overflow-y: auto;">
                     <li><h6 class="dropdown-header">Select Timezone</h6></li>
                     <?php foreach (['UTC', 'Europe/Rome', 'Europe/London', 'Europe/Paris', 'America/New_York', 'America/Los_Angeles', 'Asia/Tokyo'] as $tz): ?>
                         <li>
@@ -185,12 +190,12 @@ $privacyUrl = trim(setting('privacy_policy_url', ''));
                 </ul>
             </div>
 
-            <!-- Language Switcher -->
+            <!-- Language Switcher: Opens Start on Mobile to avoid left clipping, End on Desktop -->
             <div class="dropdown">
                 <button class="btn btn-sm btn-outline-secondary dropdown-toggle text-uppercase" type="button" data-bs-toggle="dropdown">
                     <i class="bi bi-translate me-1"></i><?= \App\Core\I18n::getLocale() ?>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <ul class="dropdown-menu dropdown-menu-start dropdown-menu-md-end shadow-sm">
                     <?php foreach (SettingService::getEnabledLocales() as $code => $info): ?>
                         <li>
                             <a class="dropdown-item <?= \App\Core\I18n::getLocale() === $code ? 'active fw-bold' : '' ?>" href="/lang/switch?lang=<?= $code ?>">
