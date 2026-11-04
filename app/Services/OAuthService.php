@@ -19,9 +19,9 @@ class OAuthService
         $this->clientId = SettingService::get("oauth_{$provider}_client_id", '');
         $this->clientSecret = SettingService::get("oauth_{$provider}_client_secret", '');
         
-        // Auto-detect redirect callback URL dynamically
-        $baseUrl = SettingService::getAppUrl();
-        $this->redirectUri = "{$baseUrl}/auth/callback/{$provider}";
+        // Auto-detect redirect callback URL dynamically with clean trailing slash trim
+        $baseUrl = rtrim(SettingService::getAppUrl(), '/');
+        $this->redirectUri = "{$baseUrl}/auth/callback/{$this->provider}";
     }
 
     /**
