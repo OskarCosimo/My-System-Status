@@ -83,15 +83,33 @@ $router->post('/admin/maintenance/translate', [\App\Controllers\Admin\Maintenanc
 $router->get('/api/v1/monitor/day-logs', [\App\Controllers\StatusPageController::class, 'getDayLogs']);
 
 // ==========================================
-// AUTHENTICATION & 2FA ROUTES
+// AUTHENTICATION, OAUTH & 2FA ROUTES
 // ==========================================
 $router->get('/auth/login', [\App\Controllers\AuthController::class, 'login']);
 $router->post('/auth/authenticate', [\App\Controllers\AuthController::class, 'authenticate']);
 $router->get('/auth/logout', [\App\Controllers\AuthController::class, 'logout']);
 $router->get('/auth/oauth', [\App\Controllers\AuthController::class, 'oauthRedirect']);
+
+// Provider-specific and generic OAuth callbacks
 $router->get('/auth/callback', [\App\Controllers\AuthController::class, 'oauthCallback']);
+$router->get('/auth/callback/myetv', function() {
+    (new \App\Controllers\AuthController())->oauthCallback('myetv');
+});
+$router->get('/auth/callback/google', function() {
+    (new \App\Controllers\AuthController())->oauthCallback('google');
+});
+$router->get('/auth/callback/microsoft', function() {
+    (new \App\Controllers\AuthController())->oauthCallback('microsoft');
+});
+$router->get('/auth/callback/facebook', function() {
+    (new \App\Controllers\AuthController())->oauthCallback('facebook');
+});
+
+// OAuth Account Linking
 $router->get('/auth/oauth-link', [\App\Controllers\AuthController::class, 'oauthLinkView']);
 $router->post('/auth/oauth-link-verify', [\App\Controllers\AuthController::class, 'oauthLinkVerify']);
+
+// Two-Factor Authentication
 $router->get('/auth/2fa', [\App\Controllers\AuthController::class, 'twoFactorView']);
 $router->post('/auth/2fa-verify', [\App\Controllers\AuthController::class, 'twoFactorVerify']);
 
