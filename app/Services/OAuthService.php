@@ -134,13 +134,16 @@ class OAuthService
 
         $data = json_decode((string)$response, true);
 
-        // Normalize data across all providers
+        // Normalize data across all providers with strict email validation
+        $rawEmail = trim((string)($data['email'] ?? ''));
+        $validEmail = (filter_var($rawEmail, FILTER_VALIDATE_EMAIL) && !str_contains(strtolower($rawEmail), 'fail')) ? $rawEmail : null;
+
         return match ($this->provider) {
             'myetv' => [
                 'provider'    => 'myetv',
                 'provider_id' => (string)($data['id'] ?? ''),
-                'email'       => $data['email'] ?? null,
-                'name'        => $data['name'] ?? $data['username'],
+                'email'       => $validEmail,
+                'name'        => $data['name'] ?? ($data['username'] ?? 'MYETV User'),
                 'avatar'      => $data['avatar'] ?? null,
                 'profile_url' => $data['profile_url'] ?? null
             ],
@@ -163,7 +166,7 @@ class OAuthService
             'facebook' => [
                 'provider'    => 'facebook',
                 'provider_id' => (string)$data['id'],
-                'email'       => $data['email'] ?? null,
+                'email'       => $validEmail,
                 'name'        => $data['name'],
                 'avatar'      => $data['picture']['data']['url'] ?? null,
                 'profile_url' => null
