@@ -166,9 +166,20 @@ class AuthController
         }
     }
 
-    public function oauthCallback(): void
+    public function oauthCallback(?string $provider = null): void
     {
-        $provider = $_GET['provider'] ?? '';
+        // Resolve provider from parameter, query string or URI path
+        if (!$provider) {
+            $provider = $_GET['provider'] ?? '';
+            if (!$provider) {
+                $path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
+                $parts = explode('/', trim($path, '/'));
+                if (count($parts) >= 3 && $parts[0] === 'auth' && $parts[1] === 'callback') {
+                    $provider = $parts[2];
+                }
+            }
+        }
+        $provider = strtolower(trim($provider));
         $code     = $_GET['code'] ?? '';
 
         if (!$code) {
