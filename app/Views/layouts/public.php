@@ -252,13 +252,13 @@ $privacyUrl = trim(setting('privacy_policy_url', ''));
     </div>
 </footer>
 
-<!-- Bootstrap 5 Bundle JS -->
+<!-- Bootstrap 5 Bundle JS (Single instance) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Initialize Bootstrap Tooltips & Theme Switcher Handler -->
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Tooltips
+    // Tooltips initialization
     const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     [...tooltipTriggerList].map(el => new bootstrap.Tooltip(el, { html: true }));
 
