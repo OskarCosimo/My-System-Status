@@ -286,11 +286,12 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <label class="form-label small fw-semibold text-body-secondary">MYETV Authorized Callback URI (Redirect URI):</label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="myetvCallbackUrl" readonly 
-                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback?provider=myetv') ?>">
+                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/myetv') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('myetvCallbackUrl', this)">
                                 <i class="bi bi-clipboard me-1"></i> Copy
                             </button>
                         </div>
+                        <small class="text-muted" style="font-size: 11px;">Copy and paste this exact URL into the "Redirect URI" field in your MYETV Developer app console.</small>
                     </div>
 
                     <div class="row g-3">
@@ -325,13 +326,13 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <label class="form-label small fw-semibold text-body-secondary">Google Authorized Redirect URI:</label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="googleCallbackUrl" readonly 
-                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback?provider=google') ?>">
+                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/google') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('googleCallbackUrl', this)">
                                 <i class="bi bi-clipboard me-1"></i> Copy
                             </button>
                         </div>
                         <small class="text-body-secondary d-block mt-1">
-                            In Google Cloud Console &rarr; <em>APIs &amp; Services</em> &rarr; <em>Credentials</em> &rarr; Create or Edit your OAuth 2.0 Client ID (type: Web Application) &rarr; Paste this under <strong>Authorized redirect URIs</strong>.
+                            In Google Cloud Console &rarr; <em>APIs &amp; Services</em> &rarr; <em>Credentials</em> &rarr; Edit OAuth 2.0 Client ID &rarr; Paste this under <strong>Authorized redirect URIs</strong>.
                         </small>
                     </div>
 
@@ -367,7 +368,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <label class="form-label small fw-semibold text-body-secondary">Microsoft Redirect URI (Web platform):</label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="msCallbackUrl" readonly 
-                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback?provider=microsoft') ?>">
+                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/microsoft') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('msCallbackUrl', this)">
                                 <i class="bi bi-clipboard me-1"></i> Copy
                             </button>
@@ -409,7 +410,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <label class="form-label small fw-semibold text-body-secondary">Valid OAuth Redirect URI:</label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="fbCallbackUrl" readonly 
-                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback?provider=facebook') ?>">
+                                   value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/facebook') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('fbCallbackUrl', this)">
                                 <i class="bi bi-clipboard me-1"></i> Copy
                             </button>
