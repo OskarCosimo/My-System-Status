@@ -3,6 +3,8 @@
 $appName          = htmlspecialchars(setting('app_name', 'My System Status'));
 $myetvEnabled     = !empty(setting('oauth_myetv_client_id'));
 $googleEnabled    = !empty(setting('oauth_google_client_id'));
+$microsoftEnabled = !empty(setting('oauth_microsoft_client_id'));
+$facebookEnabled  = !empty(setting('oauth_facebook_client_id'));
 $turnstileEnabled = (bool)setting('turnstile_enabled', '0');
 $turnstileSiteKey = setting('turnstile_site_key', '');
 ?>
@@ -36,6 +38,10 @@ $turnstileSiteKey = setting('turnstile_site_key', '');
             <?php elseif (isset($_GET['error']) && $_GET['error'] === 'turnstile_failed'): ?>
                 <div class="alert alert-danger py-2 small text-center">
                     Bot verification failed. Please check Turnstile and try again.
+                </div>
+            <?php elseif (isset($_GET['error']) && $_GET['error'] === 'oauth_denied'): ?>
+                <div class="alert alert-danger py-2 small text-center">
+                    Single Sign-On authentication was cancelled or denied.
                 </div>
             <?php elseif (isset($_GET['error'])): ?>
                 <div class="alert alert-danger py-2 small text-center">
@@ -71,7 +77,7 @@ $turnstileSiteKey = setting('turnstile_site_key', '');
                 <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">Sign In</button>
             </form>
 
-            <?php if ($myetvEnabled || $googleEnabled): ?>
+            <?php if ($myetvEnabled || $googleEnabled || $microsoftEnabled || $facebookEnabled): ?>
                 <div class="d-flex align-items-center my-3">
                     <hr class="flex-grow-1">
                     <span class="px-2 text-muted small">or continue with</span>
@@ -87,6 +93,16 @@ $turnstileSiteKey = setting('turnstile_site_key', '');
                     <?php if ($googleEnabled): ?>
                         <a href="/auth/oauth?provider=google" class="btn btn-outline-danger btn-sm py-2">
                             <i class="bi bi-google me-1"></i> Sign in with <strong>Google</strong>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($microsoftEnabled): ?>
+                        <a href="/auth/oauth?provider=microsoft" class="btn btn-outline-info btn-sm py-2">
+                            <i class="bi bi-microsoft me-1"></i> Sign in with <strong>Microsoft</strong>
+                        </a>
+                    <?php endif; ?>
+                    <?php if ($facebookEnabled): ?>
+                        <a href="/auth/oauth?provider=facebook" class="btn btn-outline-primary btn-sm py-2">
+                            <i class="bi bi-facebook me-1"></i> Sign in with <strong>Facebook</strong>
                         </a>
                     <?php endif; ?>
                 </div>
