@@ -11,9 +11,6 @@ $activeTimezone    = $activeTimezone ?? \App\Services\DateService::getActiveTime
 $todayTzStr  = \App\Services\DateService::toLocal(gmdate('Y-m-d H:i:s'), $activeTimezone);
 $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
 ?>
-<!-- Defensive Bootstrap 5.3 & Icons include to guarantee styling across environments -->
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <!-- DataTables CSS for Modal -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 
@@ -1212,8 +1209,7 @@ $todayTzBase = strtotime(substr($todayTzStr, 0, 10) . ' 12:00:00');
     </div>
 </div>
 
-<!-- Scripts for Bootstrap, DataTables & Modal Interactions -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Scripts for DataTables & Modal Interactions (Bootstrap JS is supplied by layout) -->
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
