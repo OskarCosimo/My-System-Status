@@ -84,20 +84,23 @@ class EdgeProbeService
         }
 
         // 3. Process Edge Results and record into database
-        $edgeColo = $data['edge_colo'] ?? 'EDGE';
+        $edgeColo = strtoupper(trim((string)($data['edge_colo'] ?? 'EDGE')));
         foreach ($data['results'] as $res) {
             $monitorId  = (int)$res['id'];
             $status     = $res['status'];
             $duration   = (int)$res['response_time_ms'];
             $httpCode   = $res['http_code'];
-            $error      = $res['error'] ? "{$res['error']} (via {$edgeColo})" : null;
+
+            // Persist the edge PoP code (e.g. MXP, FCO, FRA) in error_message for geographical telemetry
+            $coloTag  = strtoupper(trim((string)($res['colo'] ?? $edgeColo)));
+            $errorMsg = !empty($res['error']) ? "{$res['error']} (via {$coloTag})" : "via {$coloTag}";
 
             // Log entry
             $logStmt = $this->db->prepare("
                 INSERT INTO monitor_logs (monitor_id, status, response_time_ms, http_code, error_message)
                 VALUES (?, ?, ?, ?, ?)
             ");
-            $logStmt->execute([$monitorId, $status, $duration, $httpCode, $error]);
+            $logStmt->execute([$monitorId, $status, $duration, $httpCode, $errorMsg]);
 
             // Update monitor status
             $currentStatus = ($status === 'up') ? 'operational' : 'down';
