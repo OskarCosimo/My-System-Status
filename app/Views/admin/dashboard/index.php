@@ -4,16 +4,16 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold mb-1 d-flex align-items-center gap-2">
-                <i class="bi bi-speedometer2 text-primary"></i> Infrastructure Overview
+                <i class="bi bi-speedometer2 text-primary"></i> <?= __('dashboard.infrastructure_overview') ?>
             </h2>
-            <p class="text-secondary mb-0">Real-time metrics, telemetry, and distributed probe analytics.</p>
+            <p class="text-secondary mb-0"><?= __('dashboard.infrastructure_desc') ?></p>
         </div>
         <div class="d-flex flex-wrap gap-2">
             <span class="badge bg-primary-subtle text-primary border border-primary-subtle d-inline-flex align-items-center px-3 py-2 fs-6 rounded-pill">
-                <i class="bi bi-shield-check me-1"></i> System Uptime: <?= number_format($avgUptime, 2) ?>%
+                <i class="bi bi-shield-check me-1"></i> <?= __('dashboard.system_uptime', ['uptime' => number_format($avgUptime, 2)]) ?>
             </span>
-            <a href="/admin/monitors" class="btn btn-outline-primary"><i class="bi bi-plus-lg me-1"></i> Add Route</a>
-            <a href="/admin/incidents" class="btn btn-danger"><i class="bi bi-exclamation-triangle me-1"></i> Declare Outage</a>
+            <a href="/admin/monitors" class="btn btn-outline-primary"><i class="bi bi-plus-lg me-1"></i> <?= __('dashboard.add_route') ?></a>
+            <a href="/admin/incidents" class="btn btn-danger"><i class="bi bi-exclamation-triangle me-1"></i> <?= __('dashboard.declare_outage') ?></a>
         </div>
     </div>
 
@@ -26,7 +26,7 @@
                         <i class="bi bi-hdd-network"></i>
                     </div>
                     <div>
-                        <div class="text-secondary small fw-medium">Total Active Monitors</div>
+                        <div class="text-secondary small fw-medium"><?= __('dashboard.total_active_monitors') ?></div>
                         <h3 class="fw-bold mb-0"><?= $monitorsTotal ?></h3>
                     </div>
                 </div>
@@ -40,7 +40,7 @@
                         <i class="bi bi-check-circle"></i>
                     </div>
                     <div>
-                        <div class="text-secondary small fw-medium">Operational Probes</div>
+                        <div class="text-secondary small fw-medium"><?= __('dashboard.operational_probes') ?></div>
                         <h3 class="fw-bold mb-0"><?= $monitorsUp ?></h3>
                     </div>
                 </div>
@@ -54,7 +54,7 @@
                         <i class="bi bi-exclamation-octagon"></i>
                     </div>
                     <div>
-                        <div class="text-secondary small fw-medium">Active Incidents</div>
+                        <div class="text-secondary small fw-medium"><?= __('dashboard.active_incidents') ?></div>
                         <h3 class="fw-bold mb-0"><?= $activeIncidents ?></h3>
                     </div>
                 </div>
@@ -68,7 +68,7 @@
                         <i class="bi bi-people"></i>
                     </div>
                     <div>
-                        <div class="text-secondary small fw-medium">Verified Subscribers</div>
+                        <div class="text-secondary small fw-medium"><?= __('dashboard.verified_subscribers') ?></div>
                         <h3 class="fw-bold mb-0"><?= $subscribersCount ?></h3>
                     </div>
                 </div>
@@ -76,17 +76,17 @@
         </div>
     </div>
 
-    <!-- Grafana Analytics: Row 1 (Telemetry Area Chart & Status Donut) -->
+    <!-- Analytics Row 1 (Telemetry Area Chart & Status Donut) -->
     <div class="row g-3 mb-4">
         <!-- 24h Latency Telemetry -->
         <div class="col-xl-8">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="fw-bold mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Global Latency Telemetry (24h)</h5>
-                        <small class="text-secondary">Average response time (ms) and check failures</small>
+                        <h5 class="fw-bold mb-0"><i class="bi bi-graph-up text-primary me-2"></i><?= __('dashboard.global_latency_telemetry') ?></h5>
+                        <small class="text-secondary"><?= __('dashboard.latency_telemetry_desc') ?></small>
                     </div>
-                    <span class="badge bg-body-secondary text-body border px-2 py-1"><i class="bi bi-clock-history me-1"></i>1h Slots</span>
+                    <span class="badge bg-body-secondary text-body border px-2 py-1"><i class="bi bi-clock-history me-1"></i><?= __('dashboard.slots_1h') ?></span>
                 </div>
                 <div class="card-body pt-1">
                     <div style="height: 310px; position: relative;">
@@ -100,8 +100,8 @@
         <div class="col-xl-4">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart text-success me-2"></i>Health Distribution</h5>
-                    <small class="text-secondary">Breakdown of operational states</small>
+                    <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart text-success me-2"></i><?= __('dashboard.health_distribution') ?></h5>
+                    <small class="text-secondary"><?= __('dashboard.health_distribution_desc') ?></small>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-center">
                     <div style="height: 250px; position: relative;">
@@ -110,15 +110,15 @@
                     <div class="d-flex justify-content-around text-center mt-3 pt-2 border-top">
                         <div>
                             <span class="text-success fw-bold d-block"><?= $statusCounts['operational'] ?></span>
-                            <small class="text-secondary">Operational</small>
+                            <small class="text-secondary"><?= __('dashboard.status_operational') ?></small>
                         </div>
                         <div>
                             <span class="text-warning fw-bold d-block"><?= $statusCounts['degraded'] ?></span>
-                            <small class="text-secondary">Degraded</small>
+                            <small class="text-secondary"><?= __('dashboard.status_degraded') ?></small>
                         </div>
                         <div>
                             <span class="text-danger fw-bold d-block"><?= $statusCounts['down'] ?></span>
-                            <small class="text-secondary">Down</small>
+                            <small class="text-secondary"><?= __('dashboard.status_down') ?></small>
                         </div>
                     </div>
                 </div>
@@ -126,14 +126,14 @@
         </div>
     </div>
 
-    <!-- Grafana Analytics: Row 2 (HTTP Distribution, Types & Incidents) -->
+    <!-- Analytics Row 2 (HTTP Distribution, Types & Incidents) -->
     <div class="row g-3 mb-4">
         <!-- HTTP Status Codes & Failures -->
         <div class="col-xl-4 col-md-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-bar-chart-steps text-info me-2"></i>Check Results (7 Days)</h6>
-                    <small class="text-secondary">HTTP codes, timeouts and blackout occurrences</small>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-bar-chart-steps text-info me-2"></i><?= __('dashboard.check_results') ?></h6>
+                    <small class="text-secondary"><?= __('dashboard.check_results_desc') ?></small>
                 </div>
                 <div class="card-body">
                     <div style="height: 240px; position: relative;">
@@ -147,8 +147,8 @@
         <div class="col-xl-4 col-md-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 text-warning me-2"></i>Active Monitor Types</h6>
-                    <small class="text-secondary">Protocol distribution of active probes</small>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 text-warning me-2"></i><?= __('dashboard.active_monitor_types') ?></h6>
+                    <small class="text-secondary"><?= __('dashboard.active_monitor_types_desc') ?></small>
                 </div>
                 <div class="card-body">
                     <div style="height: 240px; position: relative;">
@@ -162,40 +162,40 @@
         <div class="col-xl-4 col-md-12">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-tools text-danger me-2"></i>Incidents & Maintenances</h6>
-                    <small class="text-secondary">Severity levels and maintenance progress</small>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-tools text-danger me-2"></i><?= __('dashboard.incidents_and_maintenances') ?></h6>
+                    <small class="text-secondary"><?= __('dashboard.incidents_maintenances_desc') ?></small>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
-                        <div class="fw-semibold small text-secondary mb-2">INCIDENTS BY SEVERITY</div>
+                        <div class="fw-semibold small text-secondary mb-2"><?= __('dashboard.incidents_by_severity') ?></div>
                         <div class="d-flex flex-column gap-2 mb-3">
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-record-circle me-1"></i>Critical</span>
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-record-circle me-1"></i><?= __('dashboard.severity_critical') ?></span>
                                 <span class="fw-bold"><?= $incidentsByImpact['critical'] ?? 0 ?></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-record-circle me-1"></i>Major</span>
+                                <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-record-circle me-1"></i><?= __('dashboard.severity_major') ?></span>
                                 <span class="fw-bold"><?= $incidentsByImpact['major'] ?? 0 ?></span>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-record-circle me-1"></i>Minor</span>
+                                <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-record-circle me-1"></i><?= __('dashboard.severity_minor') ?></span>
                                 <span class="fw-bold"><?= $incidentsByImpact['minor'] ?? 0 ?></span>
                             </div>
                         </div>
                     </div>
                     <div class="border-top pt-3">
-                        <div class="fw-semibold small text-secondary mb-2">SCHEDULED MAINTENANCE</div>
+                        <div class="fw-semibold small text-secondary mb-2"><?= __('dashboard.scheduled_maintenance_heading') ?></div>
                         <div class="d-flex justify-content-between text-center">
                             <div class="bg-body-secondary p-2 rounded-2 flex-fill me-1">
-                                <small class="text-secondary d-block">Scheduled</small>
+                                <small class="text-secondary d-block"><?= __('maintenance.scheduled') ?></small>
                                 <strong class="fs-6"><?= $maintenancesByStatus['scheduled'] ?? 0 ?></strong>
                             </div>
                             <div class="bg-primary-subtle p-2 rounded-2 flex-fill me-1">
-                                <small class="text-primary d-block">In Progress</small>
+                                <small class="text-primary d-block"><?= __('maintenance.in_progress') ?></small>
                                 <strong class="fs-6 text-primary"><?= $maintenancesByStatus['in_progress'] ?? 0 ?></strong>
                             </div>
                             <div class="bg-success-subtle p-2 rounded-2 flex-fill">
-                                <small class="text-success d-block">Completed</small>
+                                <small class="text-success d-block"><?= __('maintenance.completed') ?></small>
                                 <strong class="fs-6 text-success"><?= $maintenancesByStatus['completed'] ?? 0 ?></strong>
                             </div>
                         </div>
@@ -205,19 +205,19 @@
         </div>
     </div>
 
-    <!-- Conditional Cloudflare Edge Worker Section (Rendered only if Edge Worker is Enabled) -->
+    <!-- Conditional Cloudflare Edge Worker Section -->
     <?php if ($edgeEnabled): ?>
         <div class="card border-0 shadow-sm rounded-3 mb-4">
             <div class="card-header bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div>
                     <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
-                        <i class="bi bi-globe-americas text-primary"></i> Cloudflare Distributed Edge Probes
+                        <i class="bi bi-globe-americas text-primary"></i> <?= __('dashboard.edge_probes_title') ?>
                     </h5>
-                    <small class="text-secondary">Multi-region telemetry segmented by Cloudflare Edge PoP location (IATA codes)</small>
+                    <small class="text-secondary"><?= __('dashboard.edge_probes_desc') ?></small>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
-                        <i class="bi bi-broadcast me-1"></i> Worker Active
+                        <i class="bi bi-broadcast me-1"></i> <?= __('dashboard.worker_active') ?>
                     </span>
                 </div>
             </div>
@@ -225,7 +225,7 @@
                 <?php if (empty($edgePoPStats)): ?>
                     <div class="text-center py-4 text-secondary">
                         <i class="bi bi-cloud-arrow-down fs-2 d-block mb-2"></i>
-                        No multi-region checks recorded yet. Run the cron runner to aggregate Edge PoP data.
+                        <?= __('dashboard.no_edge_checks') ?>
                     </div>
                 <?php else: ?>
                     <div class="row g-3 align-items-center">
@@ -234,11 +234,11 @@
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light">
                                         <tr>
-                                            <th>PoP / Node</th>
-                                            <th>Location</th>
-                                            <th class="text-center">Total Checks</th>
-                                            <th class="text-center">Avg Latency</th>
-                                            <th class="text-end">Uptime</th>
+                                            <th><?= __('dashboard.table_pop_node') ?></th>
+                                            <th><?= __('dashboard.table_location') ?></th>
+                                            <th class="text-center"><?= __('dashboard.table_total_checks') ?></th>
+                                            <th class="text-center"><?= __('dashboard.table_avg_latency') ?></th>
+                                            <th class="text-end"><?= __('dashboard.table_uptime') ?></th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -279,18 +279,18 @@
         </div>
     <?php endif; ?>
 
-    <!-- Grafana Analytics: Row 3 (Slowest Endpoints & All Active Plugins) -->
+    <!-- Analytics Row 3 (Slowest Endpoints & All Active Plugins) -->
     <div class="row g-3 mb-4">
         <!-- Top Slowest Endpoints -->
         <div class="col-xl-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
-                    <h6 class="fw-bold mb-0"><i class="bi bi-stopwatch text-danger me-2"></i>Slowest Endpoints (Avg 24h)</h6>
-                    <small class="text-secondary">Highest response times requiring attention</small>
+                    <h6 class="fw-bold mb-0"><i class="bi bi-stopwatch text-danger me-2"></i><?= __('dashboard.slowest_endpoints') ?></h6>
+                    <small class="text-secondary"><?= __('dashboard.slowest_endpoints_desc') ?></small>
                 </div>
                 <div class="card-body">
                     <?php if (empty($slowestMonitors)): ?>
-                        <div class="text-center py-5 text-secondary">No latency data accumulated yet.</div>
+                        <div class="text-center py-5 text-secondary"><?= __('dashboard.no_latency_data') ?></div>
                     <?php else: ?>
                         <div style="height: 240px; position: relative;">
                             <canvas id="slowestChart"></canvas>
@@ -300,31 +300,31 @@
             </div>
         </div>
 
-        <!-- All Active External Plugins & Feeds (Target URLs removed) -->
+        <!-- All Active External Plugins & Feeds -->
         <div class="col-xl-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="fw-bold mb-0"><i class="bi bi-plugin text-primary me-2"></i>Active External Plugins & Feeds</h6>
-                        <small class="text-secondary">Integrated external cloud providers & zero trust networks</small>
+                        <h6 class="fw-bold mb-0"><i class="bi bi-plugin text-primary me-2"></i><?= __('dashboard.external_plugins_title') ?></h6>
+                        <small class="text-secondary"><?= __('dashboard.external_plugins_desc') ?></small>
                     </div>
-                    <span class="badge bg-body-secondary text-body border"><?= count($allPluginServices) ?> Enabled</span>
+                    <span class="badge bg-body-secondary text-body border"><?= __('dashboard.plugins_enabled_count', ['count' => count($allPluginServices)]) ?></span>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0">
                             <thead class="table-light sticky-top">
                                 <tr>
-                                    <th>Service Name</th>
-                                    <th>Provider</th>
-                                    <th class="text-end">Status</th>
+                                    <th><?= __('dashboard.table_service_name') ?></th>
+                                    <th><?= __('dashboard.table_provider') ?></th>
+                                    <th class="text-end"><?= __('common.status') ?></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php if (empty($allPluginServices)): ?>
                                     <tr>
                                         <td colspan="3" class="text-center py-4 text-secondary">
-                                            No external plugin services active.
+                                            <?= __('dashboard.no_external_plugins') ?>
                                         </td>
                                     </tr>
                                 <?php else: ?>
@@ -341,11 +341,11 @@
                                             </td>
                                             <td class="text-end">
                                                 <?php if ($srv['current_status'] === 'operational'): ?>
-                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">OPERATIONAL</span>
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle"><?= __('dashboard.badge_operational') ?></span>
                                                 <?php elseif ($srv['current_status'] === 'degraded'): ?>
-                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">DEGRADED</span>
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><?= __('dashboard.badge_degraded') ?></span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">DOWN</span>
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><?= __('dashboard.badge_down') ?></span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -362,23 +362,23 @@
     <!-- Recent Probes Activity (Bottom Table) -->
     <div class="card border-0 shadow-sm rounded-3">
         <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
-            <h5 class="fw-bold mb-0"><i class="bi bi-activity text-primary me-2"></i>Latest Heartbeat Checks</h5>
-            <a href="/admin/logs" class="btn btn-sm btn-outline-secondary">View All Logs</a>
+            <h5 class="fw-bold mb-0"><i class="bi bi-activity text-primary me-2"></i><?= __('dashboard.latest_heartbeat_checks') ?></h5>
+            <a href="/admin/logs" class="btn btn-sm btn-outline-secondary"><?= __('dashboard.view_all_logs') ?></a>
         </div>
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Time</th>
-                        <th>Monitor</th>
-                        <th>Status</th>
-                        <th>Latency</th>
-                        <th>HTTP Code</th>
+                        <th><?= __('dashboard.table_time') ?></th>
+                        <th><?= __('dashboard.table_monitor') ?></th>
+                        <th><?= __('common.status') ?></th>
+                        <th><?= __('dashboard.table_latency') ?></th>
+                        <th><?= __('dashboard.table_http_code') ?></th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (empty($recentLogs)): ?>
-                        <tr><td colspan="5" class="text-center py-4 text-secondary">No heartbeat checks recorded yet. Run the cron runner to begin.</td></tr>
+                        <tr><td colspan="5" class="text-center py-4 text-secondary"><?= __('dashboard.no_heartbeats') ?></td></tr>
                     <?php endif; ?>
 
                     <?php foreach ($recentLogs as $log): ?>
@@ -429,7 +429,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 labels: latencyLabels.length > 0 ? latencyLabels : ['00:00', '06:00', '12:00', '18:00', '24:00'],
                 datasets: [
                     {
-                        label: 'Average Latency (ms)',
+                        label: <?= json_encode(__('dashboard.chart_avg_latency')) ?>,
                         data: latencyData.length > 0 ? latencyData : [0, 0, 0, 0, 0],
                         borderColor: '#0284c7',
                         backgroundColor: gradient,
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         yAxisID: 'y'
                     },
                     {
-                        label: 'Failed Checks',
+                        label: <?= json_encode(__('dashboard.chart_failed_checks')) ?>,
                         data: errorPoints.length > 0 ? errorPoints : [0, 0, 0, 0, 0],
                         borderColor: '#ef4444',
                         backgroundColor: 'rgba(239, 68, 68, 0.2)',
@@ -473,7 +473,12 @@ document.addEventListener('DOMContentLoaded', () => {
         new Chart(ctxStatus, {
             type: 'doughnut',
             data: {
-                labels: ['Operational', 'Degraded', 'Down', 'Maintenance'],
+                labels: [
+                    <?= json_encode(__('dashboard.status_operational')) ?>,
+                    <?= json_encode(__('dashboard.status_degraded')) ?>,
+                    <?= json_encode(__('dashboard.status_down')) ?>,
+                    <?= json_encode(__('dashboard.status_maintenance')) ?>
+                ],
                 datasets: [{
                     data: [
                         <?= (int)$statusCounts['operational'] ?>,
@@ -507,7 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Occurrences',
+                    label: <?= json_encode(__('dashboard.chart_occurrences')) ?>,
                     data: values,
                     backgroundColor: ['#10b981', '#38bdf8', '#fbbf24', '#f87171', '#a855f7'],
                     borderRadius: 4
@@ -561,7 +566,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: edgePops.map(p => p.code),
                 datasets: [{
-                    label: 'Checks by PoP',
+                    label: <?= json_encode(__('dashboard.chart_checks_by_pop')) ?>,
                     data: edgePops.map(p => p.total_checks),
                     backgroundColor: '#0284c7',
                     borderRadius: 4
@@ -576,7 +581,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 },
                 plugins: {
                     legend: { display: false },
-                    title: { display: true, text: 'Check Volume per Edge Datacenter', color: textColor, font: { weight: 'bold' } }
+                    title: { display: true, text: <?= json_encode(__('dashboard.chart_check_volume_pop')) ?>, color: textColor, font: { weight: 'bold' } }
                 }
             }
         });
@@ -591,7 +596,7 @@ document.addEventListener('DOMContentLoaded', () => {
             data: {
                 labels: slowestData.map(m => m.name),
                 datasets: [{
-                    label: 'Avg Latency (ms)',
+                    label: <?= json_encode(__('dashboard.chart_avg_latency')) ?>,
                     data: slowestData.map(m => m.avg_latency),
                     backgroundColor: '#f43f5e',
                     borderRadius: 4
