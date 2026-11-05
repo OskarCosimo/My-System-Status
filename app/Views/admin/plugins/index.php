@@ -29,14 +29,6 @@
         </div>
     <?php endif; ?>
 
-    <!-- Translation Success Alert -->
-    <?php if (isset($_GET['translated'])): ?>
-        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($_GET['msg'] ?? __('plugins.alert_translations_updated')) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-
     <!-- Error Alert -->
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
@@ -211,7 +203,7 @@
             </div>
         </div>
 
-        <!-- 4. LibreTranslate Auto-Translator -->
+        <!-- 4. LibreTranslate Informational Card (Directs to Settings) -->
         <div class="col-md-6 col-xl-6">
             <div class="card h-100 border-0 shadow-sm">
                 <div class="card-body">
@@ -232,64 +224,13 @@
                         <?= __('plugins.translate_desc', ['endpoint' => '<code>' . htmlspecialchars($translateEndpoint ?: __('plugins.text_not_configured')) . '</code>']) ?>
                     </p>
                 </div>
-                <div class="card-footer bg-transparent border-0 pt-0 pb-3 d-flex gap-2">
-                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#translateModal">
-                        <i class="bi bi-translate me-1"></i> <?= __('plugins.btn_autotranslate_jsons') ?>
-                    </button>
-                    <a href="/admin/settings#generalTab" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_settings') ?>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                    <a href="/admin/settings#aiTab" class="btn btn-sm btn-primary">
+                        <i class="bi bi-sliders me-1"></i> <?= __('plugins.btn_settings') ?>
                     </a>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Modal: Auto-Translate with LibreTranslate (Asynchronous Batch Runner) -->
-<div class="modal fade" id="translateModal" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog">
-        <form id="asyncTranslateFormPlugins" class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-translate me-2 text-primary"></i><?= __('plugins.modal_translate_title') ?></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" id="syncPluginsCloseBtn"></button>
-            </div>
-            <div class="modal-body">
-                <div class="alert alert-info small mb-3">
-                    <i class="bi bi-info-circle me-1"></i>
-                    <?= __('plugins.modal_translate_info') ?>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold"><?= __('plugins.field_target_lang') ?></label>
-                    <select name="target_lang" id="targetLangSelectPlugins" class="form-select" required>
-                        <option value="it"><?= __('plugins.lang_it') ?></option>
-                        <option value="es"><?= __('plugins.lang_es') ?></option>
-                        <option value="fr"><?= __('plugins.lang_fr') ?></option>
-                        <option value="de"><?= __('plugins.lang_de') ?></option>
-                        <option value="pt"><?= __('plugins.lang_pt') ?></option>
-                    </select>
-                    <small class="text-body-secondary"><?= __('plugins.help_lang_file') ?></small>
-                </div>
-
-                <!-- Async Progress Section (Initially Hidden) -->
-                <div id="asyncProgressContainerPlugins" class="d-none my-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="small fw-semibold text-body" id="asyncStatusLabelPlugins">Preparing queue...</span>
-                        <span class="small text-secondary fw-bold" id="asyncPercentageLabelPlugins">0%</span>
-                    </div>
-                    <div class="progress" style="height: 12px;">
-                        <div id="asyncProgressBarPlugins" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;"></div>
-                    </div>
-                    <div class="text-danger small mt-2 d-none" id="asyncErrorBoxPlugins"></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="syncPluginsCancelBtn"><?= __('common.cancel') ?></button>
-                <button type="submit" class="btn btn-primary fw-semibold" id="startTranslateBtnPlugins">
-                    <i class="bi bi-magic me-1"></i> <?= __('plugins.btn_start_translation') ?>
-                </button>
-            </div>
-        </form>
     </div>
 </div>
 
@@ -310,101 +251,4 @@ function setAllCfSubservices(checked) {
         cb.checked = checked;
     });
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    const asyncFormPlugins = document.getElementById('asyncTranslateFormPlugins');
-    if (asyncFormPlugins) {
-        asyncFormPlugins.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const selectTarget   = document.getElementById('targetLangSelectPlugins').value;
-            const progressBox    = document.getElementById('asyncProgressContainerPlugins');
-            const progressBar    = document.getElementById('asyncProgressBarPlugins');
-            const statusLabel    = document.getElementById('asyncStatusLabelPlugins');
-            const percentLabel   = document.getElementById('asyncPercentageLabelPlugins');
-            const errorBox       = document.getElementById('asyncErrorBoxPlugins');
-            const startBtn       = document.getElementById('startTranslateBtnPlugins');
-            const cancelBtn      = document.getElementById('syncPluginsCancelBtn');
-            const closeBtn       = document.getElementById('syncPluginsCloseBtn');
-
-            startBtn.disabled = true;
-            cancelBtn.disabled = true;
-            closeBtn.disabled = true;
-            startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Synchronizing...';
-            progressBox.classList.remove('d-none');
-            errorBox.classList.add('d-none');
-            progressBar.style.width = '5%';
-            percentLabel.textContent = '5%';
-            statusLabel.textContent = 'Fetching queue...';
-
-            try {
-                const qRes = await fetch('/admin/translations/queue', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-                    body: new URLSearchParams({ target_lang: selectTarget })
-                });
-                const qData = await qRes.json();
-
-                if (qData.status !== 'success' || !qData.queue || qData.queue.length === 0) {
-                    throw new Error(qData.message || 'Unable to build translation queue.');
-                }
-
-                const queue = qData.queue;
-                let totalTrans = 0;
-
-                for (let i = 0; i < queue.length; i++) {
-                    const langCode = queue[i];
-                    let isLangDone = false;
-
-                    while (!isLangDone) {
-                        statusLabel.textContent = `Translating [${langCode.toUpperCase()}] in progress...`;
-
-                        const cRes = await fetch('/admin/translations/chunk', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-                            body: new URLSearchParams({ target_lang: langCode, limit: '6' })
-                        });
-                        const cData = await cRes.json();
-
-                        if (cData.status !== 'success') {
-                            throw new Error(cData.message || `Error translating ${langCode}`);
-                        }
-
-                        totalTrans += (cData.translated_count || 0);
-
-                        if (cData.total_pending > 0) {
-                            const currentProgress = Math.min(95, Math.round(((cData.total_pending - cData.remaining) / cData.total_pending) * 100));
-                            progressBar.style.width = currentProgress + '%';
-                            percentLabel.textContent = currentProgress + '%';
-                            statusLabel.textContent = `[${langCode.toUpperCase()}] ${cData.remaining} keys remaining...`;
-                        }
-
-                        if (cData.done === true || cData.remaining <= 0) {
-                            isLangDone = true;
-                        }
-                    }
-                }
-
-                progressBar.style.width = '100%';
-                progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
-                progressBar.classList.add('bg-success');
-                percentLabel.textContent = '100%';
-                statusLabel.textContent = 'Completed! Reloading...';
-
-                setTimeout(() => {
-                    window.location.href = window.location.pathname + '?translated=1&msg=' + encodeURIComponent(`Translation completed! Total keys translated: ${totalTrans}`);
-                }, 1200);
-
-            } catch (err) {
-                errorBox.textContent = err.message;
-                errorBox.classList.remove('d-none');
-                statusLabel.textContent = 'Translation halted.';
-                startBtn.disabled = false;
-                cancelBtn.disabled = false;
-                closeBtn.disabled = false;
-                startBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Retry Translation';
-            }
-        });
-    }
-});
 </script>
