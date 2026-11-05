@@ -54,43 +54,43 @@ foreach ($monitors as $m) {
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Monitors & Services</h2>
-            <p class="text-body-secondary mb-0">Manage core endpoints, secondary cloud feeds, and display order.</p>
+            <h2 class="fw-bold mb-0"><?= __('monitors.page_title') ?></h2>
+            <p class="text-body-secondary mb-0"><?= __('monitors.page_subtitle') ?></p>
         </div>
         <div class="d-flex gap-2">
             <button type="submit" form="orderForm" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-down-up me-1"></i> Save Custom Order
+                <i class="bi bi-arrow-down-up me-1"></i> <?= __('monitors.save_custom_order') ?>
             </button>
             <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newMonitorModal">
-                <i class="bi bi-plus-lg me-1"></i> Add New Route
+                <i class="bi bi-plus-lg me-1"></i> <?= __('monitors.add_new_route') ?>
             </button>
         </div>
     </div>
 
     <?php if (isset($_GET['reordered'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> Monitor display order updated successfully!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('monitors.alert_reordered') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['created'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> New monitor route created successfully!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('monitors.alert_created') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['updated'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> Monitor configuration updated successfully!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('monitors.alert_updated') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['deleted'])): ?>
         <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-info-circle-fill me-2"></i> Monitor deleted successfully.
+            <i class="bi bi-info-circle-fill me-2"></i> <?= __('monitors.alert_deleted') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -100,14 +100,14 @@ foreach ($monitors as $m) {
             <table id="monitorsTable" class="table table-hover align-middle mb-0 w-100">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 70px;" class="text-center">Order</th>
-                        <th>Status</th>
-                        <th>Type</th>
-                        <th>Service Name</th>
-                        <th>Target</th>
-                        <th>Uptime</th>
-                        <th>Tier</th>
-                        <th class="text-end">Actions</th>
+                        <th style="width: 70px;" class="text-center"><?= __('monitors.table_order') ?></th>
+                        <th><?= __('common.status') ?></th>
+                        <th><?= __('monitors.table_type') ?></th>
+                        <th><?= __('monitors.table_service_name') ?></th>
+                        <th><?= __('monitors.table_target') ?></th>
+                        <th><?= __('monitors.table_uptime') ?></th>
+                        <th><?= __('monitors.table_tier') ?></th>
+                        <th class="text-end"><?= __('monitors.table_actions') ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -127,9 +127,9 @@ foreach ($monitors as $m) {
                             </td>
                             <td>
                                 <?php if ($m['current_status'] === 'operational'): ?>
-                                    <span class="badge bg-success">UP</span>
+                                    <span class="badge bg-success"><?= __('monitors.badge_up') ?></span>
                                 <?php elseif ($m['current_status'] === 'down'): ?>
-                                    <span class="badge bg-danger">DOWN</span>
+                                    <span class="badge bg-danger"><?= __('monitors.badge_down') ?></span>
                                 <?php else: ?>
                                     <span class="badge bg-warning text-dark"><?= strtoupper($m['current_status']) ?></span>
                                 <?php endif; ?>
@@ -139,8 +139,8 @@ foreach ($monitors as $m) {
                                 <div class="d-flex align-items-center gap-2">
                                     <strong class="text-body"><?= htmlspecialchars($m['name']) ?></strong>
                                     <?php if ($isExternal): ?>
-                                        <span class="badge bg-body-secondary text-body border small" title="Automated plugin or Zero Trust tunnel feed">
-                                            <i class="bi bi-plugin me-1 text-primary"></i> Feed / Tunnel
+                                        <span class="badge bg-body-secondary text-body border small" title="<?= htmlspecialchars(__('monitors.feed_tunnel_tooltip')) ?>">
+                                            <i class="bi bi-plugin me-1 text-primary"></i> <?= __('monitors.feed_tunnel') ?>
                                         </span>
                                     <?php endif; ?>
                                     <?php if ($hasChildren): ?>
@@ -148,7 +148,7 @@ foreach ($monitors as $m) {
                                                 style="font-size: 11px;" 
                                                 type="button" 
                                                 data-monitor-id="<?= $m['id'] ?>">
-                                            <span><?= count($m['children']) ?> sub-services</span> <i class="bi bi-chevron-down ms-1"></i>
+                                            <span><?= __('monitors.subservices_count', ['count' => count($m['children'])]) ?></span> <i class="bi bi-chevron-down ms-1"></i>
                                         </button>
                                     <?php endif; ?>
                                 </div>
@@ -159,24 +159,24 @@ foreach ($monitors as $m) {
                             <td><strong><?= number_format((float)($m['uptime_percentage'] ?? 100), 2) ?>%</strong></td>
                             <td>
                                 <?php if ((int)($m['is_primary'] ?? 0) === 1): ?>
-                                    <span class="badge bg-primary"><i class="bi bi-star-fill me-1"></i> Core Service</span>
+                                    <span class="badge bg-primary"><i class="bi bi-star-fill me-1"></i> <?= __('monitors.core_service') ?></span>
                                 <?php else: ?>
-                                    <span class="badge bg-body-secondary text-body-secondary border">Secondary</span>
+                                    <span class="badge bg-body-secondary text-body-secondary border"><?= __('monitors.secondary_service') ?></span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-end">
                                 <div class="btn-group">
                                     <?php if ($isExternal): ?>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Feed and Tunnel monitors cannot be edited manually.">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary" disabled title="<?= htmlspecialchars(__('monitors.cannot_edit_external')) ?>">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                     <?php else: ?>
-                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editMonitorModal<?= $m['id'] ?>" title="Edit Monitor">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editMonitorModal<?= $m['id'] ?>" title="<?= htmlspecialchars(__('monitors.edit_monitor')) ?>">
                                             <i class="bi bi-pencil"></i>
                                         </button>
                                     <?php endif; ?>
                                     
-                                    <button type="submit" form="deleteForm<?= $m['id'] ?>" class="btn btn-sm btn-outline-danger" title="Delete Monitor and all sub-services">
+                                    <button type="submit" form="deleteForm<?= $m['id'] ?>" class="btn btn-sm btn-outline-danger" title="<?= htmlspecialchars(__('monitors.delete_monitor_tooltip')) ?>">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
@@ -195,7 +195,7 @@ foreach ($monitors as $m) {
         <template id="child-template-<?= $m['id'] ?>">
             <div class="p-3 bg-body-tertiary border-top border-bottom">
                 <div class="ps-4 border-start border-3 border-primary">
-                    <h6 class="fw-bold text-body-secondary small mb-2">Sub-services under <?= htmlspecialchars($m['name']) ?>:</h6>
+                    <h6 class="fw-bold text-body-secondary small mb-2"><?= __('monitors.subservices_under', ['name' => htmlspecialchars($m['name'])]) ?></h6>
                     <div class="row g-2">
                         <?php foreach ($m['children'] as $child): ?>
                             <div class="col-md-6 col-lg-4">
@@ -210,15 +210,15 @@ foreach ($monitors as $m) {
                                         </span>
                                         <div class="btn-group btn-group-sm">
                                             <?php if ($child['is_external']): ?>
-                                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" disabled title="Feed and Tunnel monitors cannot be edited manually.">
+                                                <button type="button" class="btn btn-xs btn-outline-secondary py-0 px-2" disabled title="<?= htmlspecialchars(__('monitors.cannot_edit_external')) ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                             <?php else: ?>
-                                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#editMonitorModal<?= $child['id'] ?>" title="Edit Sub-service">
+                                                <button type="button" class="btn btn-xs btn-outline-primary py-0 px-2" data-bs-toggle="modal" data-bs-target="#editMonitorModal<?= $child['id'] ?>" title="<?= htmlspecialchars(__('monitors.edit_subservice')) ?>">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                             <?php endif; ?>
-                                            <button type="submit" form="deleteForm<?= $child['id'] ?>" class="btn btn-xs btn-outline-danger py-0 px-2" title="Delete Sub-service">
+                                            <button type="submit" form="deleteForm<?= $child['id'] ?>" class="btn btn-xs btn-outline-danger py-0 px-2" title="<?= htmlspecialchars(__('monitors.delete_subservice_tooltip')) ?>">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -235,7 +235,7 @@ foreach ($monitors as $m) {
 
 <!-- Standalone Delete Forms for Root and Child Monitors -->
 <?php foreach ($allMonitors as $m): ?>
-    <form id="deleteForm<?= $m['id'] ?>" action="/admin/monitors/delete" method="POST" onsubmit="return confirm('Delete <?= htmlspecialchars(addslashes($m['name'])) ?>?');">
+    <form id="deleteForm<?= $m['id'] ?>" action="/admin/monitors/delete" method="POST" onsubmit="return confirm('<?= htmlspecialchars(addslashes(__('monitors.confirm_delete', ['name' => $m['name']]))) ?>');">
         <input type="hidden" name="id" value="<?= $m['id'] ?>">
     </form>
 <?php endforeach; ?>
@@ -246,13 +246,13 @@ foreach ($monitors as $m) {
         <?php
             $currentType = $m['type'] ?? 'http';
             $fieldConfig = [
-                'http' => ['label' => 'Target URL', 'placeholder' => 'https://api.example.com'],
-                'ping' => ['label' => 'Target Host or IP', 'placeholder' => '192.168.1.1 or example.com'],
-                'port' => ['label' => 'Target Host or IP', 'placeholder' => '127.0.0.1 or db.example.com'],
-                'ssl'  => ['label' => 'Target Domain', 'placeholder' => 'example.com'],
-                'path' => ['label' => 'Filesystem Path / Mount', 'placeholder' => '/mnt/storage or /media/backup_disk'],
+                'http' => ['label' => __('monitors.target_label_url'), 'placeholder' => 'https://api.example.com'],
+                'ping' => ['label' => __('monitors.target_label_host'), 'placeholder' => '192.168.1.1 or example.com'],
+                'port' => ['label' => __('monitors.target_label_host'), 'placeholder' => '127.0.0.1 or db.example.com'],
+                'ssl'  => ['label' => __('monitors.target_label_domain'), 'placeholder' => 'example.com'],
+                'path' => ['label' => __('monitors.target_label_path'), 'placeholder' => '/mnt/storage or /media/backup_disk'],
             ];
-            $currentLabel = $fieldConfig[$currentType]['label'] ?? 'Target';
+            $currentLabel = $fieldConfig[$currentType]['label'] ?? __('monitors.table_target');
             $currentPlaceholder = $fieldConfig[$currentType]['placeholder'] ?? '';
         ?>
         <div class="modal fade" id="editMonitorModal<?= $m['id'] ?>" tabindex="-1">
@@ -261,36 +261,36 @@ foreach ($monitors as $m) {
                     <input type="hidden" name="id" value="<?= $m['id'] ?>">
                     
                     <div class="modal-header">
-                        <h5 class="modal-title fw-bold">Edit Monitor: <?= htmlspecialchars($m['name']) ?></h5>
+                        <h5 class="modal-title fw-bold"><?= __('monitors.edit_monitor_title', ['name' => htmlspecialchars($m['name'])]) ?></h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Service / Route Name</label>
+                            <label class="form-label fw-semibold"><?= __('monitors.form_service_name') ?></label>
                             <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($m['name']) ?>" required>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Probe Type</label>
+                                <label class="form-label fw-semibold"><?= __('monitors.form_probe_type') ?></label>
                                 <select name="type" id="probeTypeEdit<?= $m['id'] ?>" class="form-select" onchange="updateProbeFieldsEdit(<?= $m['id'] ?>)">
-                                    <option value="http" <?= $currentType === 'http' ? 'selected' : '' ?>>HTTP / HTTPS</option>
-                                    <option value="ping" <?= $currentType === 'ping' ? 'selected' : '' ?>>Ping (ICMP)</option>
-                                    <option value="port" <?= $currentType === 'port' ? 'selected' : '' ?>>TCP Port</option>
-                                    <option value="ssl" <?= $currentType === 'ssl' ? 'selected' : '' ?>>SSL Expiration Check</option>
-                                    <option value="path" <?= $currentType === 'path' ? 'selected' : '' ?>>Path / Mount Check</option>
+                                    <option value="http" <?= $currentType === 'http' ? 'selected' : '' ?>><?= __('monitors.type_http') ?></option>
+                                    <option value="ping" <?= $currentType === 'ping' ? 'selected' : '' ?>><?= __('monitors.type_ping') ?></option>
+                                    <option value="port" <?= $currentType === 'port' ? 'selected' : '' ?>><?= __('monitors.type_port') ?></option>
+                                    <option value="ssl" <?= $currentType === 'ssl' ? 'selected' : '' ?>><?= __('monitors.type_ssl') ?></option>
+                                    <option value="path" <?= $currentType === 'path' ? 'selected' : '' ?>><?= __('monitors.type_path') ?></option>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Check Interval</label>
+                                <label class="form-label fw-semibold"><?= __('monitors.form_check_interval') ?></label>
                                 <select name="interval_seconds" class="form-select">
-                                    <option value="30" <?= (int)$m['interval_seconds'] === 30 ? 'selected' : '' ?>>Every 30 seconds</option>
-                                    <option value="60" <?= (int)$m['interval_seconds'] === 60 ? 'selected' : '' ?>>Every 1 minute</option>
-                                    <option value="300" <?= (int)$m['interval_seconds'] === 300 ? 'selected' : '' ?>>Every 5 minutes</option>
-                                    <option value="600" <?= (int)$m['interval_seconds'] === 600 ? 'selected' : '' ?>>Every 10 minutes</option>
-                                    <option value="900" <?= (int)$m['interval_seconds'] === 900 ? 'selected' : '' ?>>Every 15 minutes</option>
-                                    <option value="1800" <?= (int)$m['interval_seconds'] === 1800 ? 'selected' : '' ?>>Every 30 minutes</option>
-                                    <option value="3600" <?= (int)$m['interval_seconds'] === 3600 ? 'selected' : '' ?>>Every 1 hour</option>
+                                    <option value="30" <?= (int)$m['interval_seconds'] === 30 ? 'selected' : '' ?>><?= __('monitors.interval_30s') ?></option>
+                                    <option value="60" <?= (int)$m['interval_seconds'] === 60 ? 'selected' : '' ?>><?= __('monitors.interval_1m') ?></option>
+                                    <option value="300" <?= (int)$m['interval_seconds'] === 300 ? 'selected' : '' ?>><?= __('monitors.interval_5m') ?></option>
+                                    <option value="600" <?= (int)$m['interval_seconds'] === 600 ? 'selected' : '' ?>><?= __('monitors.interval_10m') ?></option>
+                                    <option value="900" <?= (int)$m['interval_seconds'] === 900 ? 'selected' : '' ?>><?= __('monitors.interval_15m') ?></option>
+                                    <option value="1800" <?= (int)$m['interval_seconds'] === 1800 ? 'selected' : '' ?>><?= __('monitors.interval_30m') ?></option>
+                                    <option value="3600" <?= (int)$m['interval_seconds'] === 3600 ? 'selected' : '' ?>><?= __('monitors.interval_1h') ?></option>
                                 </select>
                             </div>
                         </div>
@@ -301,15 +301,15 @@ foreach ($monitors as $m) {
                         </div>
 
                         <div class="mb-3 <?= $currentType === 'port' ? '' : 'd-none' ?>" id="portFieldWrapperEdit<?= $m['id'] ?>">
-                            <label class="form-label fw-semibold">Port Number</label>
+                            <label class="form-label fw-semibold"><?= __('monitors.form_port_number') ?></label>
                             <input type="number" name="port" class="form-control" value="<?= htmlspecialchars($m['port'] ?? '') ?>" placeholder="e.g. 3306, 22, 443">
                         </div>
 
                         <!-- Parent Group Assignment -->
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Parent Service Group (Optional)</label>
+                            <label class="form-label fw-semibold"><?= __('monitors.form_parent_group') ?></label>
                             <select name="parent_id" class="form-select">
-                                <option value="">None (Standalone / Parent Service)</option>
+                                <option value=""><?= __('monitors.form_no_parent') ?></option>
                                 <?php foreach ($parentsList as $parent): ?>
                                     <?php if ($parent['id'] != $m['id']): ?>
                                         <option value="<?= $parent['id'] ?>" <?= (isset($m['parent_id']) && $m['parent_id'] == $parent['id']) ? 'selected' : '' ?>>
@@ -324,13 +324,13 @@ foreach ($monitors as $m) {
                         <div class="form-check form-switch mb-2">
                             <input class="form-check-input" type="checkbox" name="is_primary" value="1" id="primarySwitchEdit<?= $m['id'] ?>" <?= (int)($m['is_primary'] ?? 0) === 1 ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="primarySwitchEdit<?= $m['id'] ?>">
-                                Mark as Core / Primary Service
+                                <?= __('monitors.form_mark_core') ?>
                             </label>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary fw-semibold">Save Changes</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= __('common.cancel') ?></button>
+                        <button type="submit" class="btn btn-primary fw-semibold"><?= __('monitors.save_changes') ?></button>
                     </div>
                 </form>
             </div>
@@ -343,74 +343,74 @@ foreach ($monitors as $m) {
     <div class="modal-dialog">
         <form action="/admin/monitors/store" method="POST" class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold">Add New Monitor</h5>
+                <h5 class="modal-title fw-bold"><?= __('monitors.add_new_monitor') ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Service / Route Name</label>
-                    <input type="text" name="name" class="form-control" placeholder="e.g. Primary Database or API Endpoint" required>
+                    <label class="form-label fw-semibold"><?= __('monitors.form_service_name') ?></label>
+                    <input type="text" name="name" class="form-control" placeholder="<?= htmlspecialchars(__('monitors.form_service_name_placeholder')) ?>" required>
                 </div>
 
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Probe Type</label>
+                        <label class="form-label fw-semibold"><?= __('monitors.form_probe_type') ?></label>
                         <select name="type" id="probeType" class="form-select" onchange="updateProbeFields()">
-                            <option value="http" selected>HTTP / HTTPS</option>
-                            <option value="ping">Ping (ICMP)</option>
-                            <option value="port">TCP Port</option>
-                            <option value="ssl">SSL Expiration Check</option>
-                            <option value="path">Path / Mount Check</option>
+                            <option value="http" selected><?= __('monitors.type_http') ?></option>
+                            <option value="ping"><?= __('monitors.type_ping') ?></option>
+                            <option value="port"><?= __('monitors.type_port') ?></option>
+                            <option value="ssl"><?= __('monitors.type_ssl') ?></option>
+                            <option value="path"><?= __('monitors.type_path') ?></option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Check Interval</label>
+                        <label class="form-label fw-semibold"><?= __('monitors.form_check_interval') ?></label>
                         <select name="interval_seconds" class="form-select">
-                            <option value="30">Every 30 seconds</option>
-                            <option value="60" selected>Every 1 minute</option>
-                            <option value="300">Every 5 minutes</option>
-                            <option value="600">Every 10 minutes</option>
-                            <option value="900">Every 15 minutes</option>
-                            <option value="1800">Every 30 minutes</option>
-                            <option value="3600">Every 1 hour</option>
+                            <option value="30"><?= __('monitors.interval_30s') ?></option>
+                            <option value="60" selected><?= __('monitors.interval_1m') ?></option>
+                            <option value="300"><?= __('monitors.interval_5m') ?></option>
+                            <option value="600"><?= __('monitors.interval_10m') ?></option>
+                            <option value="900"><?= __('monitors.interval_15m') ?></option>
+                            <option value="1800"><?= __('monitors.interval_30m') ?></option>
+                            <option value="3600"><?= __('monitors.interval_1h') ?></option>
                         </select>
                     </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" id="targetLabel">Target URL</label>
+                    <label class="form-label fw-semibold" id="targetLabel"><?= __('monitors.target_label_url') ?></label>
                     <input type="text" name="target" id="targetInput" class="form-control" placeholder="https://api.example.com" required>
                 </div>
 
                 <div class="mb-3 d-none" id="portFieldWrapper">
-                    <label class="form-label fw-semibold">Port Number</label>
+                    <label class="form-label fw-semibold"><?= __('monitors.form_port_number') ?></label>
                     <input type="number" name="port" class="form-control" placeholder="e.g. 3306, 22, 443">
                 </div>
 
                 <!-- Parent Group Assignment (Optional) -->
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Parent Service Group (Optional)</label>
+                    <label class="form-label fw-semibold"><?= __('monitors.form_parent_group') ?></label>
                     <select name="parent_id" class="form-select">
-                        <option value="">None (Standalone / Parent Service)</option>
+                        <option value=""><?= __('monitors.form_no_parent') ?></option>
                         <?php foreach ($parentsList as $parent): ?>
                             <option value="<?= $parent['id'] ?>"><?= htmlspecialchars($parent['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <small class="text-body-secondary">Group this monitor under an existing service.</small>
+                    <small class="text-body-secondary"><?= __('monitors.form_parent_help') ?></small>
                 </div>
 
                 <!-- Primary Core Service Checkbox -->
                 <div class="form-check form-switch mb-2">
                     <input class="form-check-input" type="checkbox" name="is_primary" value="1" id="primarySwitch" checked>
                     <label class="form-check-label fw-semibold" for="primarySwitch">
-                        Mark as Core / Primary Service
+                        <?= __('monitors.form_mark_core') ?>
                     </label>
-                    <div class="text-body-secondary small">If a Core Service goes down, the global status banner turns into Major Outage.</div>
+                    <div class="text-body-secondary small"><?= __('monitors.form_core_help') ?></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary fw-semibold">Create Monitor</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= __('common.cancel') ?></button>
+                <button type="submit" class="btn btn-primary fw-semibold"><?= __('monitors.create_monitor') ?></button>
             </div>
         </form>
     </div>
@@ -421,6 +421,30 @@ foreach ($monitors as $m) {
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 
 <script>
+// Probe field definitions for localized labels and placeholders
+const probeFieldConfig = {
+    http: {
+        label: <?= json_encode(__('monitors.target_label_url')) ?>,
+        placeholder: 'https://api.example.com'
+    },
+    ping: {
+        label: <?= json_encode(__('monitors.target_label_host')) ?>,
+        placeholder: '192.168.1.1 or example.com'
+    },
+    port: {
+        label: <?= json_encode(__('monitors.target_label_host')) ?>,
+        placeholder: '127.0.0.1 or db.example.com'
+    },
+    ssl: {
+        label: <?= json_encode(__('monitors.target_label_domain')) ?>,
+        placeholder: 'example.com'
+    },
+    path: {
+        label: <?= json_encode(__('monitors.target_label_path')) ?>,
+        placeholder: '/mnt/storage or /media/backup_disk'
+    }
+};
+
 $(document).ready(function() {
     // Initialize DataTables cleanly without DOM column count mismatches
     if ($('#monitorsTable tbody tr').length > 0) {
@@ -430,11 +454,11 @@ $(document).ready(function() {
             lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
             language: {
                 search: "_INPUT_",
-                searchPlaceholder: "Search monitors, routes, types...",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ monitors",
-                infoEmpty: "No monitors available",
-                zeroRecords: "No matching monitors found"
+                searchPlaceholder: <?= json_encode(__('monitors.dt_search')) ?>,
+                lengthMenu: <?= json_encode(__('monitors.dt_length')) ?>,
+                info: <?= json_encode(__('monitors.dt_info')) ?>,
+                infoEmpty: <?= json_encode(__('monitors.dt_info_empty')) ?>,
+                zeroRecords: <?= json_encode(__('monitors.dt_zero_records')) ?>
             },
             columnDefs: [
                 { orderable: false, targets: '_all' }
@@ -474,28 +498,9 @@ function updateProbeFields() {
         portField.classList.add('d-none');
     }
 
-    switch (type) {
-        case 'http':
-            targetLabel.textContent = 'Target URL';
-            targetInput.placeholder = 'https://api.example.com';
-            break;
-        case 'ping':
-            targetLabel.textContent = 'Target Host or IP';
-            targetInput.placeholder = '192.168.1.1 or example.com';
-            break;
-        case 'port':
-            targetLabel.textContent = 'Target Host or IP';
-            targetInput.placeholder = '127.0.0.1 or db.example.com';
-            break;
-        case 'ssl':
-            targetLabel.textContent = 'Target Domain';
-            targetInput.placeholder = 'example.com';
-            break;
-        case 'path':
-            targetLabel.textContent = 'Filesystem Path / Mount';
-            targetInput.placeholder = '/mnt/storage or /media/backup_disk';
-            break;
-    }
+    const config = probeFieldConfig[type] || probeFieldConfig.http;
+    targetLabel.textContent = config.label;
+    targetInput.placeholder = config.placeholder;
 }
 
 // Dynamic field updater for edit modals
@@ -511,27 +516,8 @@ function updateProbeFieldsEdit(id) {
         portField.classList.add('d-none');
     }
 
-    switch (type) {
-        case 'http':
-            targetLabel.textContent = 'Target URL';
-            targetInput.placeholder = 'https://api.example.com';
-            break;
-        case 'ping':
-            targetLabel.textContent = 'Target Host or IP';
-            targetInput.placeholder = '192.168.1.1 or example.com';
-            break;
-        case 'port':
-            targetLabel.textContent = 'Target Host or IP';
-            targetInput.placeholder = '127.0.0.1 or db.example.com';
-            break;
-        case 'ssl':
-            targetLabel.textContent = 'Target Domain';
-            targetInput.placeholder = 'example.com';
-            break;
-        case 'path':
-            targetLabel.textContent = 'Filesystem Path / Mount';
-            targetInput.placeholder = '/mnt/storage or /media/backup_disk';
-            break;
-    }
+    const config = probeFieldConfig[type] || probeFieldConfig.http;
+    targetLabel.textContent = config.label;
+    targetInput.placeholder = config.placeholder;
 }
 </script>
