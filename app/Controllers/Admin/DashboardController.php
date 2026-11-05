@@ -130,23 +130,137 @@ class DashboardController
         ");
         $slowestMonitors = $slowestStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 11. Cloudflare Status & Edge Probe Information
-        $cfMonitorsStmt = $this->db->query("
+        // 11. All Active External Plugins & Feeds (Cloudflare, AWS, Azure, Stripe, PayPal, GitHub, Tunnel)
+        $externalStmt = $this->db->query("
             SELECT name, target, current_status 
             FROM monitors 
             WHERE is_active = 1 
-              AND (target LIKE 'https://www.cloudflarestatus.com%' 
-                   OR target LIKE '%dash.cloudflare.com%' 
-                   OR name LIKE 'Tunnel:%')
-            ORDER BY sort_order ASC, name ASC
+              AND (
+                  target LIKE 'https://www.cloudflarestatus.com%' 
+                  OR target LIKE 'https://status.aws.amazon.com%' 
+                  OR target LIKE 'https://health.aws.amazon.com%' 
+                  OR target LIKE 'https://azure.status.microsoft%' 
+                  OR target LIKE 'https://status.stripe.com%' 
+                  OR target LIKE 'https://www.paypal-status.com%' 
+                  OR target LIKE 'https://www.githubstatus.com%' 
+                  OR target LIKE '%dash.cloudflare.com%' 
+                  OR name LIKE 'Tunnel:%'
+              )
+            ORDER BY name ASC
         ");
-        $cloudflareServices = $cfMonitorsStmt->fetchAll(PDO::FETCH_ASSOC);
+        $rawExternalMonitors = $externalStmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // Edge Worker configuration status
+        $allPluginServices = [];
+        foreach ($rawExternalMonitors as $ext) {
+            $target = $ext['target'];
+            $provider = 'External Feed';
+
+            if (str_contains($target, 'cloudflarestatus.com') || str_contains($target, 'dash.cloudflare.com') || str_starts_with($ext['name'], 'Tunnel:')) {
+                $provider = 'Cloudflare';
+            } elseif (str_contains($target, 'aws.amazon.com')) {
+                $provider = 'Amazon AWS';
+            } elseif (str_contains($target, 'azure.status.microsoft')) {
+                $provider = 'Microsoft Azure';
+            } elseif (str_contains($target, 'stripe.com')) {
+                $provider = 'Stripe';
+            } elseif (str_contains($target, 'paypal-status.com')) {
+                $provider = 'PayPal';
+            } elseif (str_contains($target, 'githubstatus.com')) {
+                $provider = 'GitHub';
+            }
+
+            $allPluginServices[] = [
+                'name'           => $ext['name'],
+                'provider'       => $provider,
+                'current_status' => $ext['current_status']
+            ];
+        }
+
+        // 12. Cloudflare Edge Worker Probe Statistics by PoP Location / Country
         $edgeEnabled   = (setting('edge_worker_enabled', '0') === '1');
         $edgeWorkerUrl = setting('edge_worker_url', '');
+        $edgePoPStats  = [];
 
-        // 12. Recent Heartbeat Logs (Table)
+        if ($edgeEnabled) {
+            // Airport PoP location dictionary with flags and city names
+            $popDictionary = [
+                'MXP' => ['city' => 'Milan', 'country' => 'Italy', 'flag' => '🇮🇹'],
+                'FCO' => ['city' => 'Rome', 'country' => 'Italy', 'flag' => '🇮🇹'],
+                'FRA' => ['city' => 'Frankfurt', 'country' => 'Germany', 'flag' => '🇩🇪'],
+                'LHR' => ['city' => 'London', 'country' => 'United Kingdom', 'flag' => '🇬🇧'],
+                'CDG' => ['city' => 'Paris', 'country' => 'France', 'flag' => '🇫🇷'],
+                'AMS' => ['city' => 'Amsterdam', 'country' => 'Netherlands', 'flag' => '🇳🇱'],
+                'MAD' => ['city' => 'Madrid', 'country' => 'Spain', 'flag' => '🇪🇸'],
+                'VIE' => ['city' => 'Vienna', 'country' => 'Austria', 'flag' => '🇦🇹'],
+                'ZRH' => ['city' => 'Zurich', 'country' => 'Switzerland', 'flag' => '🇨🇭'],
+                'IAD' => ['city' => 'Ashburn / DC', 'country' => 'United States', 'flag' => '🇺🇸'],
+                'ORD' => ['city' => 'Chicago', 'country' => 'United States', 'flag' => '🇺🇸'],
+                'DFW' => ['city' => 'Dallas', 'country' => 'United States', 'flag' => '🇺🇸'],
+                'SJC' => ['city' => 'San Jose', 'country' => 'United States', 'flag' => '🇺🇸'],
+                'LAX' => ['city' => 'Los Angeles', 'country' => 'United States', 'flag' => '🇺🇸'],
+                'NRT' => ['city' => 'Tokyo', 'country' => 'Japan', 'flag' => '🇯🇵'],
+                'SIN' => ['city' => 'Singapore', 'country' => 'Singapore', 'flag' => '🇸🇬'],
+                'HKG' => ['city' => 'Hong Kong', 'country' => 'Hong Kong', 'flag' => '🇭🇰'],
+                'SYD' => ['city' => 'Sydney', 'country' => 'Australia', 'flag' => '🇦🇺']
+            ];
+
+            // Extract all logs that contain "via {POP}" in error_message over the last 7 days
+            $popLogsStmt = $this->db->query("
+                SELECT error_message, status, response_time_ms 
+                FROM monitor_logs 
+                WHERE error_message LIKE '%via %' 
+                  AND created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+            ");
+            $popLogs = $popLogsStmt->fetchAll(PDO::FETCH_ASSOC);
+
+            $groupedPops = [];
+            foreach ($popLogs as $pl) {
+                if (preg_match('/via\s+([A-Z0-9]{3,4})/i', $pl['error_message'] ?? '', $matches)) {
+                    $code = strtoupper($matches[1]);
+                    if (!isset($groupedPops[$code])) {
+                        $groupedPops[$code] = [
+                            'code'         => $code,
+                            'city'         => $popDictionary[$code]['city'] ?? 'Edge Node',
+                            'country'      => $popDictionary[$code]['country'] ?? 'Global',
+                            'flag'         => $popDictionary[$code]['flag'] ?? '🌐',
+                            'total_checks' => 0,
+                            'up_checks'    => 0,
+                            'latency_sum'  => 0,
+                            'latency_qty'  => 0
+                        ];
+                    }
+
+                    $groupedPops[$code]['total_checks']++;
+                    if ($pl['status'] === 'up') {
+                        $groupedPops[$code]['up_checks']++;
+                        if ((int)$pl['response_time_ms'] > 0) {
+                            $groupedPops[$code]['latency_sum'] += (int)$pl['response_time_ms'];
+                            $groupedPops[$code]['latency_qty']++;
+                        }
+                    }
+                }
+            }
+
+            foreach ($groupedPops as $code => $stat) {
+                $avgLat = $stat['latency_qty'] > 0 ? (int)round($stat['latency_sum'] / $stat['latency_qty']) : 0;
+                $uptimeRate = $stat['total_checks'] > 0 ? round(($stat['up_checks'] / $stat['total_checks']) * 100, 1) : 100.0;
+
+                $edgePoPStats[] = [
+                    'code'         => $code,
+                    'city'         => $stat['city'],
+                    'country'      => $stat['country'],
+                    'flag'         => $stat['flag'],
+                    'total_checks' => $stat['total_checks'],
+                    'avg_latency'  => $avgLat,
+                    'uptime_rate'  => $uptimeRate
+                ];
+            }
+
+            // Sort by total checks descending
+            usort($edgePoPStats, fn($a, $b) => $b['total_checks'] <=> $a['total_checks']);
+        }
+
+        // 13. Recent Heartbeat Logs (Table)
         $stmt = $this->db->query("
             SELECT l.*, m.name as monitor_name 
             FROM monitor_logs l 
@@ -173,9 +287,10 @@ class DashboardController
             'incidentsByImpact'    => $incidentsByImpact,
             'maintenancesByStatus' => $maintenancesByStatus,
             'slowestMonitors'      => $slowestMonitors,
-            'cloudflareServices'   => $cloudflareServices,
+            'allPluginServices'    => $allPluginServices,
             'edgeEnabled'          => $edgeEnabled,
             'edgeWorkerUrl'        => $edgeWorkerUrl,
+            'edgePoPStats'         => $edgePoPStats,
             'recentLogs'           => $recentLogs
         ]);
     }
