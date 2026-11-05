@@ -34,6 +34,12 @@ class TranslationService
         $sourceData = json_decode((string)file_get_contents($sourceFile), true) ?? [];
         $targetData = file_exists($targetFile) ? (json_decode((string)file_get_contents($targetFile), true) ?? []) : [];
 
+        // 1. Auto-repair existing keys in targetData that contain hallucinated stutter duplicates
+        $repairedExisting = $this->autoRepairStutters($targetData);
+        if ($repairedExisting > 0) {
+            file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
+
         $pendingKeys = $this->getPendingKeys($sourceData, $targetData, $targetLang);
         $totalPending = count($pendingKeys);
 
@@ -53,6 +59,9 @@ class TranslationService
 
         foreach ($chunk as $path => $sourceText) {
             $translatedText = $this->requestTranslationWithPlaceholderProtection((string)$sourceText, 'en', $targetLang);
+            // Apply anti-stuttering filter to remove repeated words like "Impostazioni Impostazioni"
+            $translatedText = $this->cleanStutters($translatedText);
+
             $this->setNestedValue($targetData, $path, $translatedText);
             $translatedThisBatch++;
         }
@@ -134,12 +143,69 @@ class TranslationService
 
                 if ($needsTranslation && !empty($sourceText)) {
                     $translated = $this->requestTranslationWithPlaceholderProtection($sourceText, 'en', $targetLang);
-                    $target[$key] = $translated;
+                    $target[$key] = $this->cleanStutters($translated);
                     $count++;
+                } else {
+                    // Clean stutters on existing keys without re-requesting API
+                    $target[$key] = $this->cleanStutters($currentVal);
                 }
             }
         }
         return $target;
+    }
+
+    /**
+     * Traverses existing target array and repairs stuttered duplicate values in-place.
+     */
+    private function autoRepairStutters(array &$data): int
+    {
+        $repaired = 0;
+        foreach ($data as $key => &$value) {
+            if (is_array($value)) {
+                $repaired += $this->autoRepairStutters($value);
+            } elseif (is_string($value)) {
+                $cleaned = $this->cleanStutters($value);
+                if ($cleaned !== $value) {
+                    $value = $cleaned;
+                    $repaired++;
+                }
+            }
+        }
+        return $repaired;
+    }
+
+    /**
+     * Clean up duplicate stutters commonly produced by translation models on single tokens.
+     * Handles:
+     * 1. Single word duplicate: "Impostazioni Impostazioni" -> "Impostazioni"
+     * 2. Phrase duplicate: "Salva modifiche Salva modifiche" -> "Salva modifiche"
+     */
+    private function cleanStutters(string $text): string
+    {
+        $text = trim($text);
+        if (empty($text)) {
+            return $text;
+        }
+
+        // 1. Single-word duplicate check (e.g. "Impostazioni Impostazioni" or "Settings Settings")
+        $dedupedWord = preg_replace('/^(\b[\p{L}0-9_\'-]+\b)(?:\s+\1)+$/iu', '$1', $text);
+        if ($dedupedWord !== null && $dedupedWord !== $text) {
+            return $dedupedWord;
+        }
+
+        // 2. Multi-word phrase duplicate check (e.g. "Salva modifiche Salva modifiche")
+        $words = preg_split('/\s+/u', $text, -1, PREG_SPLIT_NO_EMPTY);
+        $count = count($words);
+        if ($count >= 2 && $count % 2 === 0) {
+            $half = (int)($count / 2);
+            $firstHalf = implode(' ', array_slice($words, 0, $half));
+            $secondHalf = implode(' ', array_slice($words, $half));
+            if (mb_strtolower($firstHalf) === mb_strtolower($secondHalf)) {
+                return $firstHalf;
+            }
+        }
+
+        return $text;
     }
 
     /**
