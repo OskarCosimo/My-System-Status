@@ -173,7 +173,9 @@ $router->post('/admin/updater/apply', [\App\Controllers\Admin\UpdaterController:
 // Language Switcher Route
 $router->get('/lang/switch', [\App\Controllers\LanguageController::class, 'switch']);
 
-// LibreTranslate Auto-Translator Route
+// LibreTranslate Auto-Translator Routes (Asynchronous Chunking & Synchronous Fallback)
+$router->post('/admin/translations/queue', [\App\Controllers\Admin\TranslationController::class, 'queue']);
+$router->post('/admin/translations/chunk', [\App\Controllers\Admin\TranslationController::class, 'chunk']);
 $router->post('/admin/translations/sync', [\App\Controllers\Admin\TranslationController::class, 'sync']);
 
 // Admin Profile & Security
