@@ -76,18 +76,17 @@
         </div>
     </div>
 
-    <!-- Grafana Style Analytics Section -->
-    <!-- Row 1: Latency History & Status Distribution -->
+    <!-- Grafana Analytics: Row 1 (Telemetry Area Chart & Status Donut) -->
     <div class="row g-3 mb-4">
-        <!-- 24h Latency Telemetry (Area Line Chart) -->
+        <!-- 24h Latency Telemetry -->
         <div class="col-xl-8">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                     <div>
                         <h5 class="fw-bold mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Global Latency Telemetry (24h)</h5>
-                        <small class="text-secondary">Average response time (ms) and heartbeat failure spikes</small>
+                        <small class="text-secondary">Average response time (ms) and check failures</small>
                     </div>
-                    <span class="badge bg-body-secondary text-body border px-2 py-1"><i class="bi bi-clock-history me-1"></i>1h Intervals</span>
+                    <span class="badge bg-body-secondary text-body border px-2 py-1"><i class="bi bi-clock-history me-1"></i>1h Slots</span>
                 </div>
                 <div class="card-body pt-1">
                     <div style="height: 310px; position: relative;">
@@ -97,12 +96,12 @@
             </div>
         </div>
 
-        <!-- System State Distribution (Donut Chart) -->
+        <!-- Health Distribution Donut -->
         <div class="col-xl-4">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
                     <h5 class="fw-bold mb-0"><i class="bi bi-pie-chart text-success me-2"></i>Health Distribution</h5>
-                    <small class="text-secondary">Probes categorized by operational condition</small>
+                    <small class="text-secondary">Breakdown of operational states</small>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-center">
                     <div style="height: 250px; position: relative;">
@@ -127,9 +126,9 @@
         </div>
     </div>
 
-    <!-- Row 2: HTTP Responses, Monitor Types, Incidents & Maintenance -->
+    <!-- Grafana Analytics: Row 2 (HTTP Distribution, Types & Incidents) -->
     <div class="row g-3 mb-4">
-        <!-- Check Results & HTTP Codes (Bar Chart) -->
+        <!-- HTTP Status Codes & Failures -->
         <div class="col-xl-4 col-md-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
@@ -144,12 +143,12 @@
             </div>
         </div>
 
-        <!-- Monitor Probe Types (Doughnut Chart) -->
+        <!-- Active Monitor Types -->
         <div class="col-xl-4 col-md-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-diagram-3 text-warning me-2"></i>Active Monitor Types</h6>
-                    <small class="text-secondary">Protocol distribution of configured checks</small>
+                    <small class="text-secondary">Protocol distribution of active probes</small>
                 </div>
                 <div class="card-body">
                     <div style="height: 240px; position: relative;">
@@ -159,12 +158,12 @@
             </div>
         </div>
 
-        <!-- Incidents & Maintenance Stats Panel -->
+        <!-- Incidents & Maintenance -->
         <div class="col-xl-4 col-md-12">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-tools text-danger me-2"></i>Incidents & Maintenances</h6>
-                    <small class="text-secondary">Summary breakdown by impact and status</small>
+                    <small class="text-secondary">Severity levels and maintenance progress</small>
                 </div>
                 <div class="card-body d-flex flex-column justify-content-between">
                     <div>
@@ -206,20 +205,94 @@
         </div>
     </div>
 
-    <!-- Row 3: Slowest Monitors & Cloudflare / Edge Probes Section -->
+    <!-- Conditional Cloudflare Edge Worker Section (Rendered only if Edge Worker is Enabled) -->
+    <?php if ($edgeEnabled): ?>
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+            <div class="card-header bg-transparent py-3 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div>
+                    <h5 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-globe-americas text-primary"></i> Cloudflare Distributed Edge Probes
+                    </h5>
+                    <small class="text-secondary">Multi-region telemetry segmented by Cloudflare Edge PoP location (IATA codes)</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                        <i class="bi bi-broadcast me-1"></i> Worker Active
+                    </span>
+                </div>
+            </div>
+            <div class="card-body">
+                <?php if (empty($edgePoPStats)): ?>
+                    <div class="text-center py-4 text-secondary">
+                        <i class="bi bi-cloud-arrow-down fs-2 d-block mb-2"></i>
+                        No multi-region checks recorded yet. Run the cron runner to aggregate Edge PoP data.
+                    </div>
+                <?php else: ?>
+                    <div class="row g-3 align-items-center">
+                        <div class="col-xl-7">
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>PoP / Node</th>
+                                            <th>Location</th>
+                                            <th class="text-center">Total Checks</th>
+                                            <th class="text-center">Avg Latency</th>
+                                            <th class="text-end">Uptime</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($edgePoPStats as $pop): ?>
+                                            <tr>
+                                                <td class="fw-bold font-monospace text-primary">
+                                                    <span class="me-1"><?= $pop['flag'] ?></span> <?= htmlspecialchars($pop['code']) ?>
+                                                </td>
+                                                <td>
+                                                    <div class="fw-semibold"><?= htmlspecialchars($pop['city']) ?></div>
+                                                    <small class="text-secondary"><?= htmlspecialchars($pop['country']) ?></small>
+                                                </td>
+                                                <td class="text-center">
+                                                    <span class="badge bg-body-secondary text-body border"><?= number_format($pop['total_checks']) ?></span>
+                                                </td>
+                                                <td class="text-center fw-semibold">
+                                                    <?= $pop['avg_latency'] ?> ms
+                                                </td>
+                                                <td class="text-end">
+                                                    <span class="badge bg-<?= $pop['uptime_rate'] >= 99 ? 'success' : ($pop['uptime_rate'] >= 95 ? 'warning' : 'danger') ?>-subtle text-<?= $pop['uptime_rate'] >= 99 ? 'success' : ($pop['uptime_rate'] >= 95 ? 'warning' : 'danger') ?> border">
+                                                        <?= number_format($pop['uptime_rate'], 1) ?>%
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-xl-5">
+                            <div style="height: 240px; position: relative;">
+                                <canvas id="edgePopsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+    <?php endif; ?>
+
+    <!-- Grafana Analytics: Row 3 (Slowest Endpoints & All Active Plugins) -->
     <div class="row g-3 mb-4">
-        <!-- Top Slowest Monitors (Horizontal Bar Chart) -->
+        <!-- Top Slowest Endpoints -->
         <div class="col-xl-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3">
                     <h6 class="fw-bold mb-0"><i class="bi bi-stopwatch text-danger me-2"></i>Slowest Endpoints (Avg 24h)</h6>
-                    <small class="text-secondary">Highest latency targets requiring optimization</small>
+                    <small class="text-secondary">Highest response times requiring attention</small>
                 </div>
                 <div class="card-body">
                     <?php if (empty($slowestMonitors)): ?>
                         <div class="text-center py-5 text-secondary">No latency data accumulated yet.</div>
                     <?php else: ?>
-                        <div style="height: 230px; position: relative;">
+                        <div style="height: 240px; position: relative;">
                             <canvas id="slowestChart"></canvas>
                         </div>
                     <?php endif; ?>
@@ -227,58 +300,52 @@
             </div>
         </div>
 
-        <!-- Cloudflare Edge & Zero Trust Tunnels Panel -->
+        <!-- All Active External Plugins & Feeds (Target URLs removed) -->
         <div class="col-xl-6">
             <div class="card border-0 shadow-sm rounded-3 h-100">
                 <div class="card-header bg-transparent py-3 d-flex justify-content-between align-items-center">
                     <div>
-                        <h6 class="fw-bold mb-0"><i class="bi bi-cloud-check text-primary me-2"></i>Cloudflare & Edge Infrastructure</h6>
-                        <small class="text-secondary">Zero Trust Tunnels and Edge Worker status</small>
+                        <h6 class="fw-bold mb-0"><i class="bi bi-plugin text-primary me-2"></i>Active External Plugins & Feeds</h6>
+                        <small class="text-secondary">Integrated external cloud providers & zero trust networks</small>
                     </div>
-                    <?php if ($edgeEnabled): ?>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle">
-                            <i class="bi bi-broadcast me-1"></i> Edge Worker Active
-                        </span>
-                    <?php else: ?>
-                        <span class="badge bg-secondary-subtle text-secondary border">
-                            Edge Inactive
-                        </span>
-                    <?php endif; ?>
+                    <span class="badge bg-body-secondary text-body border"><?= count($allPluginServices) ?> Enabled</span>
                 </div>
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="table-light">
+                            <thead class="table-light sticky-top">
                                 <tr>
-                                    <th>Service / Component</th>
-                                    <th>Target URL</th>
+                                    <th>Service Name</th>
+                                    <th>Provider</th>
                                     <th class="text-end">Status</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($cloudflareServices)): ?>
+                                <?php if (empty($allPluginServices)): ?>
                                     <tr>
                                         <td colspan="3" class="text-center py-4 text-secondary">
-                                            No Cloudflare routes configured or synced yet.
+                                            No external plugin services active.
                                         </td>
                                     </tr>
                                 <?php else: ?>
-                                    <?php foreach ($cloudflareServices as $cf): ?>
+                                    <?php foreach ($allPluginServices as $srv): ?>
                                         <tr>
                                             <td class="fw-semibold">
-                                                <i class="bi bi-globe me-2 text-primary opacity-75"></i>
-                                                <?= htmlspecialchars($cf['name']) ?>
+                                                <i class="bi bi-check2-circle text-primary me-2 opacity-75"></i>
+                                                <?= htmlspecialchars($srv['name']) ?>
                                             </td>
                                             <td>
-                                                <small class="text-secondary font-monospace"><?= htmlspecialchars(mb_strimwidth($cf['target'], 0, 42, '...')) ?></small>
+                                                <span class="badge bg-secondary-subtle text-secondary border">
+                                                    <?= htmlspecialchars($srv['provider']) ?>
+                                                </span>
                                             </td>
                                             <td class="text-end">
-                                                <?php if ($cf['current_status'] === 'operational'): ?>
+                                                <?php if ($srv['current_status'] === 'operational'): ?>
                                                     <span class="badge bg-success-subtle text-success border border-success-subtle">OPERATIONAL</span>
-                                                <?php elseif ($cf['current_status'] === 'degraded'): ?>
+                                                <?php elseif ($srv['current_status'] === 'degraded'): ?>
                                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle">DEGRADED</span>
                                                 <?php else: ?>
-                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">OUTAGE</span>
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">DOWN</span>
                                                 <?php endif; ?>
                                             </td>
                                         </tr>
@@ -333,12 +400,11 @@
     </div>
 </div>
 
-<!-- Chart.js CDN for Grafana-style Data Visualizations -->
+<!-- Chart.js for Visualizations -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    // Detect dark or light mode
     const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
     const gridColor = isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)';
     const textColor = isDark ? '#94a3b8' : '#64748b';
@@ -390,34 +456,13 @@ document.addEventListener('DOMContentLoaded', () => {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
+                interaction: { mode: 'index', intersect: false },
                 scales: {
-                    x: {
-                        grid: { color: gridColor },
-                        ticks: { color: textColor }
-                    },
-                    y: {
-                        position: 'left',
-                        grid: { color: gridColor },
-                        ticks: { color: textColor, callback: (v) => v + ' ms' },
-                        beginAtZero: true
-                    },
-                    y1: {
-                        position: 'right',
-                        grid: { drawOnChartArea: false },
-                        ticks: { color: '#ef4444', precision: 0 },
-                        beginAtZero: true
-                    }
+                    x: { grid: { color: gridColor }, ticks: { color: textColor } },
+                    y: { position: 'left', grid: { color: gridColor }, ticks: { color: textColor, callback: (v) => v + ' ms' }, beginAtZero: true },
+                    y1: { position: 'right', grid: { drawOnChartArea: false }, ticks: { color: '#ef4444', precision: 0 }, beginAtZero: true }
                 },
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: { boxWidth: 12, color: textColor }
-                    }
-                }
+                plugins: { legend: { position: 'top', labels: { boxWidth: 12, color: textColor } } }
             }
         });
     }
@@ -445,12 +490,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '72%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: { boxWidth: 10, padding: 12, color: textColor }
-                    }
-                }
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 12, color: textColor } } }
             }
         });
     }
@@ -507,14 +547,42 @@ document.addEventListener('DOMContentLoaded', () => {
                 responsive: true,
                 maintainAspectRatio: false,
                 cutout: '65%',
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, color: textColor } } }
+            }
+        });
+    }
+
+    // 5. Cloudflare Edge PoP Checks Chart (Bar Chart)
+    const ctxEdgePops = document.getElementById('edgePopsChart');
+    if (ctxEdgePops) {
+        const edgePops = <?= json_encode($edgePoPStats) ?>;
+        new Chart(ctxEdgePops, {
+            type: 'bar',
+            data: {
+                labels: edgePops.map(p => p.code),
+                datasets: [{
+                    label: 'Checks by PoP',
+                    data: edgePops.map(p => p.total_checks),
+                    backgroundColor: '#0284c7',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: textColor } },
+                    y: { grid: { color: gridColor }, ticks: { color: textColor, precision: 0 }, beginAtZero: true }
+                },
                 plugins: {
-                    legend: { position: 'bottom', labels: { boxWidth: 10, padding: 8, color: textColor } }
+                    legend: { display: false },
+                    title: { display: true, text: 'Check Volume per Edge Datacenter', color: textColor, font: { weight: 'bold' } }
                 }
             }
         });
     }
 
-    // 5. Slowest Monitors (Horizontal Bar Chart)
+    // 6. Slowest Monitors (Horizontal Bar Chart)
     const ctxSlowest = document.getElementById('slowestChart');
     if (ctxSlowest) {
         const slowestData = <?= json_encode($slowestMonitors) ?>;
