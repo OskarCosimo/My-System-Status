@@ -40,17 +40,18 @@ class DashboardController
         // 4. Average System Uptime Percentage
         $avgUptime = (float)$this->db->query("SELECT COALESCE(AVG(uptime_percentage), 100.0) FROM monitors WHERE is_active = 1")->fetchColumn();
 
-        // 5. Response Time & Latency Timeline (Last 24 Hours, hourly aggregate)
+        // 5. Response Time & Latency Timeline (Last 24 Hours, strictly compatible with ONLY_FULL_GROUP_BY)
         $latencyStmt = $this->db->query("
             SELECT 
-                DATE_FORMAT(created_at, '%H:00') AS time_label,
+                DATE_FORMAT(created_at, '%Y-%m-%d %H:00') AS time_slot,
+                DATE_FORMAT(MIN(created_at), '%H:00') AS time_label,
                 ROUND(AVG(CASE WHEN status = 'up' AND response_time_ms > 0 THEN response_time_ms ELSE NULL END)) AS avg_latency,
                 SUM(CASE WHEN status != 'up' THEN 1 ELSE 0 END) AS error_count,
                 COUNT(*) AS total_checks
             FROM monitor_logs
             WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
             GROUP BY DATE_FORMAT(created_at, '%Y-%m-%d %H:00')
-            ORDER BY DATE_FORMAT(created_at, '%Y-%m-%d %H:00') ASC
+            ORDER BY time_slot ASC
         ");
         $latencyRows = $latencyStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -142,7 +143,7 @@ class DashboardController
         $cloudflareServices = $cfMonitorsStmt->fetchAll(PDO::FETCH_ASSOC);
 
         // Edge Worker configuration status
-        $edgeEnabled = (setting('edge_worker_enabled', '0') === '1');
+        $edgeEnabled   = (setting('edge_worker_enabled', '0') === '1');
         $edgeWorkerUrl = setting('edge_worker_url', '');
 
         // 12. Recent Heartbeat Logs (Table)
