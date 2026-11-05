@@ -196,7 +196,7 @@
         "create_monitor": "创建监视器",
         "dt_search": "搜索显示器、路线、类型...",
         "dt_length": "显示   MENU  条目",
-        "dt_info": "显示  TOTAL 显示器的  START  到  END ",
+        "dt_info": "显示  TOTAL 显示器的  START  到  END",
         "dt_info_empty": "没有可用的监视器",
         "dt_zero_records": "未找到匹配显示器"
     },
@@ -277,7 +277,7 @@
         "dt_search_active": "搜索活动事件...",
         "dt_search_resolved": "搜索已解决的事件...",
         "dt_length": "显示   MENU  条目",
-        "dt_info_active": " TOTAL 事件显示  START 至 END ",
+        "dt_info_active": "TOTAL 事件显示  START 至 END",
         "dt_info_empty_active": "无事故发生",
         "dt_zero_records_active": "未发现匹配事件",
         "dt_info_resolved": "显示  START  到  END  of  TOTAL 存档事件",

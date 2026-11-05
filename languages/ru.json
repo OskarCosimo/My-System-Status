@@ -196,7 +196,7 @@
         "create_monitor": "Создаем монитор",
         "dt_search": "Поисковые мониторы, маршруты, типы...",
         "dt_length": "Показать  MENU  записи",
-        "dt_info": "Показать  START  на  END  мониторы  TOTAL ",
+        "dt_info": "Показать  START  на  END  мониторы  TOTAL",
         "dt_info_empty": "Нет доступных мониторов",
         "dt_zero_records": "Мониторы соответствия не найдены"
     },
@@ -280,7 +280,7 @@
         "dt_info_active": "Показать  START  to  END  of  TOTAL  incidents",
         "dt_info_empty_active": "Инциденты отсутствуют",
         "dt_zero_records_active": "Не найдено совпадений",
-        "dt_info_resolved": "Показ архивных инцидентов  START  to  END  of  TOTAL ",
+        "dt_info_resolved": "Показ архивных инцидентов  START  to  END  of  TOTAL",
         "dt_info_empty_resolved": "Архивированные инциденты отсутствуют",
         "dt_zero_records_resolved": "Не найдено совпадений архивных инцидентов",
         "js_ai_fail": "Не удалось создать отчет ИИ.",

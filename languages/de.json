@@ -99,7 +99,7 @@
         "severity_critical": "Kritische",
         "severity_major": "Major",
         "severity_minor": "Minen",
-        "scheduled_maintenance_heading": "WICHTIGSTEN WICHTIGSTEN",
+        "scheduled_maintenance_heading": "WICHTIGSTEN",
         "edge_probes_title": "Cloudflare verteilte Randsonden",
         "edge_probes_desc": "Multi-Region-Telemetrie segmentiert von Cloudflare Edge PoP Standort (IATA-Codes)",
         "worker_active": "Worker Active",
