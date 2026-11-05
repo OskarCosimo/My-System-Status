@@ -57,28 +57,28 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Scheduled Maintenance</h2>
-            <p class="text-body-secondary mb-0">Schedule infrastructure upgrades, manage calendar events, and archive past works.</p>
+            <h2 class="fw-bold mb-0"><?= __('maintenance.title') ?></h2>
+            <p class="text-body-secondary mb-0"><?= __('maintenance.page_subtitle') ?></p>
         </div>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newMaintenanceModal">
-            <i class="bi bi-plus-lg me-1"></i> Schedule Maintenance
+            <i class="bi bi-plus-lg me-1"></i> <?= __('maintenance.schedule_new') ?>
         </button>
     </div>
 
     <!-- Feedback Alerts -->
     <?php if (isset($_GET['created'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> Maintenance window successfully scheduled!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('maintenance.alert_created') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php elseif (isset($_GET['updated'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> Maintenance details updated successfully!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('maintenance.alert_updated') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php elseif (isset($_GET['deleted'])): ?>
         <div class="alert alert-info alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-trash-fill me-2"></i> Maintenance window removed from database.
+            <i class="bi bi-trash-fill me-2"></i> <?= __('maintenance.alert_deleted') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -86,8 +86,8 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
     <!-- FullCalendar Interactive View -->
     <div class="card shadow-sm border-0 mb-5">
         <div class="card-header bg-body py-3 d-flex justify-content-between align-items-center border-bottom">
-            <h5 class="fw-bold mb-0"><i class="bi bi-calendar-week text-primary me-2"></i>Interactive Calendar</h5>
-            <small class="text-body-secondary">Click any event on the calendar to edit or complete it.</small>
+            <h5 class="fw-bold mb-0"><i class="bi bi-calendar-week text-primary me-2"></i><?= __('maintenance.interactive_calendar') ?></h5>
+            <small class="text-body-secondary"><?= __('maintenance.interactive_calendar_help') ?></small>
         </div>
         <div class="card-body p-4">
             <div id="calendar"></div>
@@ -98,25 +98,25 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
     <div class="card shadow-sm border-0 mb-5">
         <div class="card-header bg-body py-3 d-flex justify-content-between align-items-center border-bottom">
             <h5 class="fw-bold mb-0 text-primary">
-                <i class="bi bi-clock-history me-2"></i>Active & Upcoming Maintenances
+                <i class="bi bi-clock-history me-2"></i><?= __('maintenance.upcoming_title') ?>
             </h5>
             <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1">
-                <?= count($upcoming) ?> Active
+                <?= __('maintenance.count_active', ['count' => count($upcoming)]) ?>
             </span>
         </div>
         <div class="card-body p-0">
             <?php if (empty($upcoming)): ?>
-                <div class="text-center py-4 text-body-secondary small">No upcoming maintenances scheduled.</div>
+                <div class="text-center py-4 text-body-secondary small"><?= __('maintenance.no_upcoming') ?></div>
             <?php else: ?>
                 <div class="table-responsive p-3">
                     <table id="upcomingMaintenanceTable" class="table table-hover align-middle mb-0 w-100">
                         <thead class="table-light">
                             <tr>
-                                <th>Status</th>
-                                <th>Title</th>
-                                <th>Start Window</th>
-                                <th>End Window</th>
-                                <th class="text-end">Actions</th>
+                                <th><?= __('common.status') ?></th>
+                                <th><?= __('common.title') ?></th>
+                                <th><?= __('maintenance.table_start_window') ?></th>
+                                <th><?= __('maintenance.table_end_window') ?></th>
+                                <th class="text-end"><?= __('maintenance.table_actions') ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,7 +124,7 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                 <tr>
                                     <td>
                                         <span class="badge bg-<?= $m['status'] === 'in_progress' ? 'warning text-dark' : 'primary' ?> text-uppercase">
-                                            <?= str_replace('_', ' ', $m['status']) ?>
+                                            <?= $m['status'] === 'in_progress' ? __('maintenance.in_progress') : __('maintenance.scheduled') ?>
                                         </span>
                                     </td>
                                     <td>
@@ -141,7 +141,7 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                         <!-- Copy Direct Share Link Button -->
                                         <button type="button" class="btn btn-sm btn-outline-info me-1" 
                                                 onclick="copyShareLink('<?= app_url() ?>/?maintenance=<?= $m['id'] ?>', this)" 
-                                                title="Copy Direct Shareable Link">
+                                                title="<?= htmlspecialchars(__('maintenance.tooltip_copy_link')) ?>">
                                             <i class="bi bi-link-45deg"></i>
                                         </button>
 
@@ -155,22 +155,22 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                             <input type="hidden" name="end_time" value="<?= $m['end_local'] ?>">
                                             <input type="hidden" name="timezone" value="<?= htmlspecialchars($m['timezone'] ?? $activeTimezone) ?>">
                                             <input type="hidden" name="status" value="completed">
-                                            <button type="submit" class="btn btn-sm btn-success me-1" title="Mark as Completed">
-                                                <i class="bi bi-check-lg me-1"></i> Complete
+                                            <button type="submit" class="btn btn-sm btn-success me-1" title="<?= htmlspecialchars(__('maintenance.tooltip_mark_completed')) ?>">
+                                                <i class="bi bi-check-lg me-1"></i> <?= __('maintenance.btn_complete') ?>
                                             </button>
                                         </form>
 
                                         <!-- Edit Modal Trigger -->
                                         <button class="btn btn-sm btn-outline-secondary me-1" 
                                                 onclick="openEditMaintenanceModal(<?= $m['id'] ?>, '<?= htmlspecialchars(addslashes($m['title'])) ?>', '<?= htmlspecialchars(addslashes($m['description'] ?? '')) ?>', '<?= $m['start_local'] ?>', '<?= $m['end_local'] ?>', '<?= $m['status'] ?>', '<?= $m['monitor_id'] ?? '' ?>', '<?= htmlspecialchars(addslashes($m['timezone'] ?? $activeTimezone)) ?>')"
-                                                title="Edit Details">
+                                                title="<?= htmlspecialchars(__('maintenance.tooltip_edit')) ?>">
                                             <i class="bi bi-pencil"></i>
                                         </button>
 
                                         <!-- Delete Trigger -->
-                                        <form action="/admin/maintenance/delete" method="POST" class="d-inline" onsubmit="return confirm('Delete this maintenance?');">
+                                        <form action="/admin/maintenance/delete" method="POST" class="d-inline" onsubmit="return confirm('<?= htmlspecialchars(addslashes(__('maintenance.confirm_delete'))) ?>');">
                                             <input type="hidden" name="maintenance_id" value="<?= $m['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="<?= htmlspecialchars(__('maintenance.tooltip_delete')) ?>">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -188,24 +188,24 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
     <div class="card shadow-sm border-0">
         <div class="card-header bg-body py-3 d-flex justify-content-between align-items-center border-bottom">
             <h5 class="fw-bold mb-0 text-secondary">
-                <i class="bi bi-archive me-2"></i>Past & Completed Maintenances
+                <i class="bi bi-archive me-2"></i><?= __('maintenance.past_title') ?>
             </h5>
             <span class="badge bg-body-secondary text-body-secondary border">
-                <?= count($past) ?> Archived
+                <?= __('maintenance.count_archived', ['count' => count($past)]) ?>
             </span>
         </div>
         <div class="card-body p-0">
             <?php if (empty($past)): ?>
-                <div class="text-center py-4 text-body-secondary small">No past maintenances recorded.</div>
+                <div class="text-center py-4 text-body-secondary small"><?= __('maintenance.no_past') ?></div>
             <?php else: ?>
                 <div class="table-responsive p-3">
                     <table id="pastMaintenanceTable" class="table table-hover align-middle mb-0 w-100">
                         <thead class="table-light">
                             <tr>
-                                <th>Title</th>
-                                <th>Execution Window</th>
-                                <th>Status</th>
-                                <th class="text-end">Actions</th>
+                                <th><?= __('common.title') ?></th>
+                                <th><?= __('maintenance.table_execution_window') ?></th>
+                                <th><?= __('common.status') ?></th>
+                                <th class="text-end"><?= __('maintenance.table_actions') ?></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -221,26 +221,26 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                                     </td>
                                     <td>
                                         <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25">
-                                            Completed
+                                            <?= __('maintenance.completed') ?>
                                         </span>
                                     </td>
                                     <td class="text-end">
                                         <!-- Copy Direct Share Link Button -->
                                         <button type="button" class="btn btn-sm btn-outline-info me-1" 
                                                 onclick="copyShareLink('<?= app_url() ?>/?maintenance=<?= $p['id'] ?>', this)" 
-                                                title="Copy Direct Shareable Link">
+                                                title="<?= htmlspecialchars(__('maintenance.tooltip_copy_link')) ?>">
                                             <i class="bi bi-link-45deg"></i>
                                         </button>
 
                                         <button class="btn btn-sm btn-outline-secondary me-1" 
                                                 onclick="openEditMaintenanceModal(<?= $p['id'] ?>, '<?= htmlspecialchars(addslashes($p['title'])) ?>', '<?= htmlspecialchars(addslashes($p['description'] ?? '')) ?>', '<?= $p['start_local'] ?>', '<?= $p['end_local'] ?>', '<?= $p['status'] ?>', '<?= $p['monitor_id'] ?? '' ?>', '<?= htmlspecialchars(addslashes($p['timezone'] ?? $activeTimezone)) ?>')"
-                                                title="Edit Details">
+                                                title="<?= htmlspecialchars(__('maintenance.tooltip_edit')) ?>">
                                             <i class="bi bi-pencil"></i>
                                         </button>
 
-                                        <form action="/admin/maintenance/delete" method="POST" class="d-inline" onsubmit="return confirm('Delete this archived record?');">
+                                        <form action="/admin/maintenance/delete" method="POST" class="d-inline" onsubmit="return confirm('<?= htmlspecialchars(addslashes(__('maintenance.confirm_delete_archived'))) ?>');">
                                             <input type="hidden" name="maintenance_id" value="<?= $p['id'] ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="<?= htmlspecialchars(__('maintenance.tooltip_delete')) ?>">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </form>
@@ -260,44 +260,44 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
     <div class="modal-dialog">
         <form action="/admin/maintenance/store" method="POST" class="modal-content shadow">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold">Schedule Maintenance</h5>
+                <h5 class="modal-title fw-bold"><?= __('maintenance.modal_new_title') ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Title</label>
-                    <input type="text" name="title" class="form-control" placeholder="e.g. Database Cluster Optimization" required>
+                    <label class="form-label fw-semibold"><?= __('common.title') ?></label>
+                    <input type="text" name="title" class="form-control" placeholder="<?= htmlspecialchars(__('maintenance.placeholder_title')) ?>" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Target Service (Optional)</label>
+                    <label class="form-label fw-semibold"><?= __('maintenance.field_target_service') ?></label>
                     <select name="monitor_id" class="form-select">
-                        <option value="">All Services (Global Maintenance)</option>
+                        <option value=""><?= __('maintenance.target_all_services') ?></option>
                         <?php foreach ($monitorsList as $m): ?>
                             <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <small class="text-body-secondary">Associates this maintenance window to the selected service bar.</small>
+                    <small class="text-body-secondary"><?= __('maintenance.target_service_help') ?></small>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Start Window</label>
+                        <label class="form-label fw-semibold"><?= __('maintenance.field_start_window') ?></label>
                         <input type="datetime-local" name="start_time" class="form-control" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">End Window</label>
+                        <label class="form-label fw-semibold"><?= __('maintenance.field_end_window') ?></label>
                         <input type="datetime-local" name="end_time" class="form-control" required>
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Initial Status</label>
+                        <label class="form-label fw-semibold"><?= __('maintenance.field_initial_status') ?></label>
                         <select name="status" class="form-select">
-                            <option value="scheduled" selected>Scheduled</option>
-                            <option value="in_progress">In Progress</option>
+                            <option value="scheduled" selected><?= __('maintenance.scheduled') ?></option>
+                            <option value="in_progress"><?= __('maintenance.in_progress') ?></option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold"><i class="bi bi-clock me-1"></i> Timezone</label>
+                        <label class="form-label fw-semibold"><i class="bi bi-clock me-1"></i> <?= __('maintenance.field_timezone') ?></label>
                         <select name="timezone" class="form-select">
                             <?php foreach ($timezonesList as $tz): ?>
                                 <option value="<?= $tz ?>" <?= $tz === $activeTimezone ? 'selected' : '' ?>><?= $tz ?></option>
@@ -307,8 +307,8 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary fw-bold">Schedule Event</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= __('common.cancel') ?></button>
+                <button type="submit" class="btn btn-primary fw-bold"><?= __('maintenance.btn_schedule_event') ?></button>
             </div>
         </form>
     </div>
@@ -320,49 +320,49 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
         <form action="/admin/maintenance/update" method="POST" class="modal-content shadow">
             <input type="hidden" name="maintenance_id" id="editMaintId" value="">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold">Edit Maintenance Event</h5>
+                <h5 class="modal-title fw-bold"><?= __('maintenance.modal_edit_title') ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Title</label>
+                    <label class="form-label fw-semibold"><?= __('common.title') ?></label>
                     <input type="text" name="title" id="editMaintTitle" class="form-control" required>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Description</label>
+                    <label class="form-label fw-semibold"><?= __('common.description') ?></label>
                     <textarea name="description" id="editMaintDesc" class="form-control" rows="3"></textarea>
                 </div>
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Target Service (Optional)</label>
+                    <label class="form-label fw-semibold"><?= __('maintenance.field_target_service') ?></label>
                     <select name="monitor_id" id="editMaintMonitorId" class="form-select">
-                        <option value="">All Services (Global Maintenance)</option>
+                        <option value=""><?= __('maintenance.target_all_services') ?></option>
                         <?php foreach ($monitorsList as $m): ?>
                             <option value="<?= $m['id'] ?>"><?= htmlspecialchars($m['name']) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <small class="text-body-secondary">Associates this maintenance window to the selected service bar.</small>
+                    <small class="text-body-secondary"><?= __('maintenance.target_service_help') ?></small>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Start Window</label>
+                        <label class="form-label fw-semibold"><?= __('maintenance.field_start_window') ?></label>
                         <input type="datetime-local" name="start_time" id="editMaintStart" class="form-control" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">End Window</label>
+                        <label class="form-label fw-semibold"><?= __('maintenance.field_end_window') ?></label>
                         <input type="datetime-local" name="end_time" id="editMaintEnd" class="form-control" required>
                     </div>
                 </div>
                 <div class="row g-2 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Status</label>
+                        <label class="form-label fw-semibold"><?= __('common.status') ?></label>
                         <select name="status" id="editMaintStatus" class="form-select">
-                            <option value="scheduled">Scheduled</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed" class="text-success fw-bold">Completed (Archive to past events)</option>
+                            <option value="scheduled"><?= __('maintenance.scheduled') ?></option>
+                            <option value="in_progress"><?= __('maintenance.in_progress') ?></option>
+                            <option value="completed" class="text-success fw-bold"><?= __('maintenance.status_completed_archive') ?></option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold"><i class="bi bi-clock me-1"></i> Timezone</label>
+                        <label class="form-label fw-semibold"><i class="bi bi-clock me-1"></i> <?= __('maintenance.field_timezone') ?></label>
                         <select name="timezone" id="editMaintTimezone" class="form-select">
                             <?php foreach ($timezonesList as $tz): ?>
                                 <option value="<?= $tz ?>"><?= $tz ?></option>
@@ -372,8 +372,8 @@ $timezonesList  = $timezonesList ?? \App\Services\DateService::getTimezonesList(
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= __('common.cancel') ?></button>
+                <button type="submit" class="btn btn-primary fw-bold"><?= __('maintenance.btn_save_changes') ?></button>
             </div>
         </form>
     </div>
@@ -418,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     }
 
-    // 2. DataTables Initialization for Upcoming Maintenances (sorted by start time data-order)
+    // 2. DataTables Initialization for Upcoming Maintenances
     if ($('#upcomingMaintenanceTable').length > 0) {
         $('#upcomingMaintenanceTable').DataTable({
             pageLength: 10,
@@ -427,16 +427,16 @@ document.addEventListener('DOMContentLoaded', function() {
             columnDefs: [{ orderable: false, targets: 4 }],
             language: {
                 search: "_INPUT_",
-                searchPlaceholder: "Search upcoming maintenances...",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ maintenances",
-                infoEmpty: "No maintenances available",
-                zeroRecords: "No matching maintenances found"
+                searchPlaceholder: <?= json_encode(__('maintenance.dt_search_upcoming')) ?>,
+                lengthMenu: <?= json_encode(__('maintenance.dt_length')) ?>,
+                info: <?= json_encode(__('maintenance.dt_info_upcoming')) ?>,
+                infoEmpty: <?= json_encode(__('maintenance.dt_info_empty_upcoming')) ?>,
+                zeroRecords: <?= json_encode(__('maintenance.dt_zero_records_upcoming')) ?>
             }
         });
     }
 
-    // 3. DataTables Initialization for Past Maintenances (sorted strictly chronologically by timestamp data-order)
+    // 3. DataTables Initialization for Past Maintenances
     if ($('#pastMaintenanceTable').length > 0) {
         $('#pastMaintenanceTable').DataTable({
             pageLength: 10,
@@ -445,11 +445,11 @@ document.addEventListener('DOMContentLoaded', function() {
             columnDefs: [{ orderable: false, targets: 3 }],
             language: {
                 search: "_INPUT_",
-                searchPlaceholder: "Search past maintenances...",
-                lengthMenu: "Show _MENU_ entries",
-                info: "Showing _START_ to _END_ of _TOTAL_ past records",
-                infoEmpty: "No past records available",
-                zeroRecords: "No matching records found"
+                searchPlaceholder: <?= json_encode(__('maintenance.dt_search_past')) ?>,
+                lengthMenu: <?= json_encode(__('maintenance.dt_length')) ?>,
+                info: <?= json_encode(__('maintenance.dt_info_past')) ?>,
+                infoEmpty: <?= json_encode(__('maintenance.dt_info_empty_past')) ?>,
+                zeroRecords: <?= json_encode(__('maintenance.dt_zero_records_past')) ?>
             }
         });
     }
@@ -484,7 +484,7 @@ function copyShareLink(url, btn) {
             btn.classList.add('btn-outline-info');
         }, 1500);
     }).catch(err => {
-        prompt('Direct link:', url);
+        prompt(<?= json_encode(__('maintenance.js_direct_link')) ?>, url);
     });
 }
 </script>
