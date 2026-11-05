@@ -30,7 +30,7 @@ class TranslationController
     }
 
     /**
-     * Prepares and returns the queue of language codes to translate.
+     * Prepares the list of languages and reports total keys to process.
      */
     public function queue(): void
     {
@@ -56,25 +56,30 @@ class TranslationController
         }
 
         if (empty($locales)) {
-            echo json_encode(['status' => 'error', 'message' => 'No languages available in the queue.']);
+            echo json_encode(['status' => 'error', 'message' => 'No secondary languages available in queue.']);
             exit;
         }
 
+        $service = new TranslationService($endpoint);
+        $totalKeys = $service->getSourceTotal();
+
         echo json_encode([
-            'status' => 'success',
-            'queue'  => $locales
+            'status'     => 'success',
+            'queue'      => $locales,
+            'total_keys' => $totalKeys
         ]);
         exit;
     }
 
     /**
-     * Executes a single lightweight batch translation via AJAX.
+     * Translates a slice of keys by offset.
      */
     public function chunk(): void
     {
         header('Content-Type: application/json; charset=utf-8');
 
         $targetLang = trim($_POST['target_lang'] ?? '');
+        $offset     = max(0, (int)($_POST['offset'] ?? 0));
         $limit      = max(1, min(15, (int)($_POST['limit'] ?? 6)));
         $endpoint   = setting('libretranslate_endpoint');
         $apiKey     = setting('libretranslate_api_key');
@@ -91,14 +96,14 @@ class TranslationController
 
         try {
             $service = new TranslationService($endpoint, $apiKey);
-            $result  = $service->translateNextBatch($targetLang, $limit);
+            $result  = $service->translateChunkByOffset($targetLang, $offset, $limit);
 
             echo json_encode([
                 'status'           => 'success',
                 'lang'             => $targetLang,
                 'translated_count' => $result['translated_count'],
-                'remaining'        => $result['remaining'],
-                'total_pending'    => $result['total_pending'],
+                'next_offset'      => $result['next_offset'],
+                'total'            => $result['total'],
                 'done'             => $result['done']
             ]);
             exit;
@@ -107,70 +112,6 @@ class TranslationController
                 'status'  => 'error',
                 'message' => $e->getMessage()
             ]);
-            exit;
-        }
-    }
-
-    /**
-     * Synchronous fallback sync.
-     */
-    public function sync(): void
-    {
-        $targetLang = trim($_POST['target_lang'] ?? '');
-        $endpoint   = setting('libretranslate_endpoint');
-        $apiKey     = setting('libretranslate_api_key');
-
-        $referer = $_SERVER['HTTP_REFERER'] ?? '/admin/settings';
-        $cleanReferer = strtok($referer, '?');
-
-        if (empty($endpoint)) {
-            header('Location: ' . $cleanReferer . '?error=' . urlencode('LibreTranslate endpoint is not configured in Settings.'));
-            exit;
-        }
-
-        try {
-            $service = new TranslationService($endpoint, $apiKey);
-
-            if ($targetLang === 'all') {
-                $enabledLocales = array_keys(SettingService::getEnabledLocales());
-                $localesToSync = array_values(array_filter($enabledLocales, fn($code) => $code !== 'en'));
-
-                if (empty($localesToSync)) {
-                    header('Location: ' . $cleanReferer . '?error=' . urlencode('No secondary languages are currently enabled in Settings.'));
-                    exit;
-                }
-
-                $totalTranslated = 0;
-                $syncedLanguages = [];
-
-                foreach ($localesToSync as $code) {
-                    $res = $service->syncAndTranslate($code);
-                    $totalTranslated += (int)($res['translated_keys'] ?? 0);
-                    $syncedLanguages[] = strtoupper($code);
-                }
-
-                $msg = sprintf(
-                    "Successfully synchronized all enabled languages (%s)! Total keys translated: %d.",
-                    implode(', ', $syncedLanguages),
-                    $totalTranslated
-                );
-
-                header('Location: ' . $cleanReferer . '?translated=1&msg=' . urlencode($msg));
-                exit;
-            }
-
-            if (empty($targetLang) || !preg_match('/^[a-z]{2}$/', $targetLang)) {
-                header('Location: ' . $cleanReferer . '?error=' . urlencode('Invalid language code.'));
-                exit;
-            }
-
-            $result = $service->syncAndTranslate($targetLang);
-            $msg = sprintf("Successfully translated %d missing keys into %s!", $result['translated_keys'], $result['file']);
-            header('Location: ' . $cleanReferer . '?translated=1&msg=' . urlencode($msg));
-            exit;
-
-        } catch (Throwable $e) {
-            header('Location: ' . $cleanReferer . '?error=' . urlencode($e->getMessage()));
             exit;
         }
     }
