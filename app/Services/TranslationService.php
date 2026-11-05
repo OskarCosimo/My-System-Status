@@ -19,10 +19,10 @@ class TranslationService
     }
 
     /**
-     * Translates a limited chunk of pending keys for a target language.
-     * Prevents Cloudflare 524 gateway timeout by keeping execution under 5 seconds.
+     * Translates a slice of source keys determined by offset and limit.
+     * Guaranteed progression: never loops on words identical in both languages (e.g. Dashboard).
      */
-    public function translateNextBatch(string $targetLang, int $limit = 6): array
+    public function translateChunkByOffset(string $targetLang, int $offset, int $limit = 6): array
     {
         $sourceFile = $this->langDir . '/en.json';
         $targetFile = $this->langDir . "/{$targetLang}.json";
@@ -34,124 +34,86 @@ class TranslationService
         $sourceData = json_decode((string)file_get_contents($sourceFile), true) ?? [];
         $targetData = file_exists($targetFile) ? (json_decode((string)file_get_contents($targetFile), true) ?? []) : [];
 
-        // 1. Auto-repair existing keys in targetData that contain hallucinated stutter duplicates
-        $repairedExisting = $this->autoRepairStutters($targetData);
-        if ($repairedExisting > 0) {
+        // Auto-repair stutters on first chunk (offset === 0)
+        if ($offset === 0) {
+            $this->autoRepairStutters($targetData);
             file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
         }
 
-        $pendingKeys = $this->getPendingKeys($sourceData, $targetData, $targetLang);
-        $totalPending = count($pendingKeys);
+        $flatSource = $this->flattenArray($sourceData);
+        $totalKeys  = count($flatSource);
 
-        if ($totalPending === 0) {
+        if ($offset >= $totalKeys) {
             return [
                 'done'             => true,
                 'translated_count' => 0,
-                'remaining'        => 0,
-                'total_pending'    => 0,
+                'next_offset'      => $totalKeys,
+                'total'            => $totalKeys,
                 'lang'             => $targetLang
             ];
         }
 
-        // Slice up to $limit items for this batch
-        $chunk = array_slice($pendingKeys, 0, $limit, true);
+        // Slice exact keys to process for this offset
+        $slice = array_slice($flatSource, $offset, $limit, true);
         $translatedThisBatch = 0;
+        $modified = false;
 
-        foreach ($chunk as $path => $sourceText) {
-            $translatedText = $this->requestTranslationWithPlaceholderProtection((string)$sourceText, 'en', $targetLang);
-            // Apply anti-stuttering filter to remove repeated words like "Impostazioni Impostazioni"
-            $translatedText = $this->cleanStutters($translatedText);
+        foreach ($slice as $path => $sourceText) {
+            $currentVal = (string)($this->getNestedValue($targetData, $path) ?? '');
 
-            $this->setNestedValue($targetData, $path, $translatedText);
-            $translatedThisBatch++;
+            $hasBrokenToken   = str_contains($currentVal, 'X0X') || str_contains($currentVal, '[[') || str_contains($currentVal, ':conto');
+            $isUntranslated   = ($targetLang !== 'en' && $currentVal === (string)$sourceText);
+            $needsTranslation = empty($currentVal) || $hasBrokenToken || $isUntranslated;
+
+            if ($needsTranslation && !empty($sourceText)) {
+                try {
+                    $translated = $this->requestTranslationWithPlaceholderProtection((string)$sourceText, 'en', $targetLang);
+                    $cleaned = $this->cleanStutters($translated);
+                    $this->setNestedValue($targetData, $path, $cleaned);
+                    $translatedThisBatch++;
+                    $modified = true;
+                } catch (Exception $e) {
+                    // Fallback on error: keep source text and continue queue progression
+                    $this->setNestedValue($targetData, $path, $sourceText);
+                    $modified = true;
+                }
+            } else {
+                // Key already translated; clean potential stutters without calling external API
+                $cleaned = $this->cleanStutters($currentVal);
+                if ($cleaned !== $currentVal) {
+                    $this->setNestedValue($targetData, $path, $cleaned);
+                    $modified = true;
+                }
+            }
         }
 
-        // Save progress back to JSON file immediately
-        file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        if ($modified) {
+            file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        }
 
-        $remaining = $totalPending - $translatedThisBatch;
+        $nextOffset = $offset + count($slice);
+        $isDone     = ($nextOffset >= $totalKeys);
 
         return [
-            'done'             => ($remaining <= 0),
+            'done'             => $isDone,
             'translated_count' => $translatedThisBatch,
-            'remaining'        => max(0, $remaining),
-            'total_pending'    => $totalPending,
+            'next_offset'      => $nextOffset,
+            'total'            => $totalKeys,
             'lang'             => $targetLang
         ];
     }
 
     /**
-     * Scans source and target structures to find keys requiring translation.
+     * Get total count of source keys in en.json.
      */
-    public function getPendingKeys(array $sourceData, array $targetData, string $targetLang): array
-    {
-        $flatSource = $this->flattenArray($sourceData);
-        $pending = [];
-
-        foreach ($flatSource as $path => $sourceText) {
-            $currentVal = (string)($this->getNestedValue($targetData, $path) ?? '');
-
-            $hasBrokenToken = str_contains($currentVal, 'X0X') || str_contains($currentVal, '[[') || str_contains($currentVal, ':conto');
-            $needsTranslation = empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText) || $hasBrokenToken;
-
-            if ($needsTranslation && !empty($sourceText)) {
-                $pending[$path] = $sourceText;
-            }
-        }
-
-        return $pending;
-    }
-
-    /**
-     * Full synchronous sync method (kept for background cron or CLI execution).
-     */
-    public function syncAndTranslate(string $targetLang): array
+    public function getSourceTotal(): int
     {
         $sourceFile = $this->langDir . '/en.json';
-        $targetFile = $this->langDir . "/{$targetLang}.json";
-
         if (!file_exists($sourceFile)) {
-            throw new Exception("Source file languages/en.json not found.");
+            return 0;
         }
-
         $sourceData = json_decode((string)file_get_contents($sourceFile), true) ?? [];
-        $targetData = file_exists($targetFile) ? (json_decode((string)file_get_contents($targetFile), true) ?? []) : [];
-
-        $translatedCount = 0;
-        $targetData = $this->processArray($sourceData, $targetData, $targetLang, $translatedCount);
-
-        file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-
-        return [
-            'status'          => 'success',
-            'translated_keys' => $translatedCount,
-            'file'            => "{$targetLang}.json"
-        ];
-    }
-
-    private function processArray(array $source, array $target, string $targetLang, int &$count): array
-    {
-        foreach ($source as $key => $value) {
-            if (is_array($value)) {
-                $target[$key] = $this->processArray($value, $target[$key] ?? [], $targetLang, $count);
-            } else {
-                $sourceText = (string)$value;
-                $currentVal = (string)($target[$key] ?? '');
-
-                $hasBrokenToken = str_contains($currentVal, 'X0X') || str_contains($currentVal, '[[') || str_contains($currentVal, ':conto');
-                $needsTranslation = !isset($target[$key]) || empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText) || $hasBrokenToken;
-
-                if ($needsTranslation && !empty($sourceText)) {
-                    $translated = $this->requestTranslationWithPlaceholderProtection($sourceText, 'en', $targetLang);
-                    $target[$key] = $this->cleanStutters($translated);
-                    $count++;
-                } else {
-                    // Clean stutters on existing keys without re-requesting API
-                    $target[$key] = $this->cleanStutters($currentVal);
-                }
-            }
-        }
-        return $target;
+        return count($this->flattenArray($sourceData));
     }
 
     /**
@@ -176,9 +138,6 @@ class TranslationService
 
     /**
      * Clean up duplicate stutters commonly produced by translation models on single tokens.
-     * Handles:
-     * 1. Single word duplicate: "Impostazioni Impostazioni" -> "Impostazioni"
-     * 2. Phrase duplicate: "Salva modifiche Salva modifiche" -> "Salva modifiche"
      */
     private function cleanStutters(string $text): string
     {
@@ -187,7 +146,7 @@ class TranslationService
             return $text;
         }
 
-        // 1. Single-word duplicate check (e.g. "Impostazioni Impostazioni" or "Settings Settings")
+        // 1. Single-word duplicate check (e.g. "Impostazioni Impostazioni")
         $dedupedWord = preg_replace('/^(\b[\p{L}0-9_\'-]+\b)(?:\s+\1)+$/iu', '$1', $text);
         if ($dedupedWord !== null && $dedupedWord !== $text) {
             return $dedupedWord;
