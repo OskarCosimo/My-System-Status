@@ -969,100 +969,100 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
         const asyncForm = document.getElementById('asyncTranslateFormSettings');
         if (asyncForm) {
             asyncForm.addEventListener('submit', async function(e) {
-                e.preventDefault();
+    e.preventDefault();
 
-                const selectTarget   = document.getElementById('targetLangSelectSettings').value;
-                const progressBox    = document.getElementById('asyncProgressContainerSettings');
-                const progressBar    = document.getElementById('asyncProgressBarSettings');
-                const statusLabel    = document.getElementById('asyncStatusLabelSettings');
-                const percentLabel   = document.getElementById('asyncPercentageLabelSettings');
-                const errorBox       = document.getElementById('asyncErrorBoxSettings');
-                const startBtn       = document.getElementById('startTranslateBtnSettings');
-                const cancelBtn      = document.getElementById('syncCancelBtnSettings');
-                const closeBtn       = document.getElementById('syncJsonCloseBtn');
+    const selectTarget   = document.getElementById('targetLangSelectSettings').value;
+    const progressBox    = document.getElementById('asyncProgressContainerSettings');
+    const progressBar    = document.getElementById('asyncProgressBarSettings');
+    const statusLabel    = document.getElementById('asyncStatusLabelSettings');
+    const percentLabel   = document.getElementById('asyncPercentageLabelSettings');
+    const errorBox       = document.getElementById('asyncErrorBoxSettings');
+    const startBtn       = document.getElementById('startTranslateBtnSettings');
+    const cancelBtn      = document.getElementById('syncCancelBtnSettings');
+    const closeBtn       = document.getElementById('syncJsonCloseBtn');
 
-                // UI Lock
-                startBtn.disabled = true;
-                cancelBtn.disabled = true;
-                closeBtn.disabled = true;
-                startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Synchronizing...';
-                progressBox.classList.remove('d-none');
-                errorBox.classList.add('d-none');
-                progressBar.style.width = '5%';
-                percentLabel.textContent = '5%';
-                statusLabel.textContent = 'Fetching translation queue...';
+    startBtn.disabled = true;
+    cancelBtn.disabled = true;
+    closeBtn.disabled = true;
+    startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Synchronizing...';
+    progressBox.classList.remove('d-none');
+    errorBox.classList.add('d-none');
+    progressBar.style.width = '2%';
+    percentLabel.textContent = '2%';
+    statusLabel.textContent = 'Initializing queue...';
 
-                try {
-                    // 1. Fetch queue of languages
-                    const qRes = await fetch('/admin/translations/queue', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-                        body: new URLSearchParams({ target_lang: selectTarget })
-                    });
-                    const qData = await qRes.json();
+    try {
+        const qRes = await fetch('/admin/translations/queue', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+            body: new URLSearchParams({ target_lang: selectTarget })
+        });
+        const qData = await qRes.json();
 
-                    if (qData.status !== 'success' || !qData.queue || qData.queue.length === 0) {
-                        throw new Error(qData.message || 'Unable to build translation queue.');
-                    }
+        if (qData.status !== 'success' || !qData.queue || qData.queue.length === 0) {
+            throw new Error(qData.message || 'Unable to build translation queue.');
+        }
 
-                    const queue = qData.queue;
-                    let totalTrans = 0;
+        const queue = qData.queue;
+        const totalKeys = qData.total_keys || 1;
+        let totalTrans = 0;
 
-                    // 2. Iterate through each language in small chunks (6 keys per call)
-                    for (let i = 0; i < queue.length; i++) {
-                        const langCode = queue[i];
-                        let isLangDone = false;
+        for (let i = 0; i < queue.length; i++) {
+            const langCode = queue[i];
+            let offset = 0;
+            let isLangDone = false;
 
-                        while (!isLangDone) {
-                            statusLabel.textContent = `Translating [${langCode.toUpperCase()}] in progress...`;
+            while (!isLangDone) {
+                statusLabel.textContent = `Translating [${langCode.toUpperCase()}] (${offset}/${totalKeys})...`;
 
-                            const cRes = await fetch('/admin/translations/chunk', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-                                body: new URLSearchParams({ target_lang: langCode, limit: '6' })
-                            });
-                            const cData = await cRes.json();
+                const cRes = await fetch('/admin/translations/chunk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                    body: new URLSearchParams({ target_lang: langCode, offset: offset, limit: '6' })
+                });
+                const cData = await cRes.json();
 
-                            if (cData.status !== 'success') {
-                                throw new Error(cData.message || `Error translating ${langCode}`);
-                            }
-
-                            totalTrans += (cData.translated_count || 0);
-
-                            if (cData.total_pending > 0) {
-                                const currentProgress = Math.min(95, Math.round(((cData.total_pending - cData.remaining) / cData.total_pending) * 100));
-                                progressBar.style.width = currentProgress + '%';
-                                percentLabel.textContent = currentProgress + '%';
-                                statusLabel.textContent = `[${langCode.toUpperCase()}] ${cData.remaining} keys remaining...`;
-                            }
-
-                            if (cData.done === true || cData.remaining <= 0) {
-                                isLangDone = true;
-                            }
-                        }
-                    }
-
-                    // 3. Completed
-                    progressBar.style.width = '100%';
-                    progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
-                    progressBar.classList.add('bg-success');
-                    percentLabel.textContent = '100%';
-                    statusLabel.textContent = 'Completed! Reloading...';
-
-                    setTimeout(() => {
-                        window.location.href = window.location.pathname + '?translated=1&msg=' + encodeURIComponent(`Translation completed! Total keys translated: ${totalTrans}`);
-                    }, 1200);
-
-                } catch (err) {
-                    errorBox.textContent = err.message;
-                    errorBox.classList.remove('d-none');
-                    statusLabel.textContent = 'Translation halted.';
-                    startBtn.disabled = false;
-                    cancelBtn.disabled = false;
-                    closeBtn.disabled = false;
-                    startBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Retry Translation';
+                if (cData.status !== 'success') {
+                    throw new Error(cData.message || `Error translating ${langCode}`);
                 }
-            });
+
+                totalTrans += (cData.translated_count || 0);
+                offset = cData.next_offset;
+
+                const currentProgress = Math.min(98, Math.round((offset / totalKeys) * 100));
+                progressBar.style.width = currentProgress + '%';
+                percentLabel.textContent = currentProgress + '%';
+                statusLabel.textContent = `[${langCode.toUpperCase()}] ${offset} / ${totalKeys} keys processed...`;
+
+                if (cData.done === true || offset >= totalKeys) {
+                    isLangDone = true;
+                }
+
+                // Small 200ms throttle to prevent server rate-limiting
+                await new Promise(r => setTimeout(r, 200));
+            }
+        }
+
+        progressBar.style.width = '100%';
+        progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+        progressBar.classList.add('bg-success');
+        percentLabel.textContent = '100%';
+        statusLabel.textContent = 'Completed! Reloading...';
+
+        setTimeout(() => {
+            window.location.href = window.location.pathname + '?translated=1&msg=' + encodeURIComponent(`Translation completed! Total keys translated: ${totalTrans}`);
+        }, 1200);
+
+    } catch (err) {
+        errorBox.textContent = err.message;
+        errorBox.classList.remove('d-none');
+        statusLabel.textContent = 'Translation halted.';
+        startBtn.disabled = false;
+        cancelBtn.disabled = false;
+        closeBtn.disabled = false;
+        startBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Retry Translation';
+    }
+});
         }
     });
 </script>
