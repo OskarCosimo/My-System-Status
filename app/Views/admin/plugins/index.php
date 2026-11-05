@@ -2,12 +2,12 @@
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Plugins & Integrations</h2>
-            <p class="text-body-secondary mb-0">Connect external status feeds, notification channels, and AI engines.</p>
+            <h2 class="fw-bold mb-0"><?= __('plugins.page_title') ?></h2>
+            <p class="text-body-secondary mb-0"><?= __('plugins.page_subtitle') ?></p>
         </div>
         <form action="/admin/plugins/sync-feeds" method="POST">
             <button type="submit" class="btn btn-primary">
-                <i class="bi bi-arrow-repeat me-1"></i> Sync External Feeds Now
+                <i class="bi bi-arrow-repeat me-1"></i> <?= __('plugins.btn_sync_feeds_now') ?>
             </button>
         </form>
     </div>
@@ -15,8 +15,8 @@
     <!-- Feeds Synced Alert -->
     <?php if (isset($_GET['synced'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> External status feeds synchronized successfully!
-            <div class="small mt-1"><strong>Status:</strong> <?= htmlspecialchars($_GET['summary'] ?? '') ?></div>
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('plugins.alert_feeds_synced') ?>
+            <div class="small mt-1"><strong><?= __('plugins.alert_status_label') ?></strong> <?= htmlspecialchars($_GET['summary'] ?? '') ?></div>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -24,7 +24,7 @@
     <!-- Config Saved Alert -->
     <?php if (isset($_GET['saved'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> External provider settings saved and synchronized!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('plugins.alert_config_saved') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -32,7 +32,7 @@
     <!-- Translation Success Alert -->
     <?php if (isset($_GET['translated'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($_GET['msg'] ?? 'Translations updated successfully!') ?>
+            <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($_GET['msg'] ?? __('plugins.alert_translations_updated')) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -40,7 +40,7 @@
     <!-- Error Alert -->
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> Error: <?= htmlspecialchars($_GET['error']) ?>
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= __('plugins.alert_error', ['error' => htmlspecialchars($_GET['error'])]) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -56,13 +56,13 @@
                                 <i class="bi bi-cloud-arrow-down"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">External Status Importer</h5>
-                                <span class="badge bg-success">Multi-Provider</span>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.importer_title') ?></h5>
+                                <span class="badge bg-success"><?= __('plugins.badge_multi_provider') ?></span>
                             </div>
                         </div>
                     </div>
                     <p class="text-body-secondary small mb-3">
-                        Choose which public cloud status feeds and specific sub-services to monitor:
+                        <?= __('plugins.importer_desc') ?>
                     </p>
 
                     <!-- Provider Selection Checkboxes -->
@@ -71,17 +71,17 @@
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="feed_cloudflare_enabled" value="1" id="feedCf" <?= setting('feed_cloudflare_enabled', '1') === '1' ? 'checked' : '' ?> onchange="toggleCfSubservices(this.checked)">
                             <label class="form-check-label fw-semibold" for="feedCf">
-                                Cloudflare Global Network
+                                <?= __('plugins.feed_cloudflare') ?>
                             </label>
                         </div>
 
                         <!-- Cloudflare Sub-services Granular Selection -->
                         <div class="ms-4 mb-3 p-3 bg-body rounded-3 border <?= setting('feed_cloudflare_enabled', '1') === '1' ? '' : 'd-none' ?>" id="cfSubservicesContainer">
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="small fw-bold text-body-secondary">Cloudflare Sub-services:</span>
+                                <span class="small fw-bold text-body-secondary"><?= __('plugins.cf_subservices_label') ?></span>
                                 <div class="btn-group btn-group-sm">
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none me-2" onclick="setAllCfSubservices(true)">Select all</button>
-                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-danger" onclick="setAllCfSubservices(false)">Deselect all</button>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none me-2" onclick="setAllCfSubservices(true)"><?= __('plugins.select_all') ?></button>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-danger" onclick="setAllCfSubservices(false)"><?= __('plugins.deselect_all') ?></button>
                                 </div>
                             </div>
                             <div class="row g-2">
@@ -102,7 +102,7 @@
                                 <?php endforeach; ?>
                             </div>
                             <small class="text-body-secondary d-block mt-2" style="font-size: 11px;">
-                                <i class="bi bi-info-circle me-1"></i> Deselecting a sub-service (e.g. WARP) immediately deletes it from the monitors list.
+                                <i class="bi bi-info-circle me-1"></i> <?= __('plugins.cf_deselect_help') ?>
                             </small>
                         </div>
 
@@ -110,7 +110,7 @@
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="feed_aws_enabled" value="1" id="feedAws" <?= setting('feed_aws_enabled', '1') === '1' ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="feedAws">
-                                Amazon Web Services (AWS Infrastructure Health)
+                                <?= __('plugins.feed_aws') ?>
                             </label>
                         </div>
 
@@ -118,7 +118,7 @@
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="feed_azure_enabled" value="1" id="feedAzure" <?= setting('feed_azure_enabled', '1') === '1' ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="feedAzure">
-                                Microsoft Azure Cloud Services
+                                <?= __('plugins.feed_azure') ?>
                             </label>
                         </div>
 
@@ -126,7 +126,7 @@
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="feed_stripe_enabled" value="1" id="feedStripe" <?= setting('feed_stripe_enabled', '1') === '1' ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="feedStripe">
-                                Stripe Payments Engine
+                                <?= __('plugins.feed_stripe') ?>
                             </label>
                         </div>
 
@@ -134,7 +134,7 @@
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox" name="feed_paypal_enabled" value="1" id="feedPaypal" <?= setting('feed_paypal_enabled', '1') === '1' ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="feedPaypal">
-                                PayPal Payments Infrastructure
+                                <?= __('plugins.feed_paypal') ?>
                             </label>
                         </div>
 
@@ -142,14 +142,14 @@
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" name="feed_github_enabled" value="1" id="feedGh" <?= setting('feed_github_enabled', '1') === '1' ? 'checked' : '' ?>>
                             <label class="form-check-label fw-semibold" for="feedGh">
-                                GitHub Cloud Services
+                                <?= __('plugins.feed_github') ?>
                             </label>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0 pb-3 d-flex gap-2">
                     <button type="submit" class="btn btn-sm btn-primary">
-                        <i class="bi bi-save me-1"></i> Save & Poll Enabled Feeds
+                        <i class="bi bi-save me-1"></i> <?= __('plugins.btn_save_feeds') ?>
                     </button>
                 </div>
             </form>
@@ -165,20 +165,20 @@
                                 <i class="bi bi-discord"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">Discord Alert Webhooks</h5>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.discord_title') ?></h5>
                                 <span class="badge bg-<?= $discordConfigured ? 'success' : 'secondary' ?>">
-                                    <?= $discordConfigured ? 'Configured' : 'Not Configured' ?>
+                                    <?= $discordConfigured ? __('plugins.badge_configured') : __('plugins.badge_not_configured') ?>
                                 </span>
                             </div>
                         </div>
                     </div>
                     <p class="text-body-secondary small">
-                        Dispatches rich message embeds directly into your designated Discord channel whenever an endpoint goes down or an incident is declared.
+                        <?= __('plugins.discord_desc') ?>
                     </p>
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0 pb-3">
                     <a href="/admin/settings#integrationsTab" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-gear me-1"></i> Configure Webhook
+                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_configure_webhook') ?>
                     </a>
                 </div>
             </div>
@@ -194,18 +194,18 @@
                                 <i class="bi bi-robot"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">AI Incident Assistant</h5>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.ai_title') ?></h5>
                                 <span class="badge bg-primary text-uppercase"><?= htmlspecialchars($aiProvider) ?></span>
                             </div>
                         </div>
                     </div>
                     <p class="text-body-secondary small">
-                        Drafts clear, user-friendly incident post-mortems and status updates by analyzing raw infrastructure stack traces and probe error logs using <strong><?= htmlspecialchars($aiModel) ?></strong>.
+                        <?= __('plugins.ai_desc', ['model' => '<strong>' . htmlspecialchars($aiModel) . '</strong>']) ?>
                     </p>
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0 pb-3">
                     <a href="/admin/settings#aiTab" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-gear me-1"></i> Configure AI Model
+                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_configure_ai') ?>
                     </a>
                 </div>
             </div>
@@ -221,23 +221,23 @@
                                 <i class="bi bi-translate"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">LibreTranslate i18n</h5>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.translate_title') ?></h5>
                                 <span class="badge bg-<?= !empty(setting('libretranslate_endpoint')) ? 'success' : 'secondary' ?>">
-                                    <?= !empty(setting('libretranslate_endpoint')) ? 'Ready' : 'Not Configured' ?>
+                                    <?= !empty(setting('libretranslate_endpoint')) ? __('plugins.badge_ready') : __('plugins.badge_not_configured') ?>
                                 </span>
                             </div>
                         </div>
                     </div>
                     <p class="text-body-secondary small">
-                        Automatically synchronizes and translates master keys from <code>en.json</code> into other target languages using your connected LibreTranslate instance (<code><?= htmlspecialchars($translateEndpoint ?: 'Not configured') ?></code>).
+                        <?= __('plugins.translate_desc', ['endpoint' => '<code>' . htmlspecialchars($translateEndpoint ?: __('plugins.text_not_configured')) . '</code>']) ?>
                     </p>
                 </div>
                 <div class="card-footer bg-transparent border-0 pt-0 pb-3 d-flex gap-2">
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#translateModal">
-                        <i class="bi bi-translate me-1"></i> Auto-Translate JSONs
+                        <i class="bi bi-translate me-1"></i> <?= __('plugins.btn_autotranslate_jsons') ?>
                     </button>
                     <a href="/admin/settings#generalTab" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-gear me-1"></i> Settings
+                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_settings') ?>
                     </a>
                 </div>
             </div>
@@ -250,31 +250,31 @@
     <div class="modal-dialog">
         <form action="/admin/translations/sync" method="POST" class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-translate me-2 text-primary"></i>LibreTranslate Auto-Sync</h5>
+                <h5 class="modal-title"><i class="bi bi-translate me-2 text-primary"></i><?= __('plugins.modal_translate_title') ?></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-info small mb-3">
                     <i class="bi bi-info-circle me-1"></i>
-                    This tool reads <code>languages/en.json</code>, identifies missing keys in the target language file, translates them via your LibreTranslate server, and saves the updated JSON file.
+                    <?= __('plugins.modal_translate_info') ?>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Target Language Code (ISO 639-1)</label>
+                    <label class="form-label fw-semibold"><?= __('plugins.field_target_lang') ?></label>
                     <select name="target_lang" class="form-select" required>
-                        <option value="it">Italian (it.json)</option>
-                        <option value="es">Spanish (es.json)</option>
-                        <option value="fr">French (fr.json)</option>
-                        <option value="de">German (de.json)</option>
-                        <option value="pt">Portuguese (pt.json)</option>
+                        <option value="it"><?= __('plugins.lang_it') ?></option>
+                        <option value="es"><?= __('plugins.lang_es') ?></option>
+                        <option value="fr"><?= __('plugins.lang_fr') ?></option>
+                        <option value="de"><?= __('plugins.lang_de') ?></option>
+                        <option value="pt"><?= __('plugins.lang_pt') ?></option>
                     </select>
-                    <small class="text-body-secondary">If the language file does not exist, it will be automatically created.</small>
+                    <small class="text-body-secondary"><?= __('plugins.help_lang_file') ?></small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"><?= __('common.cancel') ?></button>
                 <button type="submit" class="btn btn-primary fw-semibold">
-                    <i class="bi bi-magic me-1"></i> Start Auto-Translation
+                    <i class="bi bi-magic me-1"></i> <?= __('plugins.btn_start_translation') ?>
                 </button>
             </div>
         </form>
