@@ -16,21 +16,21 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 <div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h2 class="fw-bold mb-0">Platform Settings</h2>
-            <p class="text-body-secondary mb-0">Manage system configuration, automated cronjobs, OAuth authentication, AI engines, and external integrations.</p>
+            <h2 class="fw-bold mb-0"><?= __('settings.page_title') ?></h2>
+            <p class="text-body-secondary mb-0"><?= __('settings.page_subtitle') ?></p>
         </div>
     </div>
 
     <?php if (isset($_GET['saved'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> Settings have been successfully saved to the database!
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('settings.alert_saved') ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['translated'])): ?>
         <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-            <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($_GET['msg'] ?? 'Translation completed!') ?>
+            <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($_GET['msg'] ?? __('settings.alert_translated')) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -41,42 +41,42 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
             <ul class="nav nav-tabs card-header-tabs m-0 px-3" role="tablist">
                 <li class="nav-item">
                     <a class="nav-link active" data-bs-toggle="tab" href="#generalTab" role="tab">
-                        <i class="bi bi-sliders me-1"></i> General
+                        <i class="bi bi-sliders me-1"></i> <?= __('settings.tab_general') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#cronTab" role="tab">
-                        <i class="bi bi-clock-history text-info me-1"></i> Cronjobs
+                        <i class="bi bi-clock-history text-info me-1"></i> <?= __('settings.tab_cron') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#oauthTab" role="tab">
-                        <i class="bi bi-person-badge text-primary me-1"></i> OAuth SSO
+                        <i class="bi bi-person-badge text-primary me-1"></i> <?= __('settings.tab_oauth') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#aiTab" role="tab">
-                        <i class="bi bi-robot text-success me-1"></i> AI Engine & Translations
+                        <i class="bi bi-robot text-success me-1"></i> <?= __('settings.tab_ai') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#adsTab" role="tab">
-                        <i class="bi bi-badge-ad text-warning me-1"></i> Advertisements
+                        <i class="bi bi-badge-ad text-warning me-1"></i> <?= __('settings.tab_ads') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#securityTab" role="tab">
-                        <i class="bi bi-shield-lock-fill text-danger me-1"></i> Security
+                        <i class="bi bi-shield-lock-fill text-danger me-1"></i> <?= __('settings.tab_security') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#smtpTab" role="tab">
-                        <i class="bi bi-envelope-at me-1"></i> SMTP (Email)
+                        <i class="bi bi-envelope-at me-1"></i> <?= __('settings.tab_smtp') ?>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" data-bs-toggle="tab" href="#integrationsTab" role="tab">
-                        <i class="bi bi-broadcast me-1"></i> Cloudflare & Discord
+                        <i class="bi bi-broadcast me-1"></i> <?= __('settings.tab_integrations') ?>
                     </a>
                 </li>
             </ul>
@@ -87,29 +87,29 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
             <div class="tab-pane fade show active" id="generalTab" role="tabpanel">
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Application Brand Name</label>
+                        <label class="form-label fw-semibold"><?= __('settings.app_name') ?></label>
                         <input type="text" name="app_name" value="<?= htmlspecialchars(setting('app_name', 'My System Status')) ?>" class="form-control" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Application Public URL</label>
+                        <label class="form-label fw-semibold"><?= __('settings.app_url') ?></label>
                         <input type="url" name="app_url" value="<?= htmlspecialchars(setting('app_url', app_url())) ?>" class="form-control" placeholder="https://status.example.com" required>
-                        <small class="text-body-secondary">Used for subscriber email verification links, password resets, and OAuth callbacks.</small>
+                        <small class="text-body-secondary"><?= __('settings.app_url_help') ?></small>
                     </div>
 
                     <!-- Footer Legal Links -->
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Terms of Service URL</label>
+                        <label class="form-label fw-semibold"><?= __('settings.terms_url') ?></label>
                         <input type="url" name="terms_url" value="<?= htmlspecialchars(setting('terms_url', '')) ?>" class="form-control" placeholder="https://example.com/terms">
-                        <small class="text-body-secondary">Displayed in the public page footer (leave empty to hide).</small>
+                        <small class="text-body-secondary"><?= __('settings.terms_url_help') ?></small>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Privacy Policy URL</label>
+                        <label class="form-label fw-semibold"><?= __('settings.privacy_policy_url') ?></label>
                         <input type="url" name="privacy_policy_url" value="<?= htmlspecialchars(setting('privacy_policy_url', '')) ?>" class="form-control" placeholder="https://example.com/privacy">
-                        <small class="text-body-secondary">Displayed in the public page footer (leave empty to hide).</small>
+                        <small class="text-body-secondary"><?= __('settings.privacy_url_help') ?></small>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Default System Timezone (Layer 1)</label>
+                        <label class="form-label fw-semibold"><?= __('settings.app_timezone') ?></label>
                         <select name="app_timezone" class="form-select">
                             <?php foreach ($allTimezones as $tz): ?>
                                 <option value="<?= $tz ?>" <?= $tz === $currentTimezone ? 'selected' : '' ?>>
@@ -117,12 +117,12 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="text-body-secondary">Fallback timezone when browser auto-detection is not active.</small>
+                        <small class="text-body-secondary"><?= __('settings.app_timezone_help') ?></small>
                     </div>
 
                     <!-- Supported Languages in Header Selection -->
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Enabled Header Languages</label>
+                        <label class="form-label fw-semibold"><?= __('settings.enabled_languages') ?></label>
                         <div class="p-3 bg-body-tertiary rounded-3 border" style="max-height: 220px; overflow-y: auto;">
                             <div class="row g-2">
                                 <?php foreach ($allLanguages as $code => $info): ?>
@@ -142,7 +142,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                                 <?php endforeach; ?>
                             </div>
                         </div>
-                        <small class="text-body-secondary d-block mt-1">Select which languages will appear in the navigation header switchers.</small>
+                        <small class="text-body-secondary d-block mt-1"><?= __('settings.enabled_languages_help') ?></small>
                     </div>
                 </div>
             </div>
@@ -155,54 +155,54 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                             <i class="bi bi-clock-history"></i>
                         </span>
                         <div>
-                            <h5 class="fw-bold mb-0">Automated Background Cronjob Setup</h5>
-                            <p class="text-body-secondary small mb-0">System health monitoring, probe checks, external feed sync, and Discord notifications are triggered via the CLI runner.</p>
+                            <h5 class="fw-bold mb-0"><?= __('settings.cron_title') ?></h5>
+                            <p class="text-body-secondary small mb-0"><?= __('settings.cron_desc') ?></p>
                         </div>
                     </div>
 
                     <div class="alert alert-warning border-warning-subtle small mb-4">
                         <i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>
-                        <strong>Important:</strong> For real-time 90-day telemetry, live incident detection, and automatic recovery notices, this cron task must run <strong>every minute</strong>.
+                        <strong><?= __('settings.cron_important') ?></strong> <?= __('settings.cron_notice') ?>
                     </div>
 
                     <!-- Recommended Crontab Entry -->
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">1. Recommended Crontab Command</label>
+                        <label class="form-label fw-semibold"><?= __('settings.cron_command_heading') ?></label>
                         <div class="input-group">
-                            <span class="input-group-text font-monospace bg-body-secondary">Crontab (every minute)</span>
+                            <span class="input-group-text font-monospace bg-body-secondary"><?= __('settings.cron_badge_every_minute') ?></span>
                             <input type="text" class="form-control font-monospace" id="cronCliInput" readonly 
                                    value="* * * * * php <?= htmlspecialchars($cronScriptPath) ?> > /dev/null 2>&1">
                             <button class="btn btn-outline-primary" type="button" onclick="copyInputText('cronCliInput', this)">
-                                <i class="bi bi-clipboard me-1"></i> Copy
+                                <i class="bi bi-clipboard me-1"></i> <?= __('settings.btn_copy') ?>
                             </button>
                         </div>
-                        <small class="text-body-secondary d-block mt-1">If your host uses a specific PHP binary path (e.g. <code>/usr/bin/php8.2</code>), replace <code>php</code> with your full binary path.</small>
+                        <small class="text-body-secondary d-block mt-1"><?= __('settings.cron_path_help') ?></small>
                     </div>
 
                     <!-- Setup Guide -->
                     <div class="card border mb-3">
                         <div class="card-header bg-body fw-semibold py-2">
-                            <i class="bi bi-terminal me-1 text-primary"></i> How to install this Cronjob on your Linux Server (Debian/Ubuntu/CentOS/cPanel)
+                            <i class="bi bi-terminal me-1 text-primary"></i> <?= __('settings.cron_install_guide_title') ?>
                         </div>
                         <div class="card-body small">
                             <ol class="mb-0 ps-3">
                                 <li class="mb-2">
-                                    Open your server terminal (SSH) as the web server user (e.g. <code>www-data</code>, <code>nginx</code>, or your cPanel username):
+                                    <?= __('settings.cron_step1') ?>
                                     <div class="mt-1">
                                         <code class="p-1 bg-body-tertiary rounded border">crontab -e</code>
                                     </div>
                                 </li>
                                 <li class="mb-2">
-                                    Scroll to the bottom of the crontab file and paste the copied line:
+                                    <?= __('settings.cron_step2') ?>
                                     <div class="mt-1">
                                         <code class="p-1 bg-body-tertiary rounded border">* * * * * php <?= htmlspecialchars($cronScriptPath) ?> &gt; /dev/null 2&gt;&amp;1</code>
                                     </div>
                                 </li>
                                 <li class="mb-2">
-                                    Save and exit (in Nano: press <kbd>Ctrl+O</kbd>, <kbd>Enter</kbd>, then <kbd>Ctrl+X</kbd>).
+                                    <?= __('settings.cron_step3') ?>
                                 </li>
                                 <li>
-                                    Verify that the cronjob is active:
+                                    <?= __('settings.cron_step4') ?>
                                     <div class="mt-1">
                                         <code class="p-1 bg-body-tertiary rounded border">crontab -l</code>
                                     </div>
@@ -213,13 +213,13 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <!-- Manual Test Execution -->
                     <div class="p-3 bg-body rounded-3 border">
-                        <h6 class="fw-bold mb-1"><i class="bi bi-play-circle text-success me-1"></i> Manual Test Execution</h6>
-                        <p class="text-body-secondary small mb-2">You can run the script manually from your terminal to verify that probes and database logging execute without errors:</p>
+                        <h6 class="fw-bold mb-1"><i class="bi bi-play-circle text-success me-1"></i> <?= __('settings.cron_manual_test_title') ?></h6>
+                        <p class="text-body-secondary small mb-2"><?= __('settings.cron_manual_test_desc') ?></p>
                         <div class="input-group">
                             <input type="text" class="form-control font-monospace" id="cronManualInput" readonly 
                                    value="php <?= htmlspecialchars($cronScriptPath) ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('cronManualInput', this)">
-                                <i class="bi bi-clipboard me-1"></i> Copy
+                                <i class="bi bi-clipboard me-1"></i> <?= __('settings.btn_copy') ?>
                             </button>
                         </div>
                     </div>
@@ -230,29 +230,29 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                     <div class="col-md-3">
                         <div class="p-3 bg-body-tertiary rounded-3 border text-center h-100">
                             <i class="bi bi-hdd-network text-primary fs-3 d-block mb-1"></i>
-                            <strong class="d-block text-body">Origin Health Probes</strong>
-                            <span class="small text-body-secondary">Executes HTTP/TCP/Ping checks for all enabled local monitors.</span>
+                            <strong class="d-block text-body"><?= __('settings.cron_task_origin') ?></strong>
+                            <span class="small text-body-secondary"><?= __('settings.cron_task_origin_desc') ?></span>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-body-tertiary rounded-3 border text-center h-100">
                             <i class="bi bi-globe-americas text-warning fs-3 d-block mb-1"></i>
-                            <strong class="d-block text-body">Cloudflare Edge Checks</strong>
-                            <span class="small text-body-secondary">Polls worldwide multi-location edge workers if Sentinel is enabled.</span>
+                            <strong class="d-block text-body"><?= __('settings.cron_task_edge') ?></strong>
+                            <span class="small text-body-secondary"><?= __('settings.cron_task_edge_desc') ?></span>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-body-tertiary rounded-3 border text-center h-100">
                             <i class="bi bi-cloud-arrow-down text-info fs-3 d-block mb-1"></i>
-                            <strong class="d-block text-body">External Cloud Feeds</strong>
-                            <span class="small text-body-secondary">Synchronizes status RSS/JSON feeds from Cloudflare, AWS, Stripe, etc.</span>
+                            <strong class="d-block text-body"><?= __('settings.cron_task_feeds') ?></strong>
+                            <span class="small text-body-secondary"><?= __('settings.cron_task_feeds_desc') ?></span>
                         </div>
                     </div>
                     <div class="col-md-3">
                         <div class="p-3 bg-body-tertiary rounded-3 border text-center h-100">
                             <i class="bi bi-discord text-indigo fs-3 d-block mb-1"></i>
-                            <strong class="d-block text-body">Discord Outage Alerts</strong>
-                            <span class="small text-body-secondary">Sends instant webhook alerts whenever a service changes status.</span>
+                            <strong class="d-block text-body"><?= __('settings.cron_task_discord') ?></strong>
+                            <span class="small text-body-secondary"><?= __('settings.cron_task_discord_desc') ?></span>
                         </div>
                     </div>
                 </div>
@@ -262,8 +262,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
             <div class="tab-pane fade" id="oauthTab" role="tabpanel">
                 <div class="alert alert-info border-info-subtle small mb-4">
                     <i class="bi bi-info-circle-fill text-info me-1"></i>
-                    OAuth Single Sign-On allows administrators to log in using their enterprise or personal accounts. 
-                    Configure each provider below and register the matching <strong>Authorized Callback / Redirect URI</strong> in their developer portals.
+                    <?= __('settings.oauth_intro') ?>
                 </div>
 
                 <!-- 1. MYETV SSO -->
@@ -272,35 +271,35 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-tv text-primary fs-4"></i>
                             <div>
-                                <h5 class="fw-bold mb-0">MYETV SSO Provider</h5>
-                                <small class="text-body-secondary">Enterprise OAuth 2.0 integration via MYETV Developer Network</small>
+                                <h5 class="fw-bold mb-0"><?= __('settings.oauth_myetv_title') ?></h5>
+                                <small class="text-body-secondary"><?= __('settings.oauth_myetv_desc') ?></small>
                             </div>
                         </div>
                         <a href="https://developers.myetv.tv" target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> MYETV Dev Portal
+                            <i class="bi bi-box-arrow-up-right me-1"></i> <?= __('settings.oauth_myetv_portal') ?>
                         </a>
                     </div>
 
                     <!-- Callback URL Box -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-body-secondary">MYETV Authorized Callback URI (Redirect URI):</label>
+                        <label class="form-label small fw-semibold text-body-secondary"><?= __('settings.oauth_myetv_callback') ?></label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="myetvCallbackUrl" readonly 
                                    value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/myetv') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('myetvCallbackUrl', this)">
-                                <i class="bi bi-clipboard me-1"></i> Copy
+                                <i class="bi bi-clipboard me-1"></i> <?= __('settings.btn_copy') ?>
                             </button>
                         </div>
-                        <small class="text-muted" style="font-size: 11px;">Copy and paste this exact URL into the "Redirect URI" field in your MYETV Developer app console.</small>
+                        <small class="text-muted" style="font-size: 11px;"><?= __('settings.oauth_myetv_help') ?></small>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">MYETV Client ID</label>
-                            <input type="text" name="oauth_myetv_client_id" value="<?= htmlspecialchars(setting('oauth_myetv_client_id', '')) ?>" class="form-control" placeholder="Leave empty to disable">
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_myetv_client_id') ?></label>
+                            <input type="text" name="oauth_myetv_client_id" value="<?= htmlspecialchars(setting('oauth_myetv_client_id', '')) ?>" class="form-control" placeholder="<?= htmlspecialchars(__('settings.oauth_leave_empty_disable')) ?>">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">MYETV Client Secret</label>
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_myetv_client_secret') ?></label>
                             <input type="password" name="oauth_myetv_client_secret" value="<?= htmlspecialchars(setting('oauth_myetv_client_secret', '')) ?>" class="form-control" placeholder="••••••••">
                         </div>
                     </div>
@@ -312,37 +311,37 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-google text-danger fs-4"></i>
                             <div>
-                                <h5 class="fw-bold mb-0">Google OAuth 2.0</h5>
-                                <small class="text-body-secondary">Google Cloud Console credentials (Web Application)</small>
+                                <h5 class="fw-bold mb-0"><?= __('settings.oauth_google_title') ?></h5>
+                                <small class="text-body-secondary"><?= __('settings.oauth_google_desc') ?></small>
                             </div>
                         </div>
                         <a href="https://console.cloud.google.com/apis/credentials" target="_blank" class="btn btn-sm btn-outline-danger">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> Google Cloud Console
+                            <i class="bi bi-box-arrow-up-right me-1"></i> <?= __('settings.oauth_google_portal') ?>
                         </a>
                     </div>
 
                     <!-- Callback URL Box -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-body-secondary">Google Authorized Redirect URI:</label>
+                        <label class="form-label small fw-semibold text-body-secondary"><?= __('settings.oauth_google_callback') ?></label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="googleCallbackUrl" readonly 
                                    value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/google') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('googleCallbackUrl', this)">
-                                <i class="bi bi-clipboard me-1"></i> Copy
+                                <i class="bi bi-clipboard me-1"></i> <?= __('settings.btn_copy') ?>
                             </button>
                         </div>
                         <small class="text-body-secondary d-block mt-1">
-                            In Google Cloud Console &rarr; <em>APIs &amp; Services</em> &rarr; <em>Credentials</em> &rarr; Edit OAuth 2.0 Client ID &rarr; Paste this under <strong>Authorized redirect URIs</strong>.
+                            <?= __('settings.oauth_google_help') ?>
                         </small>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Google Client ID</label>
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_google_client_id') ?></label>
                             <input type="text" name="oauth_google_client_id" value="<?= htmlspecialchars(setting('oauth_google_client_id', '')) ?>" class="form-control font-monospace" placeholder="xxxx.apps.googleusercontent.com">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Google Client Secret</label>
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_google_client_secret') ?></label>
                             <input type="password" name="oauth_google_client_secret" value="<?= htmlspecialchars(setting('oauth_google_client_secret', '')) ?>" class="form-control" placeholder="••••••••">
                         </div>
                     </div>
@@ -354,37 +353,37 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-microsoft text-info fs-4"></i>
                             <div>
-                                <h5 class="fw-bold mb-0">Microsoft Azure AD (Entra ID)</h5>
-                                <small class="text-body-secondary">Azure Portal App Registration for work/school and personal Microsoft accounts</small>
+                                <h5 class="fw-bold mb-0"><?= __('settings.oauth_ms_title') ?></h5>
+                                <small class="text-body-secondary"><?= __('settings.oauth_ms_desc') ?></small>
                             </div>
                         </div>
                         <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank" class="btn btn-sm btn-outline-info">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> Azure App Registrations
+                            <i class="bi bi-box-arrow-up-right me-1"></i> <?= __('settings.oauth_ms_portal') ?>
                         </a>
                     </div>
 
                     <!-- Callback URL Box -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-body-secondary">Microsoft Redirect URI (Web platform):</label>
+                        <label class="form-label small fw-semibold text-body-secondary"><?= __('settings.oauth_ms_callback') ?></label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="msCallbackUrl" readonly 
                                    value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/microsoft') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('msCallbackUrl', this)">
-                                <i class="bi bi-clipboard me-1"></i> Copy
+                                <i class="bi bi-clipboard me-1"></i> <?= __('settings.btn_copy') ?>
                             </button>
                         </div>
                         <small class="text-body-secondary d-block mt-1">
-                            In Azure Portal &rarr; <em>App registrations</em> &rarr; <em>Authentication</em> &rarr; Add a platform: <strong>Web</strong> &rarr; Paste this Redirect URI.
+                            <?= __('settings.oauth_ms_help') ?>
                         </small>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Microsoft Application (Client) ID</label>
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_ms_client_id') ?></label>
                             <input type="text" name="oauth_microsoft_client_id" value="<?= htmlspecialchars(setting('oauth_microsoft_client_id', '')) ?>" class="form-control font-monospace" placeholder="UUID e.g. 11111111-2222-3333-4444-555555555555">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Microsoft Client Secret</label>
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_ms_client_secret') ?></label>
                             <input type="password" name="oauth_microsoft_client_secret" value="<?= htmlspecialchars(setting('oauth_microsoft_client_secret', '')) ?>" class="form-control" placeholder="••••••••">
                         </div>
                     </div>
@@ -396,37 +395,37 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <div class="d-flex align-items-center gap-2">
                             <i class="bi bi-facebook text-primary fs-4"></i>
                             <div>
-                                <h5 class="fw-bold mb-0">Facebook Login</h5>
-                                <small class="text-body-secondary">Meta for Developers App Dashboard</small>
+                                <h5 class="fw-bold mb-0"><?= __('settings.oauth_fb_title') ?></h5>
+                                <small class="text-body-secondary"><?= __('settings.oauth_fb_desc') ?></small>
                             </div>
                         </div>
                         <a href="https://developers.facebook.com/apps/" target="_blank" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-box-arrow-up-right me-1"></i> Meta Dev Dashboard
+                            <i class="bi bi-box-arrow-up-right me-1"></i> <?= __('settings.oauth_fb_portal') ?>
                         </a>
                     </div>
 
                     <!-- Callback URL Box -->
                     <div class="mb-3">
-                        <label class="form-label small fw-semibold text-body-secondary">Valid OAuth Redirect URI:</label>
+                        <label class="form-label small fw-semibold text-body-secondary"><?= __('settings.oauth_fb_callback') ?></label>
                         <div class="input-group input-group-sm">
                             <input type="text" class="form-control font-monospace" id="fbCallbackUrl" readonly 
                                    value="<?= htmlspecialchars($appBaseUrl . '/auth/callback/facebook') ?>">
                             <button class="btn btn-outline-secondary" type="button" onclick="copyInputText('fbCallbackUrl', this)">
-                                <i class="bi bi-clipboard me-1"></i> Copy
+                                <i class="bi bi-clipboard me-1"></i> <?= __('settings.btn_copy') ?>
                             </button>
                         </div>
                         <small class="text-body-secondary d-block mt-1">
-                            In Meta Developer Dashboard &rarr; <em>Facebook Login</em> &rarr; <em>Settings</em> &rarr; Paste this into <strong>Valid OAuth Redirect URIs</strong>.
+                            <?= __('settings.oauth_fb_help') ?>
                         </small>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Facebook App ID</label>
-                            <input type="text" name="oauth_facebook_client_id" value="<?= htmlspecialchars(setting('oauth_facebook_client_id', '')) ?>" class="form-control font-monospace" placeholder="Leave empty to disable">
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_fb_app_id') ?></label>
+                            <input type="text" name="oauth_facebook_client_id" value="<?= htmlspecialchars(setting('oauth_facebook_client_id', '')) ?>" class="form-control font-monospace" placeholder="<?= htmlspecialchars(__('settings.oauth_leave_empty_disable')) ?>">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Facebook App Secret</label>
+                            <label class="form-label fw-semibold"><?= __('settings.oauth_fb_app_secret') ?></label>
                             <input type="password" name="oauth_facebook_client_secret" value="<?= htmlspecialchars(setting('oauth_facebook_client_secret', '')) ?>" class="form-control" placeholder="••••••••">
                         </div>
                     </div>
@@ -442,30 +441,30 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                             <i class="bi bi-robot"></i>
                         </span>
                         <div>
-                            <h5 class="fw-bold mb-0">AI Incident Analysis Engine</h5>
-                            <p class="text-body-secondary small mb-0">Automatically summarizes technical probe failures into clear, human-readable public notices.</p>
+                            <h5 class="fw-bold mb-0"><?= __('settings.ai_engine_title') ?></h5>
+                            <p class="text-body-secondary small mb-0"><?= __('settings.ai_engine_desc') ?></p>
                         </div>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold">AI Provider Engine</label>
+                            <label class="form-label fw-semibold"><?= __('settings.ai_provider_label') ?></label>
                             <?php $aiProvider = setting('ai_provider', 'gemini'); ?>
                             <select name="ai_provider" class="form-select" id="aiProviderSelect">
-                                <option value="gemini" <?= $aiProvider === 'gemini' ? 'selected' : '' ?>>Google Gemini API (Cloud)</option>
-                                <option value="ollama" <?= $aiProvider === 'ollama' ? 'selected' : '' ?>>Ollama (Local / Self-Hosted)</option>
-                                <option value="openai-chat" <?= $aiProvider === 'openai-chat' ? 'selected' : '' ?>>OpenAI-Compatible Chat (MLX-LM, LocalAI, vLLM, OpenAI)</option>
+                                <option value="gemini" <?= $aiProvider === 'gemini' ? 'selected' : '' ?>><?= __('settings.ai_provider_gemini') ?></option>
+                                <option value="ollama" <?= $aiProvider === 'ollama' ? 'selected' : '' ?>><?= __('settings.ai_provider_ollama') ?></option>
+                                <option value="openai-chat" <?= $aiProvider === 'openai-chat' ? 'selected' : '' ?>><?= __('settings.ai_provider_openai') ?></option>
                             </select>
                         </div>
                         <div class="col-md-8">
-                            <label class="form-label fw-semibold">Model Name</label>
+                            <label class="form-label fw-semibold"><?= __('settings.ai_model_name') ?></label>
                             <input type="text" name="ai_model" value="<?= htmlspecialchars(setting('ai_model', '')) ?>" class="form-control" id="aiModelInput" placeholder="e.g. gemini-1.5-flash or llama3">
                         </div>
 
                         <!-- Gemini Specific Fields -->
                         <div class="col-12" id="geminiGroup">
                             <div class="p-3 bg-body rounded-3 border">
-                                <label class="form-label fw-semibold">Gemini API Key</label>
+                                <label class="form-label fw-semibold"><?= __('settings.ai_gemini_key') ?></label>
                                 <input type="password" name="ai_api_key" value="<?= htmlspecialchars(setting('ai_api_key', '')) ?>" class="form-control" placeholder="AIzaSy... (leave empty if not using Gemini)">
                             </div>
                         </div>
@@ -473,7 +472,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                         <!-- Ollama Specific Fields -->
                         <div class="col-12" id="ollamaGroup">
                             <div class="p-3 bg-body rounded-3 border">
-                                <label class="form-label fw-semibold">Ollama Server Endpoint URL</label>
+                                <label class="form-label fw-semibold"><?= __('settings.ai_ollama_endpoint') ?></label>
                                 <input type="url" name="ai_endpoint" value="<?= htmlspecialchars(setting('ai_endpoint', '')) ?>" class="form-control" placeholder="http://localhost:11434 (leave empty for default)">
                             </div>
                         </div>
@@ -483,11 +482,11 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                             <div class="p-3 bg-body rounded-3 border">
                                 <div class="row g-3">
                                     <div class="col-md-8">
-                                        <label class="form-label fw-semibold">Chat Completions Endpoint URL</label>
+                                        <label class="form-label fw-semibold"><?= __('settings.ai_openai_endpoint') ?></label>
                                         <input type="url" name="ai_openai_endpoint" value="<?= htmlspecialchars(setting('ai_openai_endpoint', '')) ?>" class="form-control" placeholder="http://localhost:11435/v1/chat/completions">
                                     </div>
                                     <div class="col-md-4">
-                                        <label class="form-label fw-semibold">API Key / Bearer Token (Optional)</label>
+                                        <label class="form-label fw-semibold"><?= __('settings.ai_openai_key') ?></label>
                                         <input type="password" name="ai_openai_api_key" value="<?= htmlspecialchars(setting('ai_openai_api_key', '')) ?>" class="form-control" placeholder="Leave empty for local inference">
                                     </div>
                                 </div>
@@ -496,7 +495,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                     </div>
                 </div>
 
-                <!-- LibreTranslate Configuration & Auto-Sync Section (Moved from General) -->
+                <!-- LibreTranslate Configuration & Auto-Sync Section -->
                 <div class="p-4 bg-body-tertiary rounded-3 border">
                     <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
@@ -504,22 +503,22 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                                 <i class="bi bi-translate"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">LibreTranslate Language Files Generator</h5>
-                                <p class="text-body-secondary small mb-0">Auto-translate missing keys from <code>languages/en.json</code> into other language JSON files.</p>
+                                <h5 class="fw-bold mb-0"><?= __('settings.translate_generator_title') ?></h5>
+                                <p class="text-body-secondary small mb-0"><?= __('settings.translate_generator_desc') ?></p>
                             </div>
                         </div>
                         <button type="button" class="btn btn-sm btn-primary fw-semibold" data-bs-toggle="modal" data-bs-target="#syncJsonModal">
-                            <i class="bi bi-magic me-1"></i> Auto-Translate JSON Files
+                            <i class="bi bi-magic me-1"></i> <?= __('settings.btn_autotranslate_files') ?>
                         </button>
                     </div>
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">LibreTranslate API Endpoint</label>
+                            <label class="form-label fw-semibold"><?= __('settings.translate_endpoint_label') ?></label>
                             <input type="url" name="libretranslate_endpoint" value="<?= htmlspecialchars(setting('libretranslate_endpoint', '')) ?>" class="form-control" placeholder="http://localhost:5000/translate (leave empty if disabled)">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">LibreTranslate API Key (Optional)</label>
+                            <label class="form-label fw-semibold"><?= __('settings.translate_key_label') ?></label>
                             <input type="password" name="libretranslate_api_key" value="<?= htmlspecialchars(setting('libretranslate_api_key', '')) ?>" class="form-control" placeholder="Leave blank if self-hosted without key">
                         </div>
                     </div>
@@ -531,8 +530,8 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                 <div class="p-4 bg-body-tertiary rounded-3 border mb-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1"><i class="bi bi-badge-ad text-primary me-2"></i>Global Advertisement Settings</h5>
-                            <p class="text-body-secondary small mb-0">Enable ads and auto-inject Google AdSense into the <code>&lt;head&gt;</code> section of public pages.</p>
+                            <h5 class="fw-bold mb-1"><i class="bi bi-badge-ad text-primary me-2"></i><?= __('settings.ads_global_title') ?></h5>
+                            <p class="text-body-secondary small mb-0"><?= __('settings.ads_global_desc') ?></p>
                         </div>
                         <div class="form-check form-switch fs-5">
                             <input class="form-check-input" type="checkbox" name="ads_enabled" value="1" id="adsSwitch" <?= setting('ads_enabled') === '1' ? 'checked' : '' ?>>
@@ -541,12 +540,12 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Google AdSense Publisher ID</label>
+                            <label class="form-label fw-semibold"><?= __('settings.ads_publisher_id') ?></label>
                             <input type="text" name="adsense_client_id" value="<?= htmlspecialchars(setting('adsense_client_id', '')) ?>" class="form-control font-monospace" placeholder="ca-pub-XXXXXXXXXXXXXXXX">
-                            <small class="text-body-secondary">Automatically injects the official async loader script in <code>&lt;head&gt;</code> across the public status site.</small>
+                            <small class="text-body-secondary"><?= __('settings.ads_publisher_id_help') ?></small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Custom / Additional Ad Header Script (Optional)</label>
+                            <label class="form-label fw-semibold"><?= __('settings.ads_header_script') ?></label>
                             <textarea id="ads_header_code_input" class="form-control font-monospace" rows="2" placeholder="<!-- Additional ad tags or meta scripts -->"><?= htmlspecialchars(setting('ads_header_code', '')) ?></textarea>
                             <input type="hidden" name="ads_header_code_b64" id="ads_header_code_b64">
                         </div>
@@ -556,8 +555,8 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                 <div class="p-4 bg-body-tertiary rounded-3 border">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1"><i class="bi bi-layout-text-window-reverse text-success me-2"></i>Footer Ad Unit Placement</h5>
-                            <p class="text-body-secondary small mb-0">Display a responsive banner ad unit at the bottom of public pages, above the footer.</p>
+                            <h5 class="fw-bold mb-1"><i class="bi bi-layout-text-window-reverse text-success me-2"></i><?= __('settings.ads_footer_title') ?></h5>
+                            <p class="text-body-secondary small mb-0"><?= __('settings.ads_footer_desc') ?></p>
                         </div>
                         <div class="form-check form-switch fs-5">
                             <input class="form-check-input" type="checkbox" name="ads_footer_enabled" value="1" id="adsFooterSwitch" <?= setting('ads_footer_enabled') === '1' ? 'checked' : '' ?>>
@@ -565,10 +564,10 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                     </div>
 
                     <div class="mb-2">
-                        <label class="form-label fw-semibold">Footer Ad Unit Code (HTML / JavaScript)</label>
+                        <label class="form-label fw-semibold"><?= __('settings.ads_footer_code') ?></label>
                         <textarea id="ads_footer_code_input" class="form-control font-monospace" rows="5" placeholder="&lt;ins class=&quot;adsbygoogle&quot;&#10;     style=&quot;display:block&quot;&#10;     data-ad-client=&quot;ca-pub-XXXXXXXXXXXXXXXX&quot;&#10;     data-ad-slot=&quot;1234567890&quot;&#10;     data-ad-format=&quot;auto&quot;&#10;     data-full-width-responsive=&quot;true&quot;&gt;&lt;/ins&gt;&#10;&lt;script&gt;&#10;     (adsbygoogle = window.adsbygoogle || []).push({});&#10;&lt;/script&gt;"><?= htmlspecialchars(setting('ads_footer_code', '')) ?></textarea>
                         <input type="hidden" name="ads_footer_code_b64" id="ads_footer_code_b64">
-                        <small class="text-body-secondary d-block mt-1">Paste your AdSense ad unit block (the <code>&lt;ins&gt;</code> container and script) or any HTML/JS banner snippet.</small>
+                        <small class="text-body-secondary d-block mt-1"><?= __('settings.ads_footer_code_help') ?></small>
                     </div>
                 </div>
             </div>
@@ -578,8 +577,8 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                 <div class="p-4 bg-body-tertiary rounded-3 border mb-4">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1"><i class="bi bi-shield-check text-primary me-2"></i>Cloudflare Turnstile Bot Protection</h5>
-                            <p class="text-body-secondary small mb-0">Protect the admin login form against automated brute-force attacks.</p>
+                            <h5 class="fw-bold mb-1"><i class="bi bi-shield-check text-primary me-2"></i><?= __('settings.turnstile_title') ?></h5>
+                            <p class="text-body-secondary small mb-0"><?= __('settings.turnstile_desc') ?></p>
                         </div>
                         <div class="form-check form-switch fs-5">
                             <input class="form-check-input" type="checkbox" name="turnstile_enabled" value="1" id="turnstileSwitch" <?= setting('turnstile_enabled') === '1' ? 'checked' : '' ?>>
@@ -588,11 +587,11 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Turnstile Site Key</label>
+                            <label class="form-label fw-semibold"><?= __('settings.turnstile_site_key') ?></label>
                             <input type="text" name="turnstile_site_key" value="<?= htmlspecialchars(setting('turnstile_site_key', '')) ?>" class="form-control font-monospace" placeholder="0x4AAAAAA...">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Turnstile Secret Key</label>
+                            <label class="form-label fw-semibold"><?= __('settings.turnstile_secret_key') ?></label>
                             <input type="password" name="turnstile_secret_key" value="<?= htmlspecialchars(setting('turnstile_secret_key', '')) ?>" class="form-control font-monospace" placeholder="0x4AAAAAA...">
                         </div>
                     </div>
@@ -601,8 +600,8 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                 <div class="p-4 bg-body-tertiary rounded-3 border">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1"><i class="bi bi-speedometer2 text-danger me-2"></i>Anti-Brute Force Rate Limiter</h5>
-                            <p class="text-body-secondary small mb-0">Automatically throttle repeated failed login attempts from suspicious IP addresses.</p>
+                            <h5 class="fw-bold mb-1"><i class="bi bi-speedometer2 text-danger me-2"></i><?= __('settings.rate_limit_title') ?></h5>
+                            <p class="text-body-secondary small mb-0"><?= __('settings.rate_limit_desc') ?></p>
                         </div>
                         <div class="form-check form-switch fs-5">
                             <input class="form-check-input" type="checkbox" name="rate_limit_enabled" value="1" id="rateLimitSwitch" <?= setting('rate_limit_enabled', '1') === '1' ? 'checked' : '' ?>>
@@ -611,14 +610,14 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Max Login Attempts Allowed</label>
+                            <label class="form-label fw-semibold"><?= __('settings.rate_limit_max_attempts') ?></label>
                             <input type="number" name="rate_limit_max_attempts" value="<?= htmlspecialchars(setting('rate_limit_max_attempts', '5')) ?>" class="form-control" min="1" max="50">
-                            <small class="text-body-secondary">Threshold before temporary IP lockout is triggered.</small>
+                            <small class="text-body-secondary"><?= __('settings.rate_limit_max_attempts_help') ?></small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Lockout Duration (Minutes)</label>
+                            <label class="form-label fw-semibold"><?= __('settings.rate_limit_lockout') ?></label>
                             <input type="number" name="rate_limit_lockout_minutes" value="<?= htmlspecialchars(setting('rate_limit_lockout_minutes', '15')) ?>" class="form-control" min="1" max="1440">
-                            <small class="text-body-secondary">Minutes the attacker IP must wait before retrying.</small>
+                            <small class="text-body-secondary"><?= __('settings.rate_limit_lockout_help') ?></small>
                         </div>
                     </div>
                 </div>
@@ -628,31 +627,31 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
             <div class="tab-pane fade" id="smtpTab" role="tabpanel">
                 <div class="row g-3">
                     <div class="col-md-8">
-                        <label class="form-label fw-semibold">SMTP Host</label>
+                        <label class="form-label fw-semibold"><?= __('settings.smtp_host') ?></label>
                         <input type="text" name="smtp_host" value="<?= htmlspecialchars(setting('smtp_host', '')) ?>" class="form-control" placeholder="smtp.example.com (leave empty if disabled)">
                     </div>
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold">SMTP Port</label>
+                        <label class="form-label fw-semibold"><?= __('settings.smtp_port') ?></label>
                         <input type="number" name="smtp_port" value="<?= htmlspecialchars(setting('smtp_port', '587')) ?>" class="form-control" placeholder="587">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">SMTP Username</label>
+                        <label class="form-label fw-semibold"><?= __('settings.smtp_username') ?></label>
                         <input type="text" name="smtp_user" value="<?= htmlspecialchars(setting('smtp_user', '')) ?>" class="form-control" placeholder="user@example.com">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">SMTP Password</label>
+                        <label class="form-label fw-semibold"><?= __('settings.smtp_password') ?></label>
                         <input type="password" name="smtp_pass" value="<?= htmlspecialchars(setting('smtp_pass', '')) ?>" class="form-control" placeholder="••••••••">
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Encryption Protocol</label>
+                        <label class="form-label fw-semibold"><?= __('settings.smtp_encryption') ?></label>
                         <select name="smtp_encryption" class="form-select">
-                            <option value="starttls" <?= setting('smtp_encryption', 'starttls') === 'starttls' ? 'selected' : '' ?>>STARTTLS (Default Port 587)</option>
-                            <option value="ssl" <?= setting('smtp_encryption', 'ssl') === 'selected' ? 'selected' : '' ?>>SSL / TLS (Port 465)</option>
-                            <option value="none" <?= setting('smtp_encryption', 'none') === 'selected' ? 'selected' : '' ?>>None (Plain Port 25)</option>
+                            <option value="starttls" <?= setting('smtp_encryption', 'starttls') === 'starttls' ? 'selected' : '' ?>><?= __('settings.smtp_starttls') ?></option>
+                            <option value="ssl" <?= setting('smtp_encryption', 'ssl') === 'selected' ? 'selected' : '' ?>><?= __('settings.smtp_ssl') ?></option>
+                            <option value="none" <?= setting('smtp_encryption', 'none') === 'selected' ? 'selected' : '' ?>><?= __('settings.smtp_none') ?></option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">From Email Address</label>
+                        <label class="form-label fw-semibold"><?= __('settings.smtp_from') ?></label>
                         <input type="email" name="smtp_from" value="<?= htmlspecialchars(setting('smtp_from', '')) ?>" class="form-control" placeholder="noreply@example.com">
                     </div>
                 </div>
@@ -661,9 +660,9 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
             <!-- 8. CLOUDFLARE & DISCORD INTEGRATIONS TAB -->
             <div class="tab-pane fade" id="integrationsTab" role="tabpanel">
                 <div class="mb-4">
-                    <label class="form-label fw-semibold"><i class="bi bi-discord text-primary me-1"></i> Discord Channel Webhook URL</label>
+                    <label class="form-label fw-semibold"><i class="bi bi-discord text-primary me-1"></i> <?= __('settings.discord_webhook') ?></label>
                     <input type="url" name="discord_webhook_url" value="<?= htmlspecialchars(setting('discord_webhook_url', '')) ?>" class="form-control" placeholder="https://discord.com/api/webhooks/... (leave empty to disable)">
-                    <small class="text-body-secondary">Probes will post down/up alert embeds directly to this Discord channel.</small>
+                    <small class="text-body-secondary"><?= __('settings.discord_webhook_help') ?></small>
                 </div>
 
                 <!-- Cloudflare Zero Trust Tunnel Section -->
@@ -674,56 +673,56 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                                 <i class="bi bi-shield-shaded"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">Cloudflare Zero Trust Tunnel Monitor (Optional)</h5>
-                                <p class="text-body-secondary small mb-0">Monitor the live health status of your private Cloudflare Tunnel (cloudflared).</p>
+                                <h5 class="fw-bold mb-0"><?= __('settings.cf_tunnel_title') ?></h5>
+                                <p class="text-body-secondary small mb-0"><?= __('settings.cf_tunnel_desc') ?></p>
                             </div>
                         </div>
                         <div class="form-check form-switch fs-6">
                             <input class="form-check-input" type="checkbox" name="cf_tunnel_is_primary" value="1" id="tunnelPrimarySwitch" <?= setting('cf_tunnel_is_primary', '1') === '1' ? 'checked' : '' ?>>
-                            <label class="form-check-label fw-semibold" for="tunnelPrimarySwitch">Place in Core Systems</label>
+                            <label class="form-check-label fw-semibold" for="tunnelPrimarySwitch"><?= __('settings.cf_tunnel_core') ?></label>
                         </div>
                     </div>
 
                     <!-- Detailed Collapsible Setup Guide for Cloudflare Tunnel -->
                     <div class="alert alert-info border-info-subtle mb-3 p-3 mt-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-body small"><i class="bi bi-info-circle me-1 text-primary"></i> How to setup Cloudflare Zero Trust Tunnel Monitoring:</strong>
+                            <strong class="text-body small"><i class="bi bi-info-circle me-1 text-primary"></i> <?= __('settings.cf_tunnel_guide_title') ?></strong>
                             <button class="btn btn-sm btn-link p-0 text-decoration-none small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#tunnelGuideCollapse">
-                                Show Setup Guide <i class="bi bi-chevron-down ms-1"></i>
+                                <?= __('settings.show_setup_guide') ?> <i class="bi bi-chevron-down ms-1"></i>
                             </button>
                         </div>
                         <div class="collapse mt-3 pt-2 border-top border-info-subtle small text-body" id="tunnelGuideCollapse">
                             <ol class="ps-3 mb-2">
                                 <li class="mb-2">
-                                    <strong>1. Locate your Cloudflare Account ID:</strong>
+                                    <strong><?= __('settings.cf_tunnel_step1_title') ?></strong>
                                     <div class="text-body-secondary mt-1">
-                                        Log in to the <a href="https://dash.cloudflare.com" target="_blank" class="text-primary fw-semibold">Cloudflare Dashboard</a>. Choose any domain or check your browser address bar: <code>https://dash.cloudflare.com/&lt;ACCOUNT_ID&gt;</code>. Alternatively, on any domain Overview page, scroll down the right sidebar to copy the 32-character <strong>Account ID</strong>.
+                                        <?= __('settings.cf_tunnel_step1_desc') ?>
                                     </div>
                                 </li>
                                 <li class="mb-2">
-                                    <strong>2. Locate your Tunnel ID (UUID):</strong>
+                                    <strong><?= __('settings.cf_tunnel_step2_title') ?></strong>
                                     <div class="text-body-secondary mt-1">
-                                        Open the <strong>Zero Trust Dashboard</strong> &rarr; <strong>Networks</strong> &rarr; <strong>Tunnels</strong>. Select your active tunnel. The <strong>Tunnel ID</strong> (UUID format <code>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code>) is displayed in the tunnel overview and in the URL (<code>/tunnels/&lt;TUNNEL_ID&gt;</code>).
+                                        <?= __('settings.cf_tunnel_step2_desc') ?>
                                     </div>
                                 </li>
                                 <li class="mb-2">
-                                    <strong>3. Create an API Token with Read permission:</strong>
+                                    <strong><?= __('settings.cf_tunnel_step3_title') ?></strong>
                                     <div class="text-body-secondary mt-1">
-                                        In Cloudflare Dashboard, click your profile in the top-right corner &rarr; <strong>My Profile</strong> &rarr; <strong>API Tokens</strong> &rarr; <strong>Create Token</strong>:
+                                        <?= __('settings.cf_tunnel_step3_desc') ?>
                                         <ul class="mt-1 ps-3">
-                                            <li>Scroll to the bottom and click <strong>Create Custom Token</strong>.</li>
-                                            <li><strong>Token name:</strong> e.g. <code>StatusPage - Tunnel Reader</code>.</li>
-                                            <li><strong>Permissions:</strong> Add <code>Account</code> &gt; <code>Cloudflare Tunnel</code> &gt; <code>Read</code>.</li>
-                                            <li><strong>Account Resources:</strong> Set <code>Include</code> &gt; <code>All accounts</code> (or select your specific account).</li>
-                                            <li>Click <strong>Continue to summary</strong> &rarr; <strong>Create Token</strong>.</li>
-                                            <li>Copy the generated secret token and paste it into the <strong>Cloudflare API Token</strong> field below.</li>
+                                            <li><?= __('settings.cf_tunnel_step3_item1') ?></li>
+                                            <li><?= __('settings.cf_tunnel_step3_item2') ?></li>
+                                            <li><?= __('settings.cf_tunnel_step3_item3') ?></li>
+                                            <li><?= __('settings.cf_tunnel_step3_item4') ?></li>
+                                            <li><?= __('settings.cf_tunnel_step3_item5') ?></li>
+                                            <li><?= __('settings.cf_tunnel_step3_item6') ?></li>
                                         </ul>
                                     </div>
                                 </li>
                                 <li class="mb-1">
-                                    <strong>4. Tier Placement:</strong>
+                                    <strong><?= __('settings.cf_tunnel_step4_title') ?></strong>
                                     <div class="text-body-secondary mt-1">
-                                        Keep <em>"Place in Core Systems"</em> checked if tunnel downtime should mark the global status banner as Major Outage. If disabled, it will be placed as a secondary service under the Cloudflare group.
+                                        <?= __('settings.cf_tunnel_step4_desc') ?>
                                     </div>
                                 </li>
                             </ol>
@@ -732,21 +731,21 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <div class="row g-3 mt-1">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Custom Tunnel Label</label>
+                            <label class="form-label fw-semibold"><?= __('settings.cf_tunnel_label') ?></label>
                             <input type="text" name="cf_tunnel_name" value="<?= htmlspecialchars(setting('cf_tunnel_name', '')) ?>" class="form-control" placeholder="e.g. MyETV Production Tunnel">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Cloudflare Account ID</label>
+                            <label class="form-label fw-semibold"><?= __('settings.cf_account_id') ?></label>
                             <input type="text" name="cf_tunnel_account_id" value="<?= htmlspecialchars(setting('cf_tunnel_account_id', '')) ?>" class="form-control font-monospace" placeholder="32-character account ID">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Tunnel ID (UUID)</label>
+                            <label class="form-label fw-semibold"><?= __('settings.cf_tunnel_id_label') ?></label>
                             <input type="text" name="cf_tunnel_id" value="<?= htmlspecialchars(setting('cf_tunnel_id', '')) ?>" class="form-control font-monospace" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Cloudflare API Token</label>
+                            <label class="form-label fw-semibold"><?= __('settings.cf_api_token_label') ?></label>
                             <input type="password" name="cf_tunnel_api_token" value="<?= htmlspecialchars(setting('cf_tunnel_api_token', '')) ?>" class="form-control font-monospace" placeholder="API Token with Tunnel:Read permission">
-                            <small class="text-body-secondary">Requires <code>Account &gt; Cloudflare Tunnel &gt; Read</code> permissions.</small>
+                            <small class="text-body-secondary"><?= __('settings.cf_api_token_help') ?></small>
                         </div>
                     </div>
                 </div>
@@ -759,8 +758,8 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                                 <i class="bi bi-globe-americas"></i>
                             </span>
                             <div>
-                                <h5 class="fw-bold mb-0">Cloudflare Edge Worker Probes & Sentinel (Optional)</h5>
-                                <p class="text-body-secondary small mb-0">Run multi-location latency probes from Cloudflare edge and monitor server downtime autonomously.</p>
+                                <h5 class="fw-bold mb-0"><?= __('settings.cf_worker_title') ?></h5>
+                                <p class="text-body-secondary small mb-0"><?= __('settings.cf_worker_desc') ?></p>
                             </div>
                         </div>
                         <div class="form-check form-switch fs-5">
@@ -770,31 +769,32 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <div class="alert alert-info border-info-subtle mb-3 p-3">
                         <div class="d-flex justify-content-between align-items-center">
-                            <strong class="text-body small"><i class="bi bi-info-circle me-1 text-primary"></i> How to setup your Cloudflare Worker:</strong>
+                            <strong class="text-body small"><i class="bi bi-info-circle me-1 text-primary"></i> <?= __('settings.cf_worker_guide_title') ?></strong>
                             <button class="btn btn-sm btn-link p-0 text-decoration-none small fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#workerGuideCollapse">
-                                Show Setup Guide <i class="bi bi-chevron-down ms-1"></i>
+                                <?= __('settings.show_setup_guide') ?> <i class="bi bi-chevron-down ms-1"></i>
                             </button>
                         </div>
                         <div class="collapse mt-3 pt-2 border-top border-info-subtle small text-body" id="workerGuideCollapse">
                             <ol class="ps-3 mb-2">
                                 <li class="mb-1">
-                                    <strong>Get the template code:</strong> Open the local file <code>edge/cloudflare-worker.js</code> in your repository.
+                                    <strong><?= __('settings.cf_worker_step1') ?></strong>
                                 </li>
                                 <li class="mb-1">
-                                    <strong>Create the Worker:</strong> In <a href="https://dash.cloudflare.com" target="_blank" class="text-primary fw-semibold">Cloudflare Dashboard</a> &rarr; <em>Workers &amp; Pages</em> &rarr; <em>Create Application</em> &rarr; <em>Create Worker</em>, and paste the code from <code>edge/cloudflare-worker.js</code>.
+                                    <strong><?= __('settings.cf_worker_step2') ?></strong>
                                 </li>
                                 <li class="mb-1">
-                                    <strong>Configure Variables (Worker Settings &rarr; Variables):</strong>
+                                    <strong><?= __('settings.cf_worker_step3') ?></strong>
                                     <ul class="mt-1 ps-3 text-body-secondary">
-                                        <li><code>SHARED_SECRET_TOKEN</code>: A custom password/token (must match the token entered below).</li>
-                                        <li><code>ORIGIN_STATUS_URL</code>: Your status page URL (<code><?= htmlspecialchars($appBaseUrl) ?></code>).</li>
-                                        <li><code>DISCORD_WEBHOOK_URL</code>: <em>(Optional)</em> Discord webhook for alerts if your origin server dies.</li>
+                                        <li><?= __('settings.cf_worker_var_secret') ?></li>
+                                        <li><?= __('settings.cf_worker_var_origin', ['url' => htmlspecialchars($appBaseUrl)]) ?></li>
+                                        <li><?= __('settings.cf_worker_var_discord') ?></li>
                                     </ul>
                                 </li>
                                 <li class="mb-1">
-                                    <strong>Enable Cron Trigger (Worker Settings &rarr; Triggers &rarr; Cron Triggers):</strong> Add <code>* * * * *</code> (every minute) so Cloudflare monitors your server even if your VPS crashes.</li>
+                                    <strong><?= __('settings.cf_worker_step4') ?></strong>
+                                </li>
                                 <li>
-                                    <strong>Paste URL & Token below:</strong> Copy your <code>https://your-worker.workers.dev</code> address into the field below.
+                                    <strong><?= __('settings.cf_worker_step5') ?></strong>
                                 </li>
                             </ol>
                         </div>
@@ -802,14 +802,14 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Worker URL</label>
+                            <label class="form-label fw-semibold"><?= __('settings.cf_worker_url') ?></label>
                             <input type="url" name="edge_worker_url" value="<?= htmlspecialchars(setting('edge_worker_url', '')) ?>" class="form-control" placeholder="https://my-edge-probe.workers.dev">
-                            <small class="text-body-secondary">The public <code>.workers.dev</code> endpoint of your deployed worker.</small>
+                            <small class="text-body-secondary"><?= __('settings.cf_worker_url_help') ?></small>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Shared Secret Token</label>
+                            <label class="form-label fw-semibold"><?= __('settings.cf_worker_secret_token') ?></label>
                             <input type="password" name="edge_worker_token" value="<?= htmlspecialchars(setting('edge_worker_token', '')) ?>" class="form-control" placeholder="Matches SHARED_SECRET_TOKEN in Worker">
-                            <small class="text-body-secondary">Used to authenticate requests between your server and the Cloudflare Worker.</small>
+                            <small class="text-body-secondary"><?= __('settings.cf_worker_token_help') ?></small>
                         </div>
                     </div>
                 </div>
@@ -818,34 +818,34 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
 
         <div class="card-footer bg-body-tertiary border-top p-3 text-end">
             <button type="submit" class="btn btn-primary px-4 fw-semibold">
-                <i class="bi bi-save me-1"></i> Save Platform Settings
+                <i class="bi bi-save me-1"></i> <?= __('settings.btn_save_settings') ?>
             </button>
         </div>
     </form>
 </div>
 
-<!-- Modal: Sync Language JSONs via LibreTranslate -->
-<div class="modal fade" id="syncJsonModal" tabindex="-1">
+<!-- Modal: Sync Language JSONs via LibreTranslate (Asynchronous Batch Runner) -->
+<div class="modal fade" id="syncJsonModal" tabindex="-1" data-bs-backdrop="static">
     <div class="modal-dialog">
-        <form action="/admin/translations/sync" method="POST" class="modal-content shadow">
+        <form id="asyncTranslateFormSettings" class="modal-content shadow">
             <div class="modal-header">
-                <h5 class="modal-title fw-bold"><i class="bi bi-translate me-2 text-primary"></i>Sync Language JSON Files</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <h5 class="modal-title fw-bold"><i class="bi bi-translate me-2 text-primary"></i><?= __('settings.modal_sync_title') ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" id="syncJsonCloseBtn"></button>
             </div>
             <div class="modal-body">
                 <div class="alert alert-info small mb-3">
                     <i class="bi bi-info-circle me-1"></i>
-                    This tool reads master keys from <code>languages/en.json</code>, identifies missing keys in the target file(s), translates them via LibreTranslate, and saves the updated <code>.json</code> file(s).
+                    <?= __('settings.modal_sync_info') ?>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Target Translation Scope</label>
-                    <select name="target_lang" class="form-select" required>
+                <div class="mb-3" id="syncScopeGroup">
+                    <label class="form-label fw-semibold"><?= __('settings.modal_sync_scope') ?></label>
+                    <select name="target_lang" id="targetLangSelectSettings" class="form-select" required>
                         <option value="all" class="fw-bold text-primary" selected>
-                            ★ All Enabled Languages (Batch Sync)
+                            <?= __('settings.modal_sync_all_enabled') ?>
                         </option>
                         
-                        <optgroup label="Single Language Translation">
+                        <optgroup label="<?= htmlspecialchars(__('settings.modal_sync_single_group')) ?>">
                             <?php foreach ($allLanguages as $code => $info): ?>
                                 <?php if ($code === 'en') continue; ?>
                                 <option value="<?= $code ?>">
@@ -856,8 +856,20 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                     </select>
                 </div>
 
+                <!-- Async Progress Section (Initially Hidden) -->
+                <div id="asyncProgressContainerSettings" class="d-none my-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-semibold text-body" id="asyncStatusLabelSettings">Preparing queue...</span>
+                        <span class="small text-secondary fw-bold" id="asyncPercentageLabelSettings">0%</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div id="asyncProgressBarSettings" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                    <div class="text-danger small mt-2 d-none" id="asyncErrorBoxSettings"></div>
+                </div>
+
                 <div class="p-3 bg-body-tertiary rounded-3 border small">
-                    <strong class="text-body d-block mb-1">Currently Enabled Languages:</strong>
+                    <strong class="text-body d-block mb-1"><?= __('settings.modal_sync_current_languages') ?></strong>
                     <div class="d-flex flex-wrap gap-1">
                         <?php foreach ($enabledLocales as $code): ?>
                             <span class="badge bg-<?= $code === 'en' ? 'secondary' : 'primary' ?>">
@@ -865,13 +877,13 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                             </span>
                         <?php endforeach; ?>
                     </div>
-                    <small class="text-body-secondary d-block mt-2">Selecting "All Enabled Languages" will generate/sync all badges above except English.</small>
+                    <small class="text-body-secondary d-block mt-2"><?= __('settings.modal_sync_notice') ?></small>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="submit" class="btn btn-primary fw-semibold">
-                    <i class="bi bi-magic me-1"></i> Start Auto-Translation
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="syncCancelBtnSettings"><?= __('common.cancel') ?></button>
+                <button type="submit" class="btn btn-primary fw-semibold" id="startTranslateBtnSettings">
+                    <i class="bi bi-magic me-1"></i> <?= __('settings.btn_start_translation') ?>
                 </button>
             </div>
         </form>
@@ -888,7 +900,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
         input.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(input.value).then(() => {
             const originalHtml = btnElement.innerHTML;
-            btnElement.innerHTML = '<i class="bi bi-check2 text-success me-1"></i> Copied!';
+            btnElement.innerHTML = '<i class="bi bi-check2 text-success me-1"></i> ' + <?= json_encode(__('settings.btn_copied')) ?>;
             btnElement.classList.replace('btn-outline-primary', 'btn-success');
             btnElement.classList.replace('btn-outline-secondary', 'btn-success');
             setTimeout(() => {
@@ -922,7 +934,7 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
         }
     }
 
-    // Base64 encoder with full UTF-8 support to prevent ModSecurity / WAF false positives
+    // Base64 encoder with full UTF-8 support
     function utf8ToBase64(str) {
         return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
             return String.fromCharCode('0x' + p1);
@@ -936,7 +948,6 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
             updateAIFields();
         }
 
-        // Intercept form submit and encode raw HTML/JS code into Base64 hidden inputs
         const settingsForm = document.getElementById('platformSettingsForm');
         if (settingsForm) {
             settingsForm.addEventListener('submit', function() {
@@ -953,5 +964,524 @@ $cronScriptPath = $projectRoot ? ($projectRoot . DIRECTORY_SEPARATOR . 'cron' . 
                 }
             });
         }
+
+        // Asynchronous batch translation runner
+        const asyncForm = document.getElementById('asyncTranslateFormSettings');
+        if (asyncForm) {
+            asyncForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const selectTarget   = document.getElementById('targetLangSelectSettings').value;
+                const progressBox    = document.getElementById('asyncProgressContainerSettings');
+                const progressBar    = document.getElementById('asyncProgressBarSettings');
+                const statusLabel    = document.getElementById('asyncStatusLabelSettings');
+                const percentLabel   = document.getElementById('asyncPercentageLabelSettings');
+                const errorBox       = document.getElementById('asyncErrorBoxSettings');
+                const startBtn       = document.getElementById('startTranslateBtnSettings');
+                const cancelBtn      = document.getElementById('syncCancelBtnSettings');
+                const closeBtn       = document.getElementById('syncJsonCloseBtn');
+
+                // UI Lock
+                startBtn.disabled = true;
+                cancelBtn.disabled = true;
+                closeBtn.disabled = true;
+                startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Synchronizing...';
+                progressBox.classList.remove('d-none');
+                errorBox.classList.add('d-none');
+                progressBar.style.width = '5%';
+                percentLabel.textContent = '5%';
+                statusLabel.textContent = 'Fetching translation queue...';
+
+                try {
+                    // 1. Fetch queue of languages
+                    const qRes = await fetch('/admin/translations/queue', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                        body: new URLSearchParams({ target_lang: selectTarget })
+                    });
+                    const qData = await qRes.json();
+
+                    if (qData.status !== 'success' || !qData.queue || qData.queue.length === 0) {
+                        throw new Error(qData.message || 'Unable to build translation queue.');
+                    }
+
+                    const queue = qData.queue;
+                    let totalTrans = 0;
+
+                    // 2. Iterate through each language in small chunks (6 keys per call)
+                    for (let i = 0; i < queue.length; i++) {
+                        const langCode = queue[i];
+                        let isLangDone = false;
+
+                        while (!isLangDone) {
+                            statusLabel.textContent = `Translating [${langCode.toUpperCase()}] in progress...`;
+
+                            const cRes = await fetch('/admin/translations/chunk', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                                body: new URLSearchParams({ target_lang: langCode, limit: '6' })
+                            });
+                            const cData = await cRes.json();
+
+                            if (cData.status !== 'success') {
+                                throw new Error(cData.message || `Error translating ${langCode}`);
+                            }
+
+                            totalTrans += (cData.translated_count || 0);
+
+                            if (cData.total_pending > 0) {
+                                const currentProgress = Math.min(95, Math.round(((cData.total_pending - cData.remaining) / cData.total_pending) * 100));
+                                progressBar.style.width = currentProgress + '%';
+                                percentLabel.textContent = currentProgress + '%';
+                                statusLabel.textContent = `[${langCode.toUpperCase()}] ${cData.remaining} keys remaining...`;
+                            }
+
+                            if (cData.done === true || cData.remaining <= 0) {
+                                isLangDone = true;
+                            }
+                        }
+                    }
+
+                    // 3. Completed
+                    progressBar.style.width = '100%';
+                    progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                    progressBar.classList.add('bg-success');
+                    percentLabel.textContent = '100%';
+                    statusLabel.textContent = 'Completed! Reloading...';
+
+                    setTimeout(() => {
+                        window.location.href = window.location.pathname + '?translated=1&msg=' + encodeURIComponent(`Translation completed! Total keys translated: ${totalTrans}`);
+                    }, 1200);
+
+                } catch (err) {
+                    errorBox.textContent = err.message;
+                    errorBox.classList.remove('d-none');
+                    statusLabel.textContent = 'Translation halted.';
+                    startBtn.disabled = false;
+                    cancelBtn.disabled = false;
+                    closeBtn.disabled = false;
+                    startBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Retry Translation';
+                }
+            });
+        }
     });
+</script>
+```
+
+---
+
+### 5. `app/Views/admin/plugins/index.php`
+
+Nel modal `#translateModal`, è stato integrato lo stesso motore asincrono senza timeout:
+
+```html
+<!-- path: app/Views/admin/plugins/index.php -->
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0"><?= __('plugins.page_title') ?></h2>
+            <p class="text-body-secondary mb-0"><?= __('plugins.page_subtitle') ?></p>
+        </div>
+        <form action="/admin/plugins/sync-feeds" method="POST">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-arrow-repeat me-1"></i> <?= __('plugins.btn_sync_feeds_now') ?>
+            </button>
+        </form>
+    </div>
+
+    <!-- Feeds Synced Alert -->
+    <?php if (isset($_GET['synced'])): ?>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('plugins.alert_feeds_synced') ?>
+            <div class="small mt-1"><strong><?= __('plugins.alert_status_label') ?></strong> <?= htmlspecialchars($_GET['summary'] ?? '') ?></div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Config Saved Alert -->
+    <?php if (isset($_GET['saved'])): ?>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <?= __('plugins.alert_config_saved') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Translation Success Alert -->
+    <?php if (isset($_GET['translated'])): ?>
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> <?= htmlspecialchars($_GET['msg'] ?? __('plugins.alert_translations_updated')) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <!-- Error Alert -->
+    <?php if (isset($_GET['error'])): ?>
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> <?= __('plugins.alert_error', ['error' => htmlspecialchars($_GET['error'])]) ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    <?php endif; ?>
+
+    <div class="row g-4">
+        <!-- 1. External Status Feeds Importer with Sub-services Selection -->
+        <div class="col-md-6 col-xl-6">
+            <form action="/admin/plugins/save-feeds-config" method="POST" class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="p-2 bg-primary bg-opacity-10 text-primary rounded-3 fs-4">
+                                <i class="bi bi-cloud-arrow-down"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.importer_title') ?></h5>
+                                <span class="badge bg-success"><?= __('plugins.badge_multi_provider') ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-body-secondary small mb-3">
+                        <?= __('plugins.importer_desc') ?>
+                    </p>
+
+                    <!-- Provider Selection Checkboxes -->
+                    <div class="bg-body-tertiary p-3 rounded-3 border mb-3">
+                        <!-- Cloudflare Parent -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="feed_cloudflare_enabled" value="1" id="feedCf" <?= setting('feed_cloudflare_enabled', '1') === '1' ? 'checked' : '' ?> onchange="toggleCfSubservices(this.checked)">
+                            <label class="form-check-label fw-semibold" for="feedCf">
+                                <?= __('plugins.feed_cloudflare') ?>
+                            </label>
+                        </div>
+
+                        <!-- Cloudflare Sub-services Granular Selection -->
+                        <div class="ms-4 mb-3 p-3 bg-body rounded-3 border <?= setting('feed_cloudflare_enabled', '1') === '1' ? '' : 'd-none' ?>" id="cfSubservicesContainer">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-body-secondary"><?= __('plugins.cf_subservices_label') ?></span>
+                                <div class="btn-group btn-group-sm">
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none me-2" onclick="setAllCfSubservices(true)"><?= __('plugins.select_all') ?></button>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-danger" onclick="setAllCfSubservices(false)"><?= __('plugins.deselect_all') ?></button>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <?php foreach ($cfAvailableSubservices as $slug => $label): ?>
+                                    <div class="col-12 col-sm-6">
+                                        <div class="form-check small">
+                                            <input class="form-check-input cf-sub-checkbox" 
+                                                   type="checkbox" 
+                                                   name="cf_subservices[]" 
+                                                   value="<?= htmlspecialchars($slug) ?>" 
+                                                   id="cf_sub_<?= htmlspecialchars($slug) ?>"
+                                                   <?= in_array($slug, $cfEnabledSubservices ?? [], true) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="cf_sub_<?= htmlspecialchars($slug) ?>">
+                                                <?= htmlspecialchars($label) ?>
+                                            </label>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                            <small class="text-body-secondary d-block mt-2" style="font-size: 11px;">
+                                <i class="bi bi-info-circle me-1"></i> <?= __('plugins.cf_deselect_help') ?>
+                            </small>
+                        </div>
+
+                        <!-- Amazon AWS -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="feed_aws_enabled" value="1" id="feedAws" <?= setting('feed_aws_enabled', '1') === '1' ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-semibold" for="feedAws">
+                                <?= __('plugins.feed_aws') ?>
+                            </label>
+                        </div>
+
+                        <!-- Microsoft Azure -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="feed_azure_enabled" value="1" id="feedAzure" <?= setting('feed_azure_enabled', '1') === '1' ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-semibold" for="feedAzure">
+                                <?= __('plugins.feed_azure') ?>
+                            </label>
+                        </div>
+
+                        <!-- Stripe -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="feed_stripe_enabled" value="1" id="feedStripe" <?= setting('feed_stripe_enabled', '1') === '1' ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-semibold" for="feedStripe">
+                                <?= __('plugins.feed_stripe') ?>
+                            </label>
+                        </div>
+
+                        <!-- PayPal -->
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox" name="feed_paypal_enabled" value="1" id="feedPaypal" <?= setting('feed_paypal_enabled', '1') === '1' ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-semibold" for="feedPaypal">
+                                <?= __('plugins.feed_paypal') ?>
+                            </label>
+                        </div>
+
+                        <!-- GitHub -->
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="feed_github_enabled" value="1" id="feedGh" <?= setting('feed_github_enabled', '1') === '1' ? 'checked' : '' ?>>
+                            <label class="form-check-label fw-semibold" for="feedGh">
+                                <?= __('plugins.feed_github') ?>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i class="bi bi-save me-1"></i> <?= __('plugins.btn_save_feeds') ?>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 2. Discord Webhook Plugin -->
+        <div class="col-md-6 col-xl-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="p-2 bg-primary bg-opacity-10 text-primary rounded-3 fs-4">
+                                <i class="bi bi-discord"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.discord_title') ?></h5>
+                                <span class="badge bg-<?= $discordConfigured ? 'success' : 'secondary' ?>">
+                                    <?= $discordConfigured ? __('plugins.badge_configured') : __('plugins.badge_not_configured') ?>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-body-secondary small">
+                        <?= __('plugins.discord_desc') ?>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                    <a href="/admin/settings#integrationsTab" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_configure_webhook') ?>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. AI Incident Assistant (Ollama & Gemini) -->
+        <div class="col-md-6 col-xl-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="p-2 bg-danger bg-opacity-10 text-danger rounded-3 fs-4">
+                                <i class="bi bi-robot"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.ai_title') ?></h5>
+                                <span class="badge bg-primary text-uppercase"><?= htmlspecialchars($aiProvider) ?></span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-body-secondary small">
+                        <?= __('plugins.ai_desc', ['model' => '<strong>' . htmlspecialchars($aiModel) . '</strong>']) ?>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                    <a href="/admin/settings#aiTab" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_configure_ai') ?>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. LibreTranslate Auto-Translator -->
+        <div class="col-md-6 col-xl-6">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="p-2 bg-warning bg-opacity-10 text-warning rounded-3 fs-4">
+                                <i class="bi bi-translate"></i>
+                            </span>
+                            <div>
+                                <h5 class="fw-bold mb-0"><?= __('plugins.translate_title') ?></h5>
+                                <span class="badge bg-<?= !empty(setting('libretranslate_endpoint')) ? 'success' : 'secondary' ?>">
+                                    <?= !empty(setting('libretranslate_endpoint')) ? __('plugins.badge_ready') : __('plugins.badge_not_configured') ?>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-body-secondary small">
+                        <?= __('plugins.translate_desc', ['endpoint' => '<code>' . htmlspecialchars($translateEndpoint ?: __('plugins.text_not_configured')) . '</code>']) ?>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-0 pt-0 pb-3 d-flex gap-2">
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#translateModal">
+                        <i class="bi bi-translate me-1"></i> <?= __('plugins.btn_autotranslate_jsons') ?>
+                    </button>
+                    <a href="/admin/settings#generalTab" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-gear me-1"></i> <?= __('plugins.btn_settings') ?>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Auto-Translate with LibreTranslate (Asynchronous Batch Runner) -->
+<div class="modal fade" id="translateModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <form id="asyncTranslateFormPlugins" class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-translate me-2 text-primary"></i><?= __('plugins.modal_translate_title') ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" id="syncPluginsCloseBtn"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info small mb-3">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <?= __('plugins.modal_translate_info') ?>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold"><?= __('plugins.field_target_lang') ?></label>
+                    <select name="target_lang" id="targetLangSelectPlugins" class="form-select" required>
+                        <option value="it"><?= __('plugins.lang_it') ?></option>
+                        <option value="es"><?= __('plugins.lang_es') ?></option>
+                        <option value="fr"><?= __('plugins.lang_fr') ?></option>
+                        <option value="de"><?= __('plugins.lang_de') ?></option>
+                        <option value="pt"><?= __('plugins.lang_pt') ?></option>
+                    </select>
+                    <small class="text-body-secondary"><?= __('plugins.help_lang_file') ?></small>
+                </div>
+
+                <!-- Async Progress Section (Initially Hidden) -->
+                <div id="asyncProgressContainerPlugins" class="d-none my-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="small fw-semibold text-body" id="asyncStatusLabelPlugins">Preparing queue...</span>
+                        <span class="small text-secondary fw-bold" id="asyncPercentageLabelPlugins">0%</span>
+                    </div>
+                    <div class="progress" style="height: 12px;">
+                        <div id="asyncProgressBarPlugins" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 0%;"></div>
+                    </div>
+                    <div class="text-danger small mt-2 d-none" id="asyncErrorBoxPlugins"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="syncPluginsCancelBtn"><?= __('common.cancel') ?></button>
+                <button type="submit" class="btn btn-primary fw-semibold" id="startTranslateBtnPlugins">
+                    <i class="bi bi-magic me-1"></i> <?= __('plugins.btn_start_translation') ?>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleCfSubservices(enabled) {
+    const container = document.getElementById('cfSubservicesContainer');
+    if (container) {
+        if (enabled) {
+            container.classList.remove('d-none');
+        } else {
+            container.classList.add('d-none');
+        }
+    }
+}
+
+function setAllCfSubservices(checked) {
+    document.querySelectorAll('.cf-sub-checkbox').forEach(cb => {
+        cb.checked = checked;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const asyncFormPlugins = document.getElementById('asyncTranslateFormPlugins');
+    if (asyncFormPlugins) {
+        asyncFormPlugins.addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const selectTarget   = document.getElementById('targetLangSelectPlugins').value;
+            const progressBox    = document.getElementById('asyncProgressContainerPlugins');
+            const progressBar    = document.getElementById('asyncProgressBarPlugins');
+            const statusLabel    = document.getElementById('asyncStatusLabelPlugins');
+            const percentLabel   = document.getElementById('asyncPercentageLabelPlugins');
+            const errorBox       = document.getElementById('asyncErrorBoxPlugins');
+            const startBtn       = document.getElementById('startTranslateBtnPlugins');
+            const cancelBtn      = document.getElementById('syncPluginsCancelBtn');
+            const closeBtn       = document.getElementById('syncPluginsCloseBtn');
+
+            startBtn.disabled = true;
+            cancelBtn.disabled = true;
+            closeBtn.disabled = true;
+            startBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Synchronizing...';
+            progressBox.classList.remove('d-none');
+            errorBox.classList.add('d-none');
+            progressBar.style.width = '5%';
+            percentLabel.textContent = '5%';
+            statusLabel.textContent = 'Fetching queue...';
+
+            try {
+                const qRes = await fetch('/admin/translations/queue', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                    body: new URLSearchParams({ target_lang: selectTarget })
+                });
+                const qData = await qRes.json();
+
+                if (qData.status !== 'success' || !qData.queue || qData.queue.length === 0) {
+                    throw new Error(qData.message || 'Unable to build translation queue.');
+                }
+
+                const queue = qData.queue;
+                let totalTrans = 0;
+
+                for (let i = 0; i < queue.length; i++) {
+                    const langCode = queue[i];
+                    let isLangDone = false;
+
+                    while (!isLangDone) {
+                        statusLabel.textContent = `Translating [${langCode.toUpperCase()}] in progress...`;
+
+                        const cRes = await fetch('/admin/translations/chunk', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+                            body: new URLSearchParams({ target_lang: langCode, limit: '6' })
+                        });
+                        const cData = await cRes.json();
+
+                        if (cData.status !== 'success') {
+                            throw new Error(cData.message || `Error translating ${langCode}`);
+                        }
+
+                        totalTrans += (cData.translated_count || 0);
+
+                        if (cData.total_pending > 0) {
+                            const currentProgress = Math.min(95, Math.round(((cData.total_pending - cData.remaining) / cData.total_pending) * 100));
+                            progressBar.style.width = currentProgress + '%';
+                            percentLabel.textContent = currentProgress + '%';
+                            statusLabel.textContent = `[${langCode.toUpperCase()}] ${cData.remaining} keys remaining...`;
+                        }
+
+                        if (cData.done === true || cData.remaining <= 0) {
+                            isLangDone = true;
+                        }
+                    }
+                }
+
+                progressBar.style.width = '100%';
+                progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                progressBar.classList.add('bg-success');
+                percentLabel.textContent = '100%';
+                statusLabel.textContent = 'Completed! Reloading...';
+
+                setTimeout(() => {
+                    window.location.href = window.location.pathname + '?translated=1&msg=' + encodeURIComponent(`Translation completed! Total keys translated: ${totalTrans}`);
+                }, 1200);
+
+            } catch (err) {
+                errorBox.textContent = err.message;
+                errorBox.classList.remove('d-none');
+                statusLabel.textContent = 'Translation halted.';
+                startBtn.disabled = false;
+                cancelBtn.disabled = false;
+                closeBtn.disabled = false;
+                startBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i> Retry Translation';
+            }
+        });
+    }
+});
 </script>
