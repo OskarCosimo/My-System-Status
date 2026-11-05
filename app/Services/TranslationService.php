@@ -18,6 +18,84 @@ class TranslationService
         $this->langDir  = dirname(__DIR__, 2) . '/languages';
     }
 
+    /**
+     * Translates a limited chunk of pending keys for a target language.
+     * Prevents Cloudflare 524 gateway timeout by keeping execution under 5 seconds.
+     */
+    public function translateNextBatch(string $targetLang, int $limit = 6): array
+    {
+        $sourceFile = $this->langDir . '/en.json';
+        $targetFile = $this->langDir . "/{$targetLang}.json";
+
+        if (!file_exists($sourceFile)) {
+            throw new Exception("Source file languages/en.json not found.");
+        }
+
+        $sourceData = json_decode((string)file_get_contents($sourceFile), true) ?? [];
+        $targetData = file_exists($targetFile) ? (json_decode((string)file_get_contents($targetFile), true) ?? []) : [];
+
+        $pendingKeys = $this->getPendingKeys($sourceData, $targetData, $targetLang);
+        $totalPending = count($pendingKeys);
+
+        if ($totalPending === 0) {
+            return [
+                'done'             => true,
+                'translated_count' => 0,
+                'remaining'        => 0,
+                'total_pending'    => 0,
+                'lang'             => $targetLang
+            ];
+        }
+
+        // Slice up to $limit items for this batch
+        $chunk = array_slice($pendingKeys, 0, $limit, true);
+        $translatedThisBatch = 0;
+
+        foreach ($chunk as $path => $sourceText) {
+            $translatedText = $this->requestTranslationWithPlaceholderProtection((string)$sourceText, 'en', $targetLang);
+            $this->setNestedValue($targetData, $path, $translatedText);
+            $translatedThisBatch++;
+        }
+
+        // Save progress back to JSON file immediately
+        file_put_contents($targetFile, json_encode($targetData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+
+        $remaining = $totalPending - $translatedThisBatch;
+
+        return [
+            'done'             => ($remaining <= 0),
+            'translated_count' => $translatedThisBatch,
+            'remaining'        => max(0, $remaining),
+            'total_pending'    => $totalPending,
+            'lang'             => $targetLang
+        ];
+    }
+
+    /**
+     * Scans source and target structures to find keys requiring translation.
+     */
+    public function getPendingKeys(array $sourceData, array $targetData, string $targetLang): array
+    {
+        $flatSource = $this->flattenArray($sourceData);
+        $pending = [];
+
+        foreach ($flatSource as $path => $sourceText) {
+            $currentVal = (string)($this->getNestedValue($targetData, $path) ?? '');
+
+            $hasBrokenToken = str_contains($currentVal, 'X0X') || str_contains($currentVal, '[[') || str_contains($currentVal, ':conto');
+            $needsTranslation = empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText) || $hasBrokenToken;
+
+            if ($needsTranslation && !empty($sourceText)) {
+                $pending[$path] = $sourceText;
+            }
+        }
+
+        return $pending;
+    }
+
+    /**
+     * Full synchronous sync method (kept for background cron or CLI execution).
+     */
     public function syncAndTranslate(string $targetLang): array
     {
         $sourceFile = $this->langDir . '/en.json';
@@ -27,8 +105,8 @@ class TranslationService
             throw new Exception("Source file languages/en.json not found.");
         }
 
-        $sourceData = json_decode(file_get_contents($sourceFile), true) ?? [];
-        $targetData = file_exists($targetFile) ? (json_decode(file_get_contents($targetFile), true) ?? []) : [];
+        $sourceData = json_decode((string)file_get_contents($sourceFile), true) ?? [];
+        $targetData = file_exists($targetFile) ? (json_decode((string)file_get_contents($targetFile), true) ?? []) : [];
 
         $translatedCount = 0;
         $targetData = $this->processArray($sourceData, $targetData, $targetLang, $translatedCount);
@@ -51,7 +129,6 @@ class TranslationService
                 $sourceText = (string)$value;
                 $currentVal = (string)($target[$key] ?? '');
 
-                // Auto-repair: re-translate if missing, empty, matching English, or contains broken tokens like [[X0X] or :conto
                 $hasBrokenToken = str_contains($currentVal, 'X0X') || str_contains($currentVal, '[[') || str_contains($currentVal, ':conto');
                 $needsTranslation = !isset($target[$key]) || empty($currentVal) || ($targetLang !== 'en' && $currentVal === $sourceText) || $hasBrokenToken;
 
@@ -67,30 +144,25 @@ class TranslationService
 
     /**
      * Protect :placeholders using unique 6-digit natural numbers.
-     * Machine translation models NEVER drop or alter natural numbers!
      */
     private function requestTranslationWithPlaceholderProtection(string $text, string $from, string $to): string
     {
-        // 1. Mask :placeholders with unique natural 6-digit numbers (e.g. :count -> 987650)
         $tokens = [];
         $baseNumber = 987650;
 
         $maskedText = preg_replace_callback('/:([a-zA-Z0-9_]+)/', function ($matches) use (&$tokens, &$baseNumber) {
-            $placeholder = $matches[0]; // e.g. :count
+            $placeholder = $matches[0];
             $tokenNum = (string)$baseNumber++;
             $tokens[$tokenNum] = $placeholder;
             return $tokenNum;
         }, $text);
 
-        // 2. Send clean number to LibreTranslate
         $translated = $this->requestTranslation($maskedText, $from, $to);
 
-        // 3. Restore original :placeholders from numbers
         foreach ($tokens as $tokenNum => $originalPlaceholder) {
             $translated = str_replace($tokenNum, $originalPlaceholder, $translated);
         }
 
-        // 4. Safety net cleanup for any old artifacts
         $translated = preg_replace('/\[+X0X\]*/i', ':count', $translated);
         $translated = str_replace([':conto', ':compte', ':cuenta'], ':count', $translated);
 
@@ -143,5 +215,45 @@ class TranslationService
         }
 
         return $json['translatedText'] ?? $text;
+    }
+
+    private function flattenArray(array $array, string $prefix = ''): array
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            $fullKey = $prefix === '' ? $key : "{$prefix}.{$key}";
+            if (is_array($value)) {
+                $result += $this->flattenArray($value, $fullKey);
+            } else {
+                $result[$fullKey] = (string)$value;
+            }
+        }
+        return $result;
+    }
+
+    private function setNestedValue(array &$array, string $path, mixed $value): void
+    {
+        $keys = explode('.', $path);
+        $current = &$array;
+        foreach ($keys as $key) {
+            if (!isset($current[$key]) || !is_array($current[$key])) {
+                $current[$key] = [];
+            }
+            $current = &$current[$key];
+        }
+        $current = $value;
+    }
+
+    private function getNestedValue(array $array, string $path): mixed
+    {
+        $keys = explode('.', $path);
+        $current = $array;
+        foreach ($keys as $key) {
+            if (!is_array($current) || !array_key_exists($key, $current)) {
+                return null;
+            }
+            $current = $current[$key];
+        }
+        return $current;
     }
 }
