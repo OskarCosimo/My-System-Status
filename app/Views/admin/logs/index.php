@@ -29,13 +29,13 @@
     <!-- Header with 24-Hour Date Picker -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <div>
-            <h2 class="fw-bold mb-0">System Audit & Probe Logs</h2>
-            <p class="text-muted mb-0">Inspect 24-hour heartbeat telemetry windows and diagnostic errors.</p>
+            <h2 class="fw-bold mb-0"><?= __('logs.page_title') ?></h2>
+            <p class="text-muted mb-0"><?= __('logs.page_subtitle') ?></p>
         </div>
         <div>
             <form action="/admin/logs" method="GET" class="d-flex align-items-center gap-2">
                 <label for="log_date" class="form-label small fw-semibold mb-0 text-nowrap">
-                    <i class="bi bi-calendar3 me-1"></i> 24h Window:
+                    <i class="bi bi-calendar3 me-1"></i> <?= __('logs.label_window_24h') ?>
                 </label>
                 <input type="date" 
                        id="log_date" 
@@ -45,7 +45,7 @@
                        class="form-control form-control-sm shadow-sm" 
                        onchange="this.form.submit()">
                 <?php if (!empty($selectedDate) && $selectedDate !== date('Y-m-d')): ?>
-                    <a href="/admin/logs" class="btn btn-sm btn-primary text-nowrap">Today</a>
+                    <a href="/admin/logs" class="btn btn-sm btn-primary text-nowrap"><?= __('logs.btn_today') ?></a>
                 <?php endif; ?>
             </form>
         </div>
@@ -60,7 +60,7 @@
                         <i class="bi bi-activity"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">Checks in 24h</div>
+                        <div class="text-muted small"><?= __('logs.kpi_checks_24h') ?></div>
                         <h4 class="fw-bold mb-0"><?= number_format($totalChecks ?? 0) ?></h4>
                     </div>
                 </div>
@@ -73,7 +73,7 @@
                         <i class="bi bi-check-circle"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">Successful (UP)</div>
+                        <div class="text-muted small"><?= __('logs.kpi_successful') ?></div>
                         <h4 class="fw-bold mb-0 text-success"><?= number_format($upChecks ?? 0) ?></h4>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
                         <i class="bi bi-exclamation-octagon"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">Outages (DOWN)</div>
+                        <div class="text-muted small"><?= __('logs.kpi_outages') ?></div>
                         <h4 class="fw-bold mb-0 text-danger"><?= number_format($downChecks ?? 0) ?></h4>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
                         <i class="bi bi-speedometer"></i>
                     </div>
                     <div>
-                        <div class="text-muted small">Average Latency</div>
+                        <div class="text-muted small"><?= __('logs.kpi_avg_latency') ?></div>
                         <h4 class="fw-bold mb-0"><?= (int)($avgLatency ?? 0) ?> ms</h4>
                     </div>
                 </div>
@@ -113,12 +113,12 @@
             <table id="logsTable" class="table table-hover align-middle mb-0 w-100">
                 <thead class="table-light">
                     <tr>
-                        <th style="width: 170px;">Date & Time (<?= htmlspecialchars(\App\Services\DateService::getActiveTimezone()) ?>)</th>
-                        <th>Monitor Name</th>
-                        <th>Status</th>
-                        <th>Latency</th>
-                        <th>HTTP Code</th>
-                        <th>Diagnostic Details</th>
+                        <th style="width: 170px;"><?= __('logs.table_datetime', ['timezone' => htmlspecialchars(\App\Services\DateService::getActiveTimezone())]) ?></th>
+                        <th><?= __('logs.table_monitor_name') ?></th>
+                        <th><?= __('common.status') ?></th>
+                        <th><?= __('logs.table_latency') ?></th>
+                        <th><?= __('logs.table_http_code') ?></th>
+                        <th><?= __('logs.table_diagnostic_details') ?></th>
                     </tr>
                 </thead>
                 <!-- Completely empty tbody: prevents the browser from rendering 6,500 raw HTML rows! -->
@@ -142,7 +142,7 @@ $(document).ready(function() {
         deferRender: true, // Crucial: Renders DOM elements ONLY for the 50 visible rows!
         order: [[0, 'desc']],
         pageLength: 50,
-        lengthMenu: [[25, 50, 100, 250, -1], [25, 50, 100, 250, "All"]],
+        lengthMenu: [[25, 50, 100, 250, -1], [25, 50, 100, 250, <?= json_encode(__('logs.dt_all')) ?>]],
         columns: [
             { data: 'time' },
             { data: 'monitor' },
@@ -153,11 +153,11 @@ $(document).ready(function() {
         ],
         language: {
             search: "_INPUT_",
-            searchPlaceholder: "Search within 24h logs...",
-            lengthMenu: "Show _MENU_ logs",
-            info: "Showing _START_ to _END_ of _TOTAL_ logs (24h Window)",
-            infoEmpty: "No logs recorded for this 24h window",
-            zeroRecords: "No matching logs found in this date window"
+            searchPlaceholder: <?= json_encode(__('logs.dt_search')) ?>,
+            lengthMenu: <?= json_encode(__('logs.dt_length')) ?>,
+            info: <?= json_encode(__('logs.dt_info')) ?>,
+            infoEmpty: <?= json_encode(__('logs.dt_info_empty')) ?>,
+            zeroRecords: <?= json_encode(__('logs.dt_zero_records')) ?>
         },
         initComplete: function() {
             // Instantly reveal the table with zero layout shift
